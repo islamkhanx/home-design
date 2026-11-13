@@ -1,0 +1,182 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1260" viewBox="0 0 2000 1260">
+<rect x="0" y="0" width="2000" height="1260" fill="#f5f3ee" stroke="none" stroke-width="1" rx="0"/>
+<text x="50" y="62" font-size="37" font-weight="700" fill="#354943">A3 / M1 · РИСУНОК ШВОВ НА ЛЕВОЙ СТЕНЕ</text>
+<text x="50" y="104" font-size="24" font-weight="400" fill="#354943">Одна стена, одинаковый масштаб. Контуры сантехники и мебели показаны пунктиром.</text>
+<rect x="50" y="128" width="1900" height="64" fill="#eee2c7" stroke="none" stroke-width="1" rx="0"/>
+<text x="66" y="155" font-size="21" font-weight="400" fill="#795c33">2470 × 2700 мм — условные размеры. Числа ниже — ширины модульных полей, не размеры деталей для резки.</text>
+<text x="66" y="180" font-size="20" font-weight="400" fill="#795c33">Фактические подрезки зависят от обмеров, калибра плитки, швов и примыканий. Шов 2 мм здесь только для сравнения.</text>
+<text x="65" y="235" font-size="27" font-weight="700" fill="#354943">T1  60 × 120 горизонтально</text>
+<path d="M85.00 267.00 L554.30 267.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M85.00 262.00 L85.00 272.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M554.30 262.00 L554.30 272.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<text x="294.65" y="258" font-size="18" font-weight="400" fill="#354943">2470*</text>
+<rect x="85" y="285" width="469.3" height="513.0" fill="#ded8cb" stroke="#354943" stroke-width="2" rx="0"/>
+<rect x="85.0" y="684.0" width="120.65" height="114.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="85.0" y="570.0" width="120.65" height="114.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="85.0" y="456.0" width="120.65" height="114.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="85.0" y="342.0" width="120.65" height="114.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="85.0" y="285.0" width="120.65" height="57.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="205.65" y="285.0" width="228.0" height="57.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="433.65" y="684.0" width="120.65" height="114.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="433.65" y="570.0" width="120.65" height="114.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="433.65" y="456.0" width="120.65" height="114.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="433.65" y="342.0" width="120.65" height="114.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="433.65" y="285.0" width="120.65" height="57.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<path d="M205.65 285.00 L205.65 798.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M433.65 285.00 L433.65 798.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M85.00 684.00 L554.30 684.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M85.00 570.00 L554.30 570.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M85.00 456.00 L554.30 456.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M85.00 342.00 L554.30 342.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M85.00 684.00 L218.00 684.00 L218.00 798.00 L85.00 798.00 L85.00 684.00" fill="none" stroke="#62796f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="92.0" y="706.0" font-size="17" font-weight="400" fill="#425f54">ванна</text>
+<path d="M237.00 631.75 L351.00 631.75 L351.00 731.50 L237.00 731.50 L237.00 631.75" fill="none" stroke="#62796f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="244.0" y="653.75" font-size="17" font-weight="400" fill="#425f54">тумба</text>
+<path d="M237.00 399.00 L351.00 399.00 L351.00 589.00 L237.00 589.00 L237.00 399.00" fill="none" stroke="#62796f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="244.0" y="421.0" font-size="17" font-weight="400" fill="#425f54">зеркало</text>
+<path d="M366.20 342.00 L497.30 342.00 L497.30 551.00 L366.20 551.00 L366.20 342.00" fill="none" stroke="#62796f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="373.2" y="364.0" font-size="17" font-weight="400" fill="#425f54">шкаф WC</text>
+<path d="M366.20 570.00 L497.30 570.00 L497.30 798.00 L366.20 798.00 L366.20 570.00" fill="none" stroke="#62796f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="373.2" y="592.0" font-size="17" font-weight="400" fill="#425f54">короб WC</text>
+<text x="566.3" y="315" font-size="18" font-weight="400" fill="#354943">2700*</text>
+<path d="M85.00 834.00 L205.65 834.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M85.00 829.00 L85.00 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M205.65 829.00 L205.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<text x="130.325" y="825.0" font-size="18" font-weight="400" fill="#354943">635</text>
+<path d="M205.65 834.00 L433.65 834.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M205.65 829.00 L205.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M433.65 829.00 L433.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<text x="299.65" y="825.0" font-size="18" font-weight="400" fill="#354943">1200</text>
+<path d="M433.65 834.00 L554.30 834.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M433.65 829.00 L433.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M554.30 829.00 L554.30 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<text x="478.97499999999997" y="825.0" font-size="18" font-weight="400" fill="#354943">635</text>
+<text x="65" y="878" font-size="21" font-weight="400" fill="#354943">По ширине: 635 + 1200 + 635</text>
+<text x="65" y="915" font-size="21" font-weight="400" fill="#354943">По высоте: 600 + 600 + 600 + 600 + 300</text>
+<text x="65" y="982" font-size="22" font-weight="700" fill="#354943">Горизонтальный рисунок</text>
+<text x="65" y="1018" font-size="22" font-weight="400" fill="#354943">Два вертикальных шва на этой стене</text>
+<text x="65" y="1054" font-size="22" font-weight="400" fill="#354943">Плита 1200 мм по длинной стороне</text>
+<text x="715" y="235" font-size="27" font-weight="700" fill="#354943">T2  60 × 120 вертикально</text>
+<path d="M735.00 267.00 L1204.30 267.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M735.00 262.00 L735.00 272.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M1204.30 262.00 L1204.30 272.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<text x="944.65" y="258" font-size="18" font-weight="400" fill="#354943">2470*</text>
+<rect x="735" y="285" width="469.3" height="513.0" fill="#ded8cb" stroke="#354943" stroke-width="2" rx="0"/>
+<rect x="735.0" y="570.0" width="63.65" height="228.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="735.0" y="342.0" width="63.65" height="228.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="735.0" y="285.0" width="63.65" height="57.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="798.65" y="285.0" width="114.0" height="57.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="912.65" y="285.0" width="114.0" height="57.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="1026.65" y="285.0" width="114.0" height="57.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="1140.65" y="570.0" width="63.65" height="228.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="1140.65" y="342.0" width="63.65" height="228.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="1140.65" y="285.0" width="63.65" height="57.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<path d="M798.65 285.00 L798.65 798.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M912.65 285.00 L912.65 798.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M1026.65 285.00 L1026.65 798.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M1140.65 285.00 L1140.65 798.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M735.00 570.00 L1204.30 570.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M735.00 342.00 L1204.30 342.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M735.00 684.00 L868.00 684.00 L868.00 798.00 L735.00 798.00 L735.00 684.00" fill="none" stroke="#62796f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="742.0" y="706.0" font-size="17" font-weight="400" fill="#425f54">ванна</text>
+<path d="M887.00 631.75 L1001.00 631.75 L1001.00 731.50 L887.00 731.50 L887.00 631.75" fill="none" stroke="#62796f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="894.0" y="653.75" font-size="17" font-weight="400" fill="#425f54">тумба</text>
+<path d="M887.00 399.00 L1001.00 399.00 L1001.00 589.00 L887.00 589.00 L887.00 399.00" fill="none" stroke="#62796f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="894.0" y="421.0" font-size="17" font-weight="400" fill="#425f54">зеркало</text>
+<path d="M1016.20 342.00 L1147.30 342.00 L1147.30 551.00 L1016.20 551.00 L1016.20 342.00" fill="none" stroke="#62796f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="1023.2" y="364.0" font-size="17" font-weight="400" fill="#425f54">шкаф WC</text>
+<path d="M1016.20 570.00 L1147.30 570.00 L1147.30 798.00 L1016.20 798.00 L1016.20 570.00" fill="none" stroke="#62796f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="1023.2" y="592.0" font-size="17" font-weight="400" fill="#425f54">короб WC</text>
+<text x="1216.3" y="315" font-size="18" font-weight="400" fill="#354943">2700*</text>
+<path d="M735.00 834.00 L798.65 834.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M735.00 829.00 L735.00 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M798.65 829.00 L798.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<text x="751.825" y="825.0" font-size="18" font-weight="400" fill="#354943">335</text>
+<path d="M798.65 834.00 L912.65 834.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M798.65 829.00 L798.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M912.65 829.00 L912.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<text x="840.65" y="825.0" font-size="18" font-weight="400" fill="#354943">600</text>
+<path d="M912.65 834.00 L1026.65 834.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M912.65 829.00 L912.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M1026.65 829.00 L1026.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<text x="954.65" y="825.0" font-size="18" font-weight="400" fill="#354943">600</text>
+<path d="M1026.65 834.00 L1140.65 834.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M1026.65 829.00 L1026.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M1140.65 829.00 L1140.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<text x="1068.65" y="825.0" font-size="18" font-weight="400" fill="#354943">600</text>
+<path d="M1140.65 834.00 L1204.30 834.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M1140.65 829.00 L1140.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M1204.30 829.00 L1204.30 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<text x="1157.4750000000001" y="825.0" font-size="18" font-weight="400" fill="#354943">335</text>
+<text x="715" y="878" font-size="21" font-weight="400" fill="#354943">По ширине: 335 + 600 + 600 + 600 + 335</text>
+<text x="715" y="915" font-size="21" font-weight="400" fill="#354943">По высоте: 1200 + 1200 + 300</text>
+<text x="715" y="982" font-size="22" font-weight="700" fill="#354943">Вертикальный рисунок</text>
+<text x="715" y="1018" font-size="22" font-weight="400" fill="#354943">Два горизонтальных шва на этой стене</text>
+<text x="715" y="1054" font-size="22" font-weight="400" fill="#354943">Тот же формат, другое направление</text>
+<text x="1365" y="235" font-size="27" font-weight="700" fill="#354943">T3  60 × 60</text>
+<path d="M1385.00 267.00 L1854.30 267.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M1385.00 262.00 L1385.00 272.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M1854.30 262.00 L1854.30 272.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<text x="1594.65" y="258" font-size="18" font-weight="400" fill="#354943">2470*</text>
+<rect x="1385" y="285" width="469.3" height="513.0" fill="#ded8cb" stroke="#354943" stroke-width="2" rx="0"/>
+<rect x="1385.0" y="684.0" width="63.65" height="114.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="1385.0" y="570.0" width="63.65" height="114.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="1385.0" y="456.0" width="63.65" height="114.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="1385.0" y="342.0" width="63.65" height="114.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="1385.0" y="285.0" width="63.65" height="57.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="1448.65" y="285.0" width="114.0" height="57.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="1562.65" y="285.0" width="114.0" height="57.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="1676.65" y="285.0" width="114.0" height="57.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="1790.65" y="684.0" width="63.65" height="114.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="1790.65" y="570.0" width="63.65" height="114.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="1790.65" y="456.0" width="63.65" height="114.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="1790.65" y="342.0" width="63.65" height="114.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<rect x="1790.65" y="285.0" width="63.65" height="57.0" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<path d="M1448.65 285.00 L1448.65 798.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M1562.65 285.00 L1562.65 798.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M1676.65 285.00 L1676.65 798.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M1790.65 285.00 L1790.65 798.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M1385.00 684.00 L1854.30 684.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M1385.00 570.00 L1854.30 570.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M1385.00 456.00 L1854.30 456.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M1385.00 342.00 L1854.30 342.00" fill="none" stroke="#928772" stroke-width="2" stroke-dasharray=""/>
+<path d="M1385.00 684.00 L1518.00 684.00 L1518.00 798.00 L1385.00 798.00 L1385.00 684.00" fill="none" stroke="#62796f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="1392.0" y="706.0" font-size="17" font-weight="400" fill="#425f54">ванна</text>
+<path d="M1537.00 631.75 L1651.00 631.75 L1651.00 731.50 L1537.00 731.50 L1537.00 631.75" fill="none" stroke="#62796f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="1544.0" y="653.75" font-size="17" font-weight="400" fill="#425f54">тумба</text>
+<path d="M1537.00 399.00 L1651.00 399.00 L1651.00 589.00 L1537.00 589.00 L1537.00 399.00" fill="none" stroke="#62796f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="1544.0" y="421.0" font-size="17" font-weight="400" fill="#425f54">зеркало</text>
+<path d="M1666.20 342.00 L1797.30 342.00 L1797.30 551.00 L1666.20 551.00 L1666.20 342.00" fill="none" stroke="#62796f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="1673.2" y="364.0" font-size="17" font-weight="400" fill="#425f54">шкаф WC</text>
+<path d="M1666.20 570.00 L1797.30 570.00 L1797.30 798.00 L1666.20 798.00 L1666.20 570.00" fill="none" stroke="#62796f" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="1673.2" y="592.0" font-size="17" font-weight="400" fill="#425f54">короб WC</text>
+<text x="1866.3" y="315" font-size="18" font-weight="400" fill="#354943">2700*</text>
+<path d="M1385.00 834.00 L1448.65 834.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M1385.00 829.00 L1385.00 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M1448.65 829.00 L1448.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<text x="1401.825" y="825.0" font-size="18" font-weight="400" fill="#354943">335</text>
+<path d="M1448.65 834.00 L1562.65 834.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M1448.65 829.00 L1448.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M1562.65 829.00 L1562.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<text x="1490.65" y="825.0" font-size="18" font-weight="400" fill="#354943">600</text>
+<path d="M1562.65 834.00 L1676.65 834.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M1562.65 829.00 L1562.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M1676.65 829.00 L1676.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<text x="1604.65" y="825.0" font-size="18" font-weight="400" fill="#354943">600</text>
+<path d="M1676.65 834.00 L1790.65 834.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M1676.65 829.00 L1676.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M1790.65 829.00 L1790.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<text x="1718.65" y="825.0" font-size="18" font-weight="400" fill="#354943">600</text>
+<path d="M1790.65 834.00 L1854.30 834.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M1790.65 829.00 L1790.65 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M1854.30 829.00 L1854.30 839.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<text x="1807.4750000000001" y="825.0" font-size="18" font-weight="400" fill="#354943">335</text>
+<text x="1365" y="878" font-size="21" font-weight="400" fill="#354943">По ширине: 335 + 600 + 600 + 600 + 335</text>
+<text x="1365" y="915" font-size="21" font-weight="400" fill="#354943">По высоте: 600 + 600 + 600 + 600 + 300</text>
+<text x="1365" y="982" font-size="22" font-weight="700" fill="#354943">Квадратная сетка</text>
+<text x="1365" y="1018" font-size="22" font-weight="400" fill="#354943">Больше швов при той же площади</text>
+<text x="1365" y="1054" font-size="22" font-weight="400" fill="#354943">Плита 600 мм по обеим сторонам</text>
+<rect x="65" y="1116" width="25" height="25" fill="#e5d3b4" stroke="none" stroke-width="1" rx="0"/>
+<text x="105" y="1137" font-size="22" font-weight="400" fill="#354943">Поля с подрезкой. Их окраска — пояснение схемы; вся плитка остаётся одного светлого камня.</text>
+<text x="65" y="1191" font-size="21" font-weight="400" fill="#354943">Швы и контуры усилены для чтения. Раскладку коробов, углов и стены с дверью уточним после выбора направления.</text>
+</svg>

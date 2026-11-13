@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1850" viewBox="0 0 2000 1850">
+<rect x="0" y="0" width="2000" height="1850" fill="#f3f4f1" stroke="none" stroke-width="1" rx="0"/>
+<text x="50" y="59" font-family="Arial" font-size="40" font-weight="700" fill="#243642">Санузел · четыре стены</text>
+<text x="50" y="98" font-family="Arial" font-size="23" font-weight="400" fill="#243642">02 / 03 · отделка, высоты, хранение и сервисный доступ · все линейные размеры предварительные</text>
+<rect x="50" y="120" width="1900" height="43" fill="#fff0d3" stroke="none" stroke-width="1" rx="0"/>
+<text x="66" y="149" font-family="Arial" font-size="22" font-weight="700" fill="#805b25">Размеры предложены для проверки: помещение 1800 × 2470, высота 2700. Это НЕ обмер и НЕ монтажный проект.</text>
+<rect x="50" y="190" width="935" height="750" fill="#fff" stroke="#dce1e2" stroke-width="1" rx="0"/>
+<text x="75" y="230" font-family="Arial" font-size="28" font-weight="700" fill="#243642">А · стена ванны</text>
+<text x="75" y="263" font-family="Arial" font-size="19" font-weight="400" fill="#64747d">Условная раскладка плитки; не карта реза.</text>
+<rect x="205.0" y="283.0" width="378.0" height="567.0" fill="#eeebe4" stroke="#7c898d" stroke-width="1" rx="0"/>
+<path d="M331.00 850.00 L331.00 283.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M457.00 850.00 L457.00 283.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M205.00 661.00 L583.00 661.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M205.00 409.00 L583.00 409.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M205.00 891.00 L583.00 891.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M200.00 897.00 L210.00 885.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M578.00 897.00 L588.00 885.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<text x="373.48" y="882" font-family="Arial" font-size="19" font-weight="400" fill="#243642">1800</text>
+<path d="M112.00 283.00 L112.00 850.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M107.00 287.00 L117.00 279.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M107.00 854.00 L117.00 846.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<text x="121" y="572.5" font-family="Arial" font-size="19" font-weight="400" fill="#243642">2700*</text>
+<rect x="205.0" y="724.0" width="357.0" height="126.0" fill="#fafbf9" stroke="#7c898d" stroke-width="1" rx="0"/>
+<rect x="562.0" y="703.0" width="21.0" height="147.0" fill="#d2cbbb" stroke="#7c898d" stroke-width="1" rx="0"/>
+<rect x="205.0" y="430.0" width="136.5" height="294.0" fill="#d9e7e9" stroke="#7c898d" stroke-width="1" rx="0"/>
+<text x="100" y="930" font-family="Arial" font-size="19" font-weight="400" fill="#64747d">Экран 650 — предварительно; проверить доступ к смесителю.</text>
+<rect x="1015" y="190" width="935" height="750" fill="#fff" stroke="#dce1e2" stroke-width="1" rx="0"/>
+<text x="1040" y="230" font-family="Arial" font-size="28" font-weight="700" fill="#243642">Б · раковина и унитаз</text>
+<text x="1040" y="263" font-family="Arial" font-size="19" font-weight="400" fill="#64747d">Условная раскладка плитки; не карта реза.</text>
+<rect x="1170.0" y="283.0" width="518.6999999999999" height="567.0" fill="#eeebe4" stroke="#7c898d" stroke-width="1" rx="0"/>
+<path d="M1240.35 850.00 L1240.35 283.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M1366.35 850.00 L1366.35 283.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M1492.35 850.00 L1492.35 283.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M1618.35 850.00 L1618.35 283.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M1170.00 661.00 L1688.70 661.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M1170.00 409.00 L1688.70 409.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M1170.00 891.00 L1688.70 891.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M1165.00 897.00 L1175.00 885.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M1683.70 897.00 L1693.70 885.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<text x="1408.83" y="882" font-family="Arial" font-size="19" font-weight="400" fill="#243642">2470</text>
+<path d="M1077.00 283.00 L1077.00 850.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M1072.00 287.00 L1082.00 279.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M1072.00 854.00 L1082.00 846.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<text x="1086" y="572.5" font-family="Arial" font-size="19" font-weight="400" fill="#243642">2700*</text>
+<rect x="1170.0" y="724.0" width="147.0" height="126.0" fill="#fafbf9" stroke="#7c898d" stroke-width="1" rx="0"/>
+<path d="M1243.50 640.00 L1243.50 409.00" fill="none" stroke="#8f9597" stroke-width="4" stroke-dasharray=""/>
+<path d="M1222.50 640.00 L1264.50 640.00" fill="none" stroke="#8f9597" stroke-width="4" stroke-dasharray=""/>
+<rect x="1338.0" y="682.0" width="126.0" height="94.5" fill="#cdb28c" stroke="#7c898d" stroke-width="1" rx="0"/>
+<rect x="1338.0" y="671.5" width="126.0" height="10.5" fill="#fff" stroke="#7c898d" stroke-width="1" rx="0"/>
+<rect x="1338.0" y="409.0" width="126.0" height="210.0" fill="#b6cbd1" stroke="#7c898d" stroke-width="1" rx="0"/>
+<path d="M1340.10 619.00 L1340.10 409.00" fill="none" stroke="#d9ab51" stroke-width="4" stroke-dasharray=""/>
+<path d="M1461.90 619.00 L1461.90 409.00" fill="none" stroke="#d9ab51" stroke-width="4" stroke-dasharray=""/>
+<path d="M1340.10 776.50 L1461.90 776.50" fill="none" stroke="#d9ab51" stroke-width="3" stroke-dasharray=""/>
+<rect x="1480.8" y="598.0" width="144.9" height="252.0" fill="#d8d2c5" stroke="#7c898d" stroke-width="1" rx="0"/>
+<rect x="1506.0" y="614.8" width="50.4" height="33.6" fill="#aaa99e" stroke="#7c898d" stroke-width="1" rx="0"/>
+<rect x="1495.5" y="759.7" width="75.6" height="48.3" fill="#fff" stroke="#7c898d" stroke-width="1" rx="0"/>
+<rect x="1480.8" y="346.0" width="144.9" height="231.0" fill="#d9c5a4" stroke="#7c898d" stroke-width="1" rx="0"/>
+<rect x="1625.7" y="283.0" width="63.0" height="567.0" fill="#bfc4c2" stroke="#7c898d" stroke-width="1" rx="0"/>
+<text x="1065" y="930" font-family="Arial" font-size="19" font-weight="400" fill="#64747d">850 — раковина; 430 — условный верх сиденья, уточнить по чаше.</text>
+<rect x="50" y="990" width="935" height="750" fill="#fff" stroke="#dce1e2" stroke-width="1" rx="0"/>
+<text x="75" y="1030" font-family="Arial" font-size="28" font-weight="700" fill="#243642">В · стирка и полотенца</text>
+<text x="75" y="1063" font-family="Arial" font-size="19" font-weight="400" fill="#64747d">Условная раскладка плитки; не карта реза.</text>
+<rect x="205.0" y="1083.0" width="378.0" height="567.0" fill="#eeebe4" stroke="#7c898d" stroke-width="1" rx="0"/>
+<path d="M331.00 1650.00 L331.00 1083.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M457.00 1650.00 L457.00 1083.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M205.00 1461.00 L583.00 1461.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M205.00 1209.00 L583.00 1209.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M205.00 1691.00 L583.00 1691.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M200.00 1697.00 L210.00 1685.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M578.00 1697.00 L588.00 1685.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<text x="373.48" y="1682" font-family="Arial" font-size="19" font-weight="400" fill="#243642">1800</text>
+<path d="M112.00 1083.00 L112.00 1650.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M107.00 1087.00 L117.00 1079.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M107.00 1654.00 L117.00 1646.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<text x="121" y="1372.5" font-family="Arial" font-size="19" font-weight="400" fill="#243642">2700*</text>
+<rect x="205.0" y="1083.0" width="63.0" height="567.0" fill="#bfc4c2" stroke="#7c898d" stroke-width="1" rx="0"/>
+<rect x="451.75" y="1471.5" width="126.0" height="178.5" fill="#f5f7f7" stroke="#7c898d" stroke-width="1" rx="0"/>
+<circle cx="514.75" cy="1561.8" r="39.9" fill="#c0d1d8" stroke="#6e838d" stroke-width="1"/>
+<rect x="446.5" y="1146.0" width="136.5" height="252.0" fill="#d9c5a4" stroke="#7c898d" stroke-width="1" rx="0"/>
+<path d="M299.50 1440.00 L394.00 1440.00" fill="none" stroke="#9f8a67" stroke-width="3" stroke-dasharray=""/>
+<path d="M299.50 1410.60 L394.00 1410.60" fill="none" stroke="#9f8a67" stroke-width="3" stroke-dasharray=""/>
+<path d="M299.50 1381.20 L394.00 1381.20" fill="none" stroke="#9f8a67" stroke-width="3" stroke-dasharray=""/>
+<path d="M299.50 1351.80 L394.00 1351.80" fill="none" stroke="#9f8a67" stroke-width="3" stroke-dasharray=""/>
+<path d="M299.50 1322.40 L394.00 1322.40" fill="none" stroke="#9f8a67" stroke-width="3" stroke-dasharray=""/>
+<path d="M299.50 1293.00 L394.00 1293.00" fill="none" stroke="#9f8a67" stroke-width="3" stroke-dasharray=""/>
+<path d="M299.50 1440.00 L299.50 1293.00" fill="none" stroke="#9f8a67" stroke-width="3" stroke-dasharray=""/>
+<path d="M394.00 1440.00 L394.00 1293.00" fill="none" stroke="#9f8a67" stroke-width="3" stroke-dasharray=""/>
+<text x="100" y="1730" font-family="Arial" font-size="19" font-weight="400" fill="#64747d">Шкаф над машиной глубиной 300; прибор стоит независимо.</text>
+<rect x="1015" y="990" width="935" height="750" fill="#fff" stroke="#dce1e2" stroke-width="1" rx="0"/>
+<text x="1040" y="1030" font-family="Arial" font-size="28" font-weight="700" fill="#243642">Г · вход и бок машины</text>
+<text x="1040" y="1063" font-family="Arial" font-size="19" font-weight="400" fill="#64747d">Условная раскладка плитки; не карта реза.</text>
+<rect x="1170.0" y="1083.0" width="518.6999999999999" height="567.0" fill="#eeebe4" stroke="#7c898d" stroke-width="1" rx="0"/>
+<path d="M1240.35 1650.00 L1240.35 1083.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M1366.35 1650.00 L1366.35 1083.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M1492.35 1650.00 L1492.35 1083.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M1618.35 1650.00 L1618.35 1083.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M1170.00 1461.00 L1688.70 1461.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M1170.00 1209.00 L1688.70 1209.00" fill="none" stroke="#cfcac0" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M1170.00 1691.00 L1688.70 1691.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M1165.00 1697.00 L1175.00 1685.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M1683.70 1697.00 L1693.70 1685.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<text x="1408.83" y="1682" font-family="Arial" font-size="19" font-weight="400" fill="#243642">2470</text>
+<path d="M1077.00 1083.00 L1077.00 1650.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M1072.00 1087.00 L1082.00 1079.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M1072.00 1654.00 L1082.00 1646.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<text x="1086" y="1372.5" font-family="Arial" font-size="19" font-weight="400" fill="#243642">2700*</text>
+<rect x="1348.5" y="1209.0" width="189.0" height="441.0" fill="#d3d8d6" stroke="#7c898d" stroke-width="1" rx="0"/>
+<rect x="1353.75" y="1215.3" width="178.5" height="428.4" fill="#edf0ed" stroke="#7c898d" stroke-width="1" rx="0"/>
+<circle cx="1375.8" cy="1440.0" r="4" fill="#687f8a" stroke="#596875" stroke-width="1"/>
+<rect x="1583.7" y="1471.5" width="94.5" height="178.5" fill="#e7edef" stroke="#7c898d" stroke-width="1" rx="0"/>
+<rect x="1625.7" y="1146.0" width="63.0" height="252.0" fill="#d9c5a4" stroke="#7c898d" stroke-width="1" rx="0"/>
+<text x="1065" y="1730" font-family="Arial" font-size="19" font-weight="400" fill="#64747d">Проём 900 × 2100 — допущение; полотно и наличники после обмера.</text>
+<text x="60" y="1810" font-family="Arial" font-size="21" font-weight="400" fill="#657780">Плитка условно 600 × 1200 на стенах, 600 × 600 на полу. Швы, подрезки и люки согласуются после обмера.</text>
+</svg>

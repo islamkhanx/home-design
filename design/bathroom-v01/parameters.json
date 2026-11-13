@@ -1,0 +1,68 @@
+{
+  "units": "mm",
+  "status": "CONCEPT ONLY: all linear dimensions are proposed, not measured",
+  "documented_area_m2": 4.44,
+  "room_assumption": [
+    1800,
+    2470,
+    2700
+  ],
+  "bath": [
+    0,
+    0,
+    1700,
+    700,
+    600
+  ],
+  "vanity": [
+    0,
+    800,
+    450,
+    600,
+    350,
+    850
+  ],
+  "wc_frame": [
+    0,
+    1480,
+    200,
+    690,
+    1200
+  ],
+  "wc_bowl_envelope": [
+    200,
+    1550,
+    520,
+    360,
+    430
+  ],
+  "washer_envelope": [
+    1150,
+    1920,
+    650,
+    550,
+    900
+  ],
+  "washer_nominal": [
+    600,
+    450,
+    850
+  ],
+  "service_box_reserve": [
+    0,
+    2170,
+    300,
+    300
+  ],
+  "door_assumption": [
+    850,
+    1750,
+    2100
+  ],
+  "notes": [
+    "The 1800 x 2470 outline approximates 4.44 m2 and the source image aspect ratio; it is not an as-built survey.",
+    "Entry on right, bath at top, basin and WC at left, laundry bottom-right match original topology.",
+    "Washer reserve must include actual appliance door, hoses, vibration gaps and power access.",
+    "Electrical candidates are not installation approval; wet-zone compliance must be checked locally."
+  ]
+}

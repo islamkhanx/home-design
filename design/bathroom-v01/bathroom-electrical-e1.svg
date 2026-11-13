@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1400" viewBox="0 0 2000 1400">
+<rect x="0" y="0" width="2000" height="1400" fill="#f5f3ee" stroke="none" stroke-width="1" rx="0"/>
+<text x="50" y="62" font-size="37" font-weight="700" fill="#354943">САНУЗЕЛ · РОЗЕТКИ, СВЕТ И УПРАВЛЕНИЕ</text>
+<text x="50" y="104" font-size="25" font-weight="400" fill="#354943">Предложение Э1 · база A3 / M1 / T1 / Д2 · ночной подсветки нет</text>
+<rect x="50" y="126" width="1900" height="48" fill="#eee2c7" stroke="none" stroke-width="1" rx="0"/>
+<text x="65" y="157" font-size="22" font-weight="400" fill="#795c33">Контур 1800 × 2470 мм — допущение. Все точки и высоты предварительные, не задание на монтаж.</text>
+<rect x="160.0" y="255.0" width="477.0" height="654.5500000000001" fill="#ded8cb" stroke="#354943" stroke-width="1" rx="0"/>
+<rect x="160.0" y="255.0" width="450.5" height="185.5" fill="#fafbf7" stroke="#354943" stroke-width="1" rx="10"/>
+<rect x="183.85" y="278.85" width="402.8" height="137.8" fill="#dce9e4" stroke="#354943" stroke-width="1" rx="20"/>
+<text x="297.8" y="358.35" font-size="24" font-weight="700" fill="#354943">ВАННА</text>
+<rect x="160.0" y="467.0" width="119.25" height="159.0" fill="#ad8b62" stroke="#354943" stroke-width="1" rx="0"/>
+<rect x="178.55" y="488.20000000000005" width="82.15" height="111.30000000000001" fill="#fafbf7" stroke="#354943" stroke-width="1" rx="8"/>
+<rect x="160.0" y="647.2" width="53.0" height="182.85000000000002" fill="#ded8cb" stroke="#354943" stroke-width="1" rx="0"/>
+<rect x="213.0" y="665.75" width="137.8" height="95.4" fill="#fafbf7" stroke="#354943" stroke-width="1" rx="19"/>
+<rect x="464.75" y="737.3" width="172.25" height="172.25" fill="#ad8b62" stroke="#354943" stroke-width="1" rx="0"/>
+<text x="480.65000000000003" y="787.65" font-size="17" font-weight="400" fill="#354943">КОЛОННА</text>
+<text x="488.6" y="816.8000000000001" font-size="18" font-weight="400" fill="#354943">со СМ</text>
+<rect x="160.0" y="830.0500000000001" width="79.5" height="79.5" fill="#a6b0a7" stroke="#354943" stroke-width="1" rx="0"/>
+<text x="165.3" y="877.75" font-size="13" font-weight="400" fill="#354943">ШАХТА*</text>
+<path d="M160.00 255.00 L637.00 255.00" fill="none" stroke="#354943" stroke-width="4" stroke-dasharray=""/>
+<path d="M160.00 255.00 L160.00 909.55" fill="none" stroke="#354943" stroke-width="4" stroke-dasharray=""/>
+<path d="M160.00 909.55 L637.00 909.55" fill="none" stroke="#354943" stroke-width="4" stroke-dasharray=""/>
+<path d="M637.00 255.00 L637.00 480.25" fill="none" stroke="#354943" stroke-width="4" stroke-dasharray=""/>
+<path d="M637.00 718.75 L637.00 909.55" fill="none" stroke="#354943" stroke-width="4" stroke-dasharray=""/>
+<text x="663.5" y="575.6500000000001" font-size="21" font-weight="400" fill="#354943">ВХОД</text>
+<path d="M160.00 440.50 L332.25 440.50" fill="none" stroke="#619c9a" stroke-width="5" stroke-dasharray=""/>
+<path d="M160.00 467.00 L160.00 626.00" fill="none" stroke="#bdd7d5" stroke-width="8" stroke-dasharray=""/>
+<circle cx="175.9" cy="468.59000000000003" r="6" fill="#dbb150" stroke="none" stroke-width="1"/>
+<circle cx="175.9" cy="624.94" r="6" fill="#dbb150" stroke="none" stroke-width="1"/>
+<circle cx="398.5" cy="533.25" r="22" fill="#ae8a40" stroke="none" stroke-width="1"/>
+<text x="386.5" y="540.25" font-size="19" font-weight="700" fill="#ffffff">G1</text>
+<circle cx="411.75" cy="745.25" r="22" fill="#ae8a40" stroke="none" stroke-width="1"/>
+<text x="399.75" y="752.25" font-size="19" font-weight="700" fill="#ffffff">G1</text>
+<circle cx="167.95" cy="546.5" r="22" fill="#ae8a40" stroke="none" stroke-width="1"/>
+<text x="155.95" y="553.5" font-size="19" font-weight="700" fill="#ffffff">G2</text>
+<circle cx="160.0" cy="633.95" r="22" fill="#527d8c" stroke="none" stroke-width="1"/>
+<text x="148.0" y="640.95" font-size="19" font-weight="700" fill="#ffffff">R2</text>
+<path d="M160.00 633.95 L112.30 633.95" fill="none" stroke="#527d8c" stroke-width="2" stroke-dasharray=""/>
+<circle cx="637.0" cy="838.0" r="22" fill="#527d8c" stroke="none" stroke-width="1"/>
+<text x="625.0" y="845.0" font-size="19" font-weight="700" fill="#ffffff">R1</text>
+<circle cx="557.5" cy="909.5500000000001" r="22" fill="#527d8c" stroke="none" stroke-width="1"/>
+<text x="551.5" y="916.5500000000001" font-size="19" font-weight="700" fill="#ffffff">D</text>
+<circle cx="721.8000000000001" cy="729.35" r="22" fill="#527d8c" stroke="none" stroke-width="1"/>
+<text x="715.8000000000001" y="736.35" font-size="19" font-weight="700" fill="#ffffff">S</text>
+<circle cx="199.75" cy="838.0" r="22" fill="#8b938d" stroke="none" stroke-width="1"/>
+<text x="187.75" y="845.0" font-size="19" font-weight="700" fill="#ffffff">V?</text>
+<path d="M160.00 227.00 L637.00 227.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M160.00 222.00 L160.00 232.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M637.00 222.00 L637.00 232.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<text x="373.5" y="218" font-size="18" font-weight="400" fill="#354943">1800*</text>
+<path d="M86.00 440.50 L86.00 633.95" fill="none" stroke="#b47844" stroke-width="2" stroke-dasharray=""/>
+<path d="M78.00 440.50 L94.00 440.50" fill="none" stroke="#b47844" stroke-width="2" stroke-dasharray=""/>
+<path d="M78.00 633.95 L94.00 633.95" fill="none" stroke="#b47844" stroke-width="2" stroke-dasharray=""/>
+<text x="55" y="538.55" font-size="18" font-weight="700" fill="#9c642f">730*</text>
+<text x="55" y="960" font-size="20" font-weight="400" fill="#354943">730* — от борта ванны до центра R2 в модели.</text>
+<text x="55" y="991" font-size="20" font-weight="400" fill="#9c642f">Это не подтверждение допустимой электрической зоны.</text>
+<text x="55" y="1022" font-size="20" font-weight="400" fill="#354943">V? — место вытяжки уточняется по реальному вентканалу.</text>
+<text x="810" y="225" font-size="26" font-weight="700" fill="#354943">ТОЧКИ · ВЫСОТЫ ОТ ЧИСТОВОГО ПОЛА</text>
+<rect x="800" y="252" width="1135" height="121" fill="#ffffff" stroke="#e0e1d9" stroke-width="1" rx="6"/>
+<text x="820" y="279" font-size="24" font-weight="700" fill="#354943">R1</text>
+<text x="945" y="279" font-size="23" font-weight="700" fill="#354943">Стиральная машина · 1 розетка</text>
+<text x="820" y="318" font-size="22" font-weight="400" fill="#354943">В доступном отсеке колонны; ориентир 1100–1300 мм.</text>
+<text x="820" y="351" font-size="21" font-weight="400" fill="#61726a">Проверить длину штатного шнура и доступ к вилке.</text>
+<rect x="800" y="391" width="1135" height="121" fill="#ffffff" stroke="#e0e1d9" stroke-width="1" rx="6"/>
+<text x="820" y="418" font-size="24" font-weight="700" fill="#354943">R2</text>
+<text x="945" y="418" font-size="23" font-weight="700" fill="#354943">Фен / зарядка · блок из 2 розеток</text>
+<text x="820" y="457" font-size="22" font-weight="400" fill="#354943">На левой стене у дальнего от ванны края тумбы.</text>
+<text x="820" y="490" font-size="21" font-weight="400" fill="#61726a">Ориентир 1100–1200 мм; проверить рамку и мокрые зоны.</text>
+<rect x="800" y="530" width="1135" height="121" fill="#ffffff" stroke="#e0e1d9" stroke-width="1" rx="6"/>
+<text x="820" y="557" font-size="24" font-weight="700" fill="#354943">G2 / D</text>
+<text x="945" y="557" font-size="23" font-weight="700" fill="#354943">Зеркало · вывод + доступный блок питания</text>
+<text x="820" y="596" font-size="22" font-weight="400" fill="#354943">К зеркалу — вывод по выбранной системе подсветки.</text>
+<text x="820" y="629" font-size="21" font-weight="400" fill="#61726a">D: отдельный отсек колонны; доступ и охлаждение.</text>
+<rect x="800" y="669" width="1135" height="121" fill="#ffffff" stroke="#e0e1d9" stroke-width="1" rx="6"/>
+<text x="820" y="696" font-size="24" font-weight="700" fill="#354943">V?</text>
+<text x="945" y="696" font-size="23" font-weight="700" fill="#354943">Вытяжка · 1 вывод, место пока не назначено</text>
+<text x="820" y="735" font-size="22" font-weight="400" fill="#354943">У фактического вентканала; схема по модели вентилятора.</text>
+<text x="820" y="768" font-size="21" font-weight="400" fill="#61726a">Предлагаю отдельную команду и выбег по таймеру.</text>
+<rect x="800" y="808" width="1135" height="121" fill="#ffffff" stroke="#e0e1d9" stroke-width="1" rx="6"/>
+<text x="820" y="835" font-size="24" font-weight="700" fill="#354943">S</text>
+<text x="945" y="835" font-size="23" font-weight="700" fill="#354943">Управление снаружи санузла · около 1000 мм</text>
+<text x="820" y="874" font-size="22" font-weight="400" fill="#354943">Общий свет / зеркало с диммированием / вытяжка.</text>
+<text x="820" y="907" font-size="21" font-weight="400" fill="#61726a">Точное число клавиш — после выбора оборудования.</text>
+<text x="810" y="1015" font-size="22" font-weight="700" fill="#354943">СВЕТ: 2 потолочные точки G1 + 2 линии зеркала G2.</text>
+<text x="810" y="1049" font-size="21" font-weight="400" fill="#354943">Обычный: G1 + G2 · уборка: оба ярко · вечер: только G2.</text>
+<rect x="50" y="1080" width="1900" height="265" fill="#e8ede6" stroke="none" stroke-width="1" rx="8"/>
+<text x="75" y="1120" font-size="25" font-weight="700" fill="#354943">ЧТО ПРЕДУСМОТРЕТЬ В ПРОЕКТЕ ЭЛЕКТРИКИ</text>
+<text x="75" y="1160" font-size="22" font-weight="400" fill="#354943">Линия стиралки отдельно; розетки и освещение разделить. Сечения и защиту назначает электрик по расчёту.</text>
+<text x="75" y="1196" font-size="22" font-weight="400" fill="#354943">Розетки: защитный контакт PE и дифференциальная защита до 30 мА; размещение и IP — по зонам санузла.</text>
+<text x="75" y="1232" font-size="22" font-weight="400" fill="#354943">Трассы: потолок → вертикальные спуски. Новые штробы зависят от существующей проводки и материала стен.</text>
+<text x="75" y="1268" font-size="22" font-weight="400" fill="#354943">Для обсуждения: электрический полотенцесушитель, защита от протечек, бойлер. Их точек на плане пока нет.</text>
+<text x="75" y="1307" font-size="21" font-weight="400" fill="#61726a">Схема для выбора удобства. Монтаж, проверку PE, защитных устройств и уравнивания потенциалов — электрику.</text>
+<text x="50" y="1380" font-size="20" font-weight="400" fill="#61726a">Э1 · 13.11.2026 · Не утверждено · Габариты мебели и оборудования уточнить по обмерам и паспортам.</text>
+</svg>

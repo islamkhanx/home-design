@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1570" viewBox="0 0 2000 1570">
+<rect x="0" y="0" width="2000" height="1570" fill="#f3f4f1" stroke="none" stroke-width="1" rx="0"/>
+<text x="50" y="59" font-family="Arial" font-size="40" font-weight="700" fill="#243642">Санузел · план и объём</text>
+<text x="50" y="98" font-family="Arial" font-size="23" font-weight="400" fill="#243642">01 / 03 · ванна, подвесная сантехника, хранение и стирка · площадь по исходнику 4,44 м²</text>
+<rect x="50" y="120" width="1900" height="43" fill="#fff0d3" stroke="none" stroke-width="1" rx="0"/>
+<text x="66" y="149" font-family="Arial" font-size="22" font-weight="700" fill="#805b25">Размеры предложены для проверки: помещение 1800 × 2470, высота 2700. Это НЕ обмер и НЕ монтажный проект.</text>
+<rect x="50" y="190" width="980" height="1050" fill="#fff" stroke="#dce1e2" stroke-width="1" rx="0"/>
+<text x="75" y="230" font-family="Arial" font-size="28" font-weight="700" fill="#243642">План расстановки</text>
+<text x="75" y="263" font-family="Arial" font-size="19" font-weight="400" fill="#64747d">Вход справа; расположение основных зон сохранено.</text>
+<rect x="1060" y="190" width="890" height="1050" fill="#fff" stroke="#dce1e2" stroke-width="1" rx="0"/>
+<text x="1085" y="230" font-family="Arial" font-size="28" font-weight="700" fill="#243642">Объёмная схема</text>
+<text x="1085" y="263" font-family="Arial" font-size="19" font-weight="400" fill="#64747d">Тот же контур; верхний шкаф над машиной показан пунктиром.</text>
+<rect x="150.0" y="330.0" width="540.0" height="741.0" fill="#efede7" stroke="#6d7a80" stroke-width="1" rx="0"/>
+<path d="M330.00 330.00 L330.00 1071.00" fill="none" stroke="#d5d1c7" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M510.00 330.00 L510.00 1071.00" fill="none" stroke="#d5d1c7" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M150.00 510.00 L690.00 510.00" fill="none" stroke="#d5d1c7" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M150.00 690.00 L690.00 690.00" fill="none" stroke="#d5d1c7" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M150.00 870.00 L690.00 870.00" fill="none" stroke="#d5d1c7" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M150.00 1050.00 L690.00 1050.00" fill="none" stroke="#d5d1c7" stroke-width="0.8" stroke-dasharray=""/>
+<rect x="150.0" y="330.0" width="510.0" height="210.0" fill="#fff" stroke="#667b86" stroke-width="1.6" rx="9"/>
+<rect x="177.0" y="357.0" width="456.0" height="156.0" fill="#dcebed" stroke="#92a6b0" stroke-width="1" rx="20"/>
+<rect x="660.0" y="330.0" width="30.0" height="210.0" fill="#d9d6cf" stroke="#6d7a80" stroke-width="1" rx="0"/>
+<path d="M150.00 540.00 L345.00 540.00" fill="none" stroke="#8bb5bb" stroke-width="4" stroke-dasharray=""/>
+<rect x="150.0" y="570.0" width="135.0" height="180.0" fill="#cfb893" stroke="#6d7a80" stroke-width="1" rx="0"/>
+<rect x="165.0" y="589.5" width="102.0" height="139.5" fill="#fff" stroke="#84959d" stroke-width="1" rx="10"/>
+<rect x="150.0" y="774.0" width="60.0" height="207.0" fill="#d7d1c5" stroke="#6d7a80" stroke-width="1" rx="0"/>
+<rect x="210.0" y="795.0" width="156.0" height="108.0" fill="#fff" stroke="#6d7a80" stroke-width="1.5" rx="22"/>
+<rect x="495.0" y="906.0" width="195.0" height="165.0" fill="#d9e2e7" stroke="#66818f" stroke-width="1.4" rx="0"/>
+<rect x="502.5" y="921.0" width="180.0" height="135.0" fill="#fff" stroke="#66818f" stroke-width="1.2" rx="0"/>
+<path d="M502.50 921.00 L682.50 921.00" fill="none" stroke="#247d86" stroke-width="3" stroke-dasharray=""/>
+<rect x="150.0" y="981.0" width="90.0" height="90.0" fill="#c7c9c7" stroke="#69787d" stroke-width="1.5" rx="0"/>
+<rect x="285.0" y="1041.0" width="135.0" height="30.0" fill="#eee6d9" stroke="#9b8462" stroke-width="1.2" rx="0"/>
+<path d="M495.00 726.00 L690.00 726.00 L690.00 906.00 L495.00 906.00 L495.00 726.00" fill="none" stroke="#cb913a" stroke-width="2" stroke-dasharray="7 5"/>
+<path d="M366.00 765.00 L546.00 765.00 L546.00 933.00 L366.00 933.00 L366.00 765.00" fill="none" stroke="#7c9e8b" stroke-width="1.5" stroke-dasharray="6 4"/>
+<path d="M150.00 330.00 L690.00 330.00" fill="none" stroke="#424f57" stroke-width="5" stroke-dasharray=""/>
+<path d="M150.00 330.00 L150.00 1071.00" fill="none" stroke="#424f57" stroke-width="5" stroke-dasharray=""/>
+<path d="M150.00 1071.00 L690.00 1071.00" fill="none" stroke="#424f57" stroke-width="5" stroke-dasharray=""/>
+<path d="M690.00 330.00 L690.00 585.00" fill="none" stroke="#424f57" stroke-width="5" stroke-dasharray=""/>
+<path d="M690.00 855.00 L690.00 1071.00" fill="none" stroke="#424f57" stroke-width="5" stroke-dasharray=""/>
+<path d="M690.00 855.00 L960.00 855.00" fill="none" stroke="#677b87" stroke-width="1.5" stroke-dasharray=""/>
+<path d="M690.0 585.0 Q960.0 585.0 960.0 855.0" fill="none" stroke="#677b87" stroke-width="1.4"/>
+<circle cx="405.0" cy="435.0" r="18" fill="#247d86" stroke="#247d86" stroke-width="1"/>
+<text x="399.0" y="442.0" font-family="Arial" font-size="20" font-weight="700" fill="white">1</text>
+<circle cx="217.5" cy="660.0" r="18" fill="#247d86" stroke="#247d86" stroke-width="1"/>
+<text x="211.5" y="667.0" font-family="Arial" font-size="20" font-weight="700" fill="white">2</text>
+<circle cx="288.0" cy="849.0" r="18" fill="#247d86" stroke="#247d86" stroke-width="1"/>
+<text x="282.0" y="856.0" font-family="Arial" font-size="20" font-weight="700" fill="white">3</text>
+<circle cx="592.5" cy="993.0" r="18" fill="#247d86" stroke="#247d86" stroke-width="1"/>
+<text x="586.5" y="1000.0" font-family="Arial" font-size="20" font-weight="700" fill="white">4</text>
+<circle cx="195.0" cy="1026.0" r="18" fill="#247d86" stroke="#247d86" stroke-width="1"/>
+<text x="189.0" y="1033.0" font-family="Arial" font-size="20" font-weight="700" fill="white">5</text>
+<path d="M150.00 297.00 L690.00 297.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M145.00 303.00 L155.00 291.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M150.00 330.00 L150.00 305.00" fill="none" stroke="#c8cfd2" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M685.00 303.00 L695.00 291.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M690.00 330.00 L690.00 305.00" fill="none" stroke="#c8cfd2" stroke-width="0.8" stroke-dasharray=""/>
+<text x="399.48" y="288" font-family="Arial" font-size="19" font-weight="400" fill="#243642">1800</text>
+<path d="M87.00 330.00 L87.00 1071.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M82.00 334.00 L92.00 326.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M82.00 1075.00 L92.00 1067.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<text x="96" y="706.5" font-family="Arial" font-size="19" font-weight="400" fill="#243642">2470</text>
+<path d="M150.00 1112.00 L660.00 1112.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M145.00 1118.00 L155.00 1106.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<path d="M655.00 1118.00 L665.00 1106.00" fill="none" stroke="#84929b" stroke-width="1" stroke-dasharray=""/>
+<text x="322.91999999999996" y="1103" font-family="Arial" font-size="19" font-weight="400" fill="#243642">Ванна 1700 × 700</text>
+<text x="727" y="590" font-family="Arial" font-size="24" font-weight="700" fill="#243642">ВХОД</text>
+<text x="727" y="623" font-family="Arial" font-size="19" font-weight="400" fill="#243642">проём 900*</text>
+<text x="727" y="660" font-family="Arial" font-size="19" font-weight="400" fill="#243642">открывание</text>
+<text x="727" y="687" font-family="Arial" font-size="19" font-weight="400" fill="#243642">в коридор</text>
+<text x="78" y="1136" font-family="Arial" font-size="21" font-weight="400" fill="#243642">Пунктир: зоны пользования, а не предметы мебели.</text>
+<text x="78" y="1171" font-family="Arial" font-size="21" font-weight="700" fill="#946824">Зоны перед унитазом и стиралкой пересекаются.</text>
+<text x="78" y="1205" font-family="Arial" font-size="20" font-weight="400" fill="#946824">Открытый люк и удобство прохода нужно проверить вживую.</text>
+<path d="M1480.00 665.00 L1768.00 791.00 L1372.80 963.90 L1084.80 837.90 Z" fill="#d8d5cb" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1480.00 665.00 L1768.00 791.00 L1768.00 440.00 L1480.00 314.00 Z" fill="#ede9df" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1480.00 665.00 L1084.80 837.90 L1084.80 486.90 L1480.00 314.00 Z" fill="#ded9cd" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1752.00 784.00 L1640.00 833.00 L1640.00 755.00 L1752.00 706.00 Z" fill="#b9b6ac" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1368.00 714.00 L1640.00 833.00 L1640.00 755.00 L1368.00 636.00 Z" fill="#f7f8f4" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1480.00 587.00 L1752.00 706.00 L1640.00 755.00 L1368.00 636.00 Z" fill="#fff" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1480.00 598.95 L1723.20 705.35 L1640.00 741.75 L1396.80 635.35 Z" fill="#b9d5dc" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1424.00 707.00 L1328.00 749.00 L1328.00 684.00 L1424.00 642.00 Z" fill="#b9b6ac" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1256.00 717.50 L1328.00 749.00 L1328.00 684.00 L1256.00 652.50 Z" fill="#c7ac82" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1352.00 610.50 L1424.00 642.00 L1328.00 684.00 L1256.00 652.50 Z" fill="#f9f9f6" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1352.00 578.00 L1256.00 620.00 L1256.00 490.00 L1352.00 448.00 Z" fill="#b5cbd3" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1275.20 782.60 L1164.80 830.90 L1164.80 674.90 L1275.20 626.60 Z" fill="#b9b6ac" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1132.80 816.90 L1164.80 830.90 L1164.80 674.90 L1132.80 660.90 Z" fill="#bdb7a9" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1243.20 612.60 L1275.20 626.60 L1164.80 674.90 L1132.80 660.90 Z" fill="#eee9df" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1347.20 797.90 L1289.60 823.10 L1289.60 793.20 L1347.20 768.00 Z" fill="#b9b6ac" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1206.40 786.70 L1289.60 823.10 L1289.60 793.20 L1206.40 756.80 Z" fill="#fff" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1264.00 731.60 L1347.20 768.00 L1289.60 793.20 L1206.40 756.80 Z" fill="#fff" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1275.20 613.60 L1164.80 661.90 L1164.80 518.90 L1275.20 470.60 Z" fill="#b9b6ac" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1132.80 647.90 L1164.80 661.90 L1164.80 518.90 L1132.80 504.90 Z" fill="#d7c19d" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1243.20 456.60 L1275.20 470.60 L1164.80 518.90 L1132.80 504.90 Z" fill="#eee9df" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1180.80 837.90 L1132.80 858.90 L1132.80 507.90 L1180.80 486.90 Z" fill="#b9b6ac" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1084.80 837.90 L1132.80 858.90 L1132.80 507.90 L1084.80 486.90 Z" fill="#c7c9c7" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1132.80 465.90 L1180.80 486.90 L1132.80 507.90 L1084.80 486.90 Z" fill="#eee9df" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1448.80 927.15 L1376.80 958.65 L1376.80 848.15 L1448.80 816.65 Z" fill="#b9b6ac" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1280.80 916.65 L1376.80 958.65 L1376.80 848.15 L1280.80 806.15 Z" fill="#e7edf0" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1352.80 774.65 L1448.80 816.65 L1376.80 848.15 L1280.80 806.15 Z" fill="#f5f8f8" stroke="#819096" stroke-width="1.1" stroke-dasharray=""/>
+<path d="M1316.80 741.40 L1420.80 786.90 L1372.80 807.90 L1268.80 762.40 L1316.80 741.40" fill="none" stroke="#a68d65" stroke-width="1.5" stroke-dasharray="5 4"/>
+<path d="M1316.80 585.40 L1420.80 630.90 L1372.80 651.90 L1268.80 606.40 L1316.80 585.40" fill="none" stroke="#a68d65" stroke-width="1.5" stroke-dasharray="5 4"/>
+<path d="M1316.80 741.40 L1316.80 585.40" fill="none" stroke="#a68d65" stroke-width="1.5" stroke-dasharray="5 4"/>
+<path d="M1420.80 786.90 L1420.80 630.90" fill="none" stroke="#a68d65" stroke-width="1.5" stroke-dasharray="5 4"/>
+<path d="M1372.80 807.90 L1372.80 651.90" fill="none" stroke="#a68d65" stroke-width="1.5" stroke-dasharray="5 4"/>
+<path d="M1268.80 762.40 L1268.80 606.40" fill="none" stroke="#a68d65" stroke-width="1.5" stroke-dasharray="5 4"/>
+<path d="M1351.20 579.05 L1351.20 449.05" fill="none" stroke="#d9a845" stroke-width="5" stroke-dasharray=""/>
+<path d="M1258.40 619.65 L1258.40 489.65" fill="none" stroke="#d9a845" stroke-width="5" stroke-dasharray=""/>
+<path d="M1421.60 707.45 L1332.00 746.65" fill="none" stroke="#d9a845" stroke-width="4" stroke-dasharray=""/>
+<text x="1090" y="1045" font-family="Arial" font-size="21" font-weight="700" fill="#243642">Тёплый камень + светлое дерево + белая сантехника.</text>
+<text x="1090" y="1084" font-family="Arial" font-size="21" font-weight="400" fill="#243642">Ванна 1700 × 700. Подвесная тумба 600 × 450.</text>
+<text x="1090" y="1122" font-family="Arial" font-size="21" font-weight="400" fill="#243642">Узкая стиралка: ориентир корпуса 600 × 450 × 850.</text>
+<text x="1090" y="1160" font-family="Arial" font-size="21" font-weight="400" fill="#243642">Монтажный резерв стиралки: 650 × 550.</text>
+<text x="1090" y="1198" font-family="Arial" font-size="20" font-weight="400" fill="#946824">Короб и толщину обшивки инсталляции уточнить обмером.</text>
+<text x="60" y="1296" font-family="Arial" font-size="22" font-weight="700" fill="#243642">1  Ванна</text>
+<text x="310" y="1296" font-family="Arial" font-size="21" font-weight="400" fill="#243642">Съёмный экран или люк к сифону; торцевая доборная зона условно 100.</text>
+<text x="60" y="1341" font-family="Arial" font-size="22" font-weight="700" fill="#243642">2  Раковина</text>
+<text x="310" y="1341" font-family="Arial" font-size="21" font-weight="400" fill="#243642">Тумба подвесная; верх раковины ориентировочно 850 от чистого пола.</text>
+<text x="60" y="1386" font-family="Arial" font-size="22" font-weight="700" fill="#243642">3  Унитаз</text>
+<text x="310" y="1386" font-family="Arial" font-size="21" font-weight="400" fill="#243642">Инсталляция в облицованном коробе; суммарный вылет в модели 720.</text>
+<text x="60" y="1431" font-family="Arial" font-size="22" font-weight="700" fill="#243642">4  Стирка</text>
+<text x="310" y="1431" font-family="Arial" font-size="21" font-weight="400" fill="#243642">Шкаф над машиной глубиной 300; доступ к вентилю и розетке сбоку.</text>
+<text x="60" y="1476" font-family="Arial" font-size="22" font-weight="700" fill="#243642">5  Коммуникации</text>
+<text x="310" y="1476" font-family="Arial" font-size="21" font-weight="400" fill="#243642">Сохраняем резерв под исходный сантехкороб; размеры и ревизия неизвестны.</text>
+<text x="60" y="1530" font-family="Arial" font-size="20" font-weight="400" fill="#657780">Высота и линейные размеры условны. Масштаб на экране меняется; ориентироваться на числовые размеры.</text>
+</svg>

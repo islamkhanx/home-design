@@ -1,0 +1,17 @@
+{
+  "engine": "Cycles",
+  "samples": 24,
+  "resolution": [
+    900,
+    900
+  ],
+  "device": "CPU",
+  "geometry_validation": {
+    "passed": true,
+    "meshParts": 135,
+    "maxBoundsErrorMeters": 2.384185791015625e-07,
+    "toleranceMeters": 0.0001
+  },
+  "geometry_source": "a-compositions.glb",
+  "notes": "Studio illumination; not a calculated installed lighting design. Cutaway walls vary by view; upper cabinets hidden in entry view to expose circulation. Geometry unchanged."
+}

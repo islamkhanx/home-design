@@ -1,0 +1,12 @@
+node_modules/
+dist/
+exports/
+.renders/
+.artifacts/
+.env
+.env.*
+!.env.example
+*.blend
+*.blend1
+.DS_Store
+__pycache__/

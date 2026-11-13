@@ -1,0 +1,210 @@
+{
+  "schemaVersion": 1,
+  "id": "generic-kitchen-demo",
+  "name": "L-кухня · учебный пример, не обмер квартиры",
+  "revision": 1,
+  "units": "mm",
+  "documentedArea": 12,
+  "notes": ["Все размеры условные; этот пример не является проектом кухни квартиры."],
+  "rooms": [
+    {
+      "id": "demo",
+      "name": "Демо",
+      "documentedArea": 12,
+      "polygon": [
+        [0, 0],
+        [4000, 0],
+        [4000, 3000],
+        [0, 3000]
+      ],
+      "height": 2700,
+      "evidence": "assumed",
+      "note": "Произвольный пример для проверки параметрической L-сборки."
+    }
+  ],
+  "materials": [
+    {
+      "id": "stone",
+      "name": "Тёплый камень",
+      "color": "#c9c4b6",
+      "roughness": 0.82,
+      "metalness": 0,
+      "surface": "stone"
+    },
+    {
+      "id": "oak",
+      "name": "Натуральный дуб",
+      "color": "#bd9b6d",
+      "roughness": 0.65,
+      "metalness": 0,
+      "surface": "oak"
+    },
+    {
+      "id": "white",
+      "name": "Керамика",
+      "color": "#f6f7f2",
+      "roughness": 0.19,
+      "metalness": 0
+    },
+    {
+      "id": "paint",
+      "name": "Краска",
+      "color": "#e7e4dc",
+      "roughness": 0.9,
+      "metalness": 0
+    },
+    {
+      "id": "metal",
+      "name": "Матовый металл",
+      "color": "#738084",
+      "roughness": 0.28,
+      "metalness": 0.85
+    },
+    {
+      "id": "glass",
+      "name": "Стекло",
+      "color": "#dfeeee",
+      "roughness": 0.07,
+      "metalness": 0,
+      "transmission": 0.92,
+      "ior": 1.5
+    },
+    {
+      "id": "mirror",
+      "name": "Зеркало",
+      "color": "#e2e8eb",
+      "roughness": 0.04,
+      "metalness": 1
+    },
+    {
+      "id": "light",
+      "name": "Рассеиватель",
+      "color": "#fff2d5",
+      "roughness": 0.4,
+      "metalness": 0,
+      "emissive": "#ffe3ab",
+      "emissiveIntensity": 2
+    }
+  ],
+  "objects": [
+    {
+      "id": "floor",
+      "name": "Пол",
+      "kind": "Floor",
+      "roomId": "demo",
+      "position": [0, 0, 0],
+      "rotation": [0, 0, 0],
+      "size": [4000, 70, 3000],
+      "material": "stone",
+      "evidence": "assumed",
+      "surface": {
+        "polygon": [
+          [0, 0],
+          [4000, 0],
+          [4000, 3000],
+          [0, 3000]
+        ],
+        "thickness": 70
+      }
+    },
+    {
+      "roomId": "demo",
+      "evidence": "assumed",
+      "material": "oak",
+      "id": "kitchen-long-0",
+      "name": "Кухня · ряд A 1",
+      "kind": "KitchenCabinet",
+      "position": [300, 0, 300],
+      "rotation": [0, 0, 0],
+      "size": [600, 860, 600]
+    },
+    {
+      "roomId": "demo",
+      "evidence": "assumed",
+      "material": "oak",
+      "id": "kitchen-long-1",
+      "name": "Кухня · ряд A 2",
+      "kind": "KitchenCabinet",
+      "position": [900, 0, 300],
+      "rotation": [0, 0, 0],
+      "size": [600, 860, 600]
+    },
+    {
+      "roomId": "demo",
+      "evidence": "assumed",
+      "material": "oak",
+      "id": "kitchen-long-2",
+      "name": "Кухня · ряд A 3",
+      "kind": "KitchenCabinet",
+      "position": [1500, 0, 300],
+      "rotation": [0, 0, 0],
+      "size": [600, 860, 600]
+    },
+    {
+      "roomId": "demo",
+      "evidence": "assumed",
+      "material": "oak",
+      "id": "kitchen-long-3",
+      "name": "Кухня · ряд A 4",
+      "kind": "KitchenCabinet",
+      "position": [2100, 0, 300],
+      "rotation": [0, 0, 0],
+      "size": [600, 860, 600]
+    },
+    {
+      "roomId": "demo",
+      "evidence": "assumed",
+      "material": "oak",
+      "id": "kitchen-long-4",
+      "name": "Кухня · ряд A 5",
+      "kind": "KitchenCabinet",
+      "position": [2700, 0, 300],
+      "rotation": [0, 0, 0],
+      "size": [600, 860, 600]
+    },
+    {
+      "roomId": "demo",
+      "evidence": "assumed",
+      "material": "oak",
+      "id": "kitchen-return-0",
+      "name": "Кухня · ряд B 1",
+      "kind": "KitchenCabinet",
+      "position": [300, 0, 900],
+      "rotation": [0, 90, 0],
+      "size": [600, 860, 600]
+    },
+    {
+      "roomId": "demo",
+      "evidence": "assumed",
+      "material": "oak",
+      "id": "kitchen-return-1",
+      "name": "Кухня · ряд B 2",
+      "kind": "KitchenCabinet",
+      "position": [300, 0, 1500],
+      "rotation": [0, 90, 0],
+      "size": [600, 860, 600]
+    },
+    {
+      "roomId": "demo",
+      "evidence": "assumed",
+      "material": "stone",
+      "id": "kitchen-counter",
+      "name": "L-столешница",
+      "kind": "Countertop",
+      "position": [0, 900, 0],
+      "rotation": [0, 0, 0],
+      "size": [3000, 40, 1800],
+      "surface": {
+        "thickness": 40,
+        "polygon": [
+          [0, 0],
+          [3000, 0],
+          [3000, 600],
+          [600, 600],
+          [600, 1800],
+          [0, 1800]
+        ]
+      }
+    }
+  ]
+}

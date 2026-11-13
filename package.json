@@ -1,0 +1,43 @@
+{
+  "name": "home-design",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.16"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "test:core": "node --experimental-strip-types --test tests/math.test.ts tests/schema.test.ts tests/runner.test.ts tests/kitchen.test.ts",
+    "test:geometry": "node --experimental-strip-types --test tests/geometry.test.ts",
+    "test:e2e": "node scripts/smoke.mjs",
+    "export:scene": "node scripts/export-scene.mjs",
+    "render:preview": "node --experimental-strip-types scripts/render.mjs preview",
+    "render:quality": "node --experimental-strip-types scripts/render.mjs quality",
+    "render:ultra": "node --experimental-strip-types scripts/render.mjs ultra",
+    "doctor": "node scripts/doctor.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "preview:offline": "node scripts/offline-preview.mjs",
+    "export:headless": "node --experimental-strip-types scripts/export-headless.mjs"
+  },
+  "dependencies": {
+    "@tresjs/core": "5.10.1",
+    "@tresjs/cientos": "5.0.0",
+    "three": "0.180.0",
+    "vue": "3.5.30"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/three": "^0.180.0",
+    "@vitejs/plugin-vue": "^5.2.4",
+    "playwright": "^1.51.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.0.0",
+    "vue-tsc": "^2.2.10",
+    "prettier": "3.8.1"
+  }
+}

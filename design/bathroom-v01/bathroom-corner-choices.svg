@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1780" viewBox="0 0 2000 1780">
+<rect x="0" y="0" width="2000" height="1780" fill="#f5f3ee" stroke="none" stroke-width="1" rx="0"/>
+<text x="50" y="64" font-size="37" font-weight="700" fill="#354943">A3 / M1 / T1 · КАК ОФОРМИТЬ НАРУЖНЫЙ УГОЛ</text>
+<text x="50" y="107" font-size="23" font-weight="400" fill="#354943">Одинаковый светлый камень. Слева — стык двух запиленных плит; справа — защитная металлическая кромка.</text>
+<text x="50" y="148" font-size="21" font-weight="400" fill="#7b786b">Схематичные крупные планы: толщины и ширины увеличены для наглядности. Это не монтажные чертежи.</text>
+<text x="70" y="220" font-size="29" font-weight="700" fill="#354943">У1 · ЗАПИЛ 45°</text>
+<path d="M230.00 335.00 L500.00 230.00 L770.00 335.00 L500.00 440.00 L230.00 335.00" fill="#e6dfd1" stroke="#827b6d" stroke-width="1" stroke-dasharray=""/>
+<path d="M500.00 440.00 L230.00 335.00 L230.00 685.00 L500.00 790.00 L500.00 440.00" fill="#c9bfad" stroke="#827b6d" stroke-width="1" stroke-dasharray=""/>
+<path d="M500.00 440.00 L770.00 335.00 L770.00 685.00 L500.00 790.00 L500.00 440.00" fill="#ded5c3" stroke="#827b6d" stroke-width="1" stroke-dasharray=""/>
+<path d="M230.00 505.00 L500.00 610.00" fill="none" stroke="#a99e8b" stroke-width="2" stroke-dasharray=""/>
+<path d="M500.00 610.00 L770.00 505.00" fill="none" stroke="#b7ac97" stroke-width="2" stroke-dasharray=""/>
+<path d="M500.00 440.00 L500.00 790.00" fill="none" stroke="#8c816e" stroke-width="2" stroke-dasharray=""/>
+<text x="85" y="827" font-size="25" font-weight="700" fill="#354943">Камень визуально оборачивает угол</text>
+<text x="85" y="869" font-size="22" font-weight="400" fill="#354943">Сечение сверху · принцип соединения</text>
+<rect x="165" y="955" width="190" height="190" fill="#cbd0c8" stroke="none" stroke-width="1" rx="0"/>
+<path d="M135.00 915.00 L355.00 915.00 L355.00 943.00 L159.00 943.00 L135.00 919.00 L135.00 915.00" fill="#ded5c3" stroke="#827b6d" stroke-width="1" stroke-dasharray=""/>
+<path d="M125.00 925.00 L129.00 925.00 L153.00 949.00 L153.00 1145.00 L125.00 1145.00 L125.00 925.00" fill="#c9bfad" stroke="#827b6d" stroke-width="1" stroke-dasharray=""/>
+<path d="M149.00 936.00 L470.00 980.00" fill="none" stroke="#a36f3f" stroke-width="1.5" stroke-dasharray=""/>
+<text x="475" y="984" font-size="21" font-weight="400" fill="#354943">Запил с обратной стороны</text>
+<text x="475" y="1026" font-size="21" font-weight="400" fill="#354943">Торцы сходятся под 45°</text>
+<text x="475" y="1068" font-size="21" font-weight="400" fill="#354943">Кромку не сводят «в нож»</text>
+<text x="85" y="1193" font-size="22" font-weight="700" fill="#354943">Вид: цельный каменный объём</text>
+<text x="85" y="1230" font-size="22" font-weight="400" fill="#354943">Монтаж: точный рез и обработка обеих кромок</text>
+<text x="85" y="1267" font-size="22" font-weight="400" fill="#354943">Стойкость: тонкий край требует бережного обращения</text>
+<text x="1060" y="220" font-size="29" font-weight="700" fill="#354943">У2 · ПРЯМОЙ МЕТАЛЛИЧЕСКИЙ ПРОФИЛЬ</text>
+<path d="M1220.00 335.00 L1490.00 230.00 L1760.00 335.00 L1490.00 440.00 L1220.00 335.00" fill="#e6dfd1" stroke="#827b6d" stroke-width="1" stroke-dasharray=""/>
+<path d="M1490.00 440.00 L1220.00 335.00 L1220.00 685.00 L1490.00 790.00 L1490.00 440.00" fill="#c9bfad" stroke="#827b6d" stroke-width="1" stroke-dasharray=""/>
+<path d="M1490.00 440.00 L1760.00 335.00 L1760.00 685.00 L1490.00 790.00 L1490.00 440.00" fill="#ded5c3" stroke="#827b6d" stroke-width="1" stroke-dasharray=""/>
+<path d="M1220.00 505.00 L1490.00 610.00" fill="none" stroke="#a99e8b" stroke-width="2" stroke-dasharray=""/>
+<path d="M1490.00 610.00 L1760.00 505.00" fill="none" stroke="#b7ac97" stroke-width="2" stroke-dasharray=""/>
+<path d="M1481.00 436.50 L1490.00 440.00 L1490.00 790.00 L1481.00 786.50 L1481.00 436.50" fill="#929e9f" stroke="#849091" stroke-width="1" stroke-dasharray=""/>
+<path d="M1490.00 440.00 L1499.00 436.50 L1499.00 786.50 L1490.00 790.00 L1490.00 440.00" fill="#d4dddd" stroke="#97a3a4" stroke-width="1" stroke-dasharray=""/>
+<path d="M1481.00 436.50 L1490.00 433.00 L1499.00 436.50 L1490.00 440.00 L1481.00 436.50" fill="#e0e7e5" stroke="#827b6d" stroke-width="1" stroke-dasharray=""/>
+<text x="1075" y="827" font-size="25" font-weight="700" fill="#354943">На углу видна ровная металлическая линия</text>
+<text x="1075" y="869" font-size="22" font-weight="400" fill="#354943">Сечение сверху · принцип соединения</text>
+<rect x="1155" y="955" width="190" height="190" fill="#cbd0c8" stroke="none" stroke-width="1" rx="0"/>
+<rect x="1149" y="915" width="196" height="28" fill="#ded5c3" stroke="#827b6d" stroke-width="1" rx="0"/>
+<rect x="1115" y="949" width="28" height="196" fill="#c9bfad" stroke="#827b6d" stroke-width="1" rx="0"/>
+<rect x="1115" y="915" width="28" height="28" fill="#a8b4b4" stroke="#718383" stroke-width="1" rx="0"/>
+<path d="M1141.00 941.00 L1147.00 947.00 L1303.00 947.00 L1303.00 951.00 L1144.00 951.00 L1141.00 943.00 L1141.00 941.00" fill="#a8b4b4" stroke="#718383" stroke-width="0.5" stroke-dasharray=""/>
+<path d="M1129.00 929.00 L1460.00 980.00" fill="none" stroke="#527d8c" stroke-width="1.5" stroke-dasharray=""/>
+<text x="1465" y="984" font-size="21" font-weight="400" fill="#354943">Профиль закрывает кромки</text>
+<text x="1465" y="1026" font-size="21" font-weight="400" fill="#354943">Монтажная полка под плиткой</text>
+<text x="1465" y="1068" font-size="21" font-weight="400" fill="#354943">Форма зависит от изделия</text>
+<text x="1075" y="1193" font-size="22" font-weight="700" fill="#354943">Вид: аккуратный графичный кант</text>
+<text x="1075" y="1230" font-size="22" font-weight="400" fill="#354943">Монтаж: прямые резы плитки; точная посадка профиля</text>
+<text x="1075" y="1267" font-size="22" font-weight="400" fill="#354943">Стойкость: профиль защищает края от ударов</text>
+<path d="M50.00 1320.00 L1950.00 1320.00" fill="none" stroke="#cdd2c8" stroke-width="1.2" stroke-dasharray=""/>
+<text x="50" y="1370" font-size="28" font-weight="700" fill="#354943">ГДЕ ЭТО В НАШЕЙ A3</text>
+<rect x="80.0" y="1410.0" width="49.5" height="66.0" fill="#c4a57a" stroke="#354943" stroke-width="1" rx="0"/>
+<rect x="80.0" y="1484.8" width="22.0" height="75.9" fill="#ded8cb" stroke="#354943" stroke-width="1" rx="0"/>
+<rect x="102.0" y="1492.5" width="57.2" height="39.6" fill="#fafbf7" stroke="#354943" stroke-width="1" rx="0"/>
+<path d="M80.00 1405.00 L80.00 1570.00" fill="none" stroke="#354943" stroke-width="3" stroke-dasharray=""/>
+<path d="M102.00 1484.80 L102.00 1560.70" fill="none" stroke="#b67843" stroke-width="5" stroke-dasharray=""/>
+<path d="M80.00 1484.80 L102.00 1484.80" fill="none" stroke="#b67843" stroke-width="5" stroke-dasharray=""/>
+<text x="195" y="1443" font-size="20" font-weight="400" fill="#354943">Тумба</text>
+<text x="195" y="1513" font-size="20" font-weight="400" fill="#354943">WC</text>
+<text x="360" y="1436" font-size="24" font-weight="700" fill="#354943">Выделен доступный наружный угол короба WC рядом с тумбой.</text>
+<text x="360" y="1479" font-size="22" font-weight="400" fill="#354943">Здесь сравниваем вертикальную кромку и верхнее переднее ребро короба.</text>
+<text x="360" y="1522" font-size="22" font-weight="400" fill="#354943">Остальные торцы и углы шахты уточним после обмеров и проверки доступа.</text>
+<text x="360" y="1578" font-size="22" font-weight="700" fill="#354943">У ванны и на внутренних примыканиях нужен отдельный узел:</text>
+<text x="360" y="1612" font-size="22" font-weight="400" fill="#354943">эпоксидная затирка не заменяет предусмотренные эластичные швы.</text>
+<text x="50" y="1691" font-size="20" font-weight="400" fill="#354943">На рисунке У2 — условный прямой профиль. Материал, отделка и высота подбираются под плитку и условия эксплуатации.</text>
+<text x="50" y="1732" font-size="20" font-weight="400" fill="#6b766f">Основание: рекомендации RUBI по заусовке и Schlüter по защите кромок. Ни один вариант пока не выбран.</text>
+</svg>

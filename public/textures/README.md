@@ -1,0 +1,1 @@
+Place local PNG/JPEG texture files here. Reference `/textures/filename.png` from MaterialDef.texture or normalTexture. The GLB exporter embeds these images; Blender preserves the imported material nodes. Do not put private files in public/.

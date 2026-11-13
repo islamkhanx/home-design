@@ -1,0 +1,547 @@
+{
+  "schemaVersion": 1,
+  "id": "home-design",
+  "name": "Home Design · 45,99 м²",
+  "revision": 3,
+  "units": "mm",
+  "documentedArea": 45.99,
+  "notes": [
+    "Лоджия 3,10 м² фактически / 1,55 м² в общей площади.",
+    "Подтверждены площади и топология, но не линейные размеры.",
+    "Начальная модель санузла — проектная гипотеза. Не для заказа мебели.",
+    "Розетки, трассы и электрические зоны пока не утверждены.",
+    "A3 / M1 / T1 / Д2: текущая композиция; точные изделия и узел У1 требуют деталировки.",
+    "Полотенцесушитель выбран, но не размещён до выбора модели и места. Свет — предложение G1/G2."
+  ],
+  "rooms": [
+    {
+      "id": "bathroom",
+      "name": "Санузел",
+      "documentedArea": 4.44,
+      "polygon": [
+        [0, 0],
+        [1800, 0],
+        [1800, 2470],
+        [0, 2470]
+      ],
+      "height": 2700,
+      "evidence": "assumed",
+      "note": "1800 × 2470 × 2700 — контрольные допущения, НЕ обмер."
+    },
+    {
+      "id": "bedroom",
+      "name": "Спальня",
+      "documentedArea": 13.48,
+      "evidence": "assumed",
+      "note": "Известна площадь. Геометрия пока отсутствует: нужны длины стен."
+    },
+    {
+      "id": "living",
+      "name": "Гостиная",
+      "documentedArea": 16.12,
+      "evidence": "assumed",
+      "note": "Известна площадь. Геометрия пока отсутствует: нужны длины стен."
+    },
+    {
+      "id": "kitchen",
+      "name": "Кухня-ниша",
+      "documentedArea": 6.22,
+      "evidence": "assumed",
+      "note": "Известна площадь. Геометрия пока отсутствует: нужны длины стен."
+    },
+    {
+      "id": "hall",
+      "name": "Коридор",
+      "documentedArea": 4.18,
+      "evidence": "assumed",
+      "note": "Известна площадь. Геометрия пока отсутствует: нужны длины стен."
+    },
+    {
+      "id": "loggia",
+      "name": "Лоджия",
+      "documentedArea": 3.1,
+      "evidence": "assumed",
+      "note": "Известна площадь. Геометрия пока отсутствует: нужны длины стен."
+    }
+  ],
+  "materials": [
+    {
+      "id": "stone",
+      "name": "Тёплый камень",
+      "color": "#d3cec2",
+      "roughness": 0.82,
+      "metalness": 0,
+      "surface": "stone",
+      "tileSize": [1.2, 0.6]
+    },
+    {
+      "id": "oak",
+      "name": "Натуральный дуб",
+      "color": "#ad8b62",
+      "roughness": 0.58,
+      "metalness": 0,
+      "surface": "oak"
+    },
+    {
+      "id": "white",
+      "name": "Керамика",
+      "color": "#f6f7f2",
+      "roughness": 0.19,
+      "metalness": 0
+    },
+    {
+      "id": "paint",
+      "name": "Краска",
+      "color": "#e7e4dc",
+      "roughness": 0.9,
+      "metalness": 0
+    },
+    {
+      "id": "metal",
+      "name": "Матовый металл",
+      "color": "#b2b7b8",
+      "roughness": 0.24,
+      "metalness": 1
+    },
+    {
+      "id": "glass",
+      "name": "Стекло",
+      "color": "#dfeeee",
+      "roughness": 0.07,
+      "metalness": 0,
+      "transmission": 0.92,
+      "ior": 1.5
+    },
+    {
+      "id": "mirror",
+      "name": "Зеркало",
+      "color": "#e2e8eb",
+      "roughness": 0.04,
+      "metalness": 1
+    },
+    {
+      "id": "light",
+      "name": "Рассеиватель",
+      "color": "#fff2d5",
+      "roughness": 0.4,
+      "metalness": 0,
+      "emissive": "#ffe3ab",
+      "emissiveIntensity": 2
+    },
+    {
+      "id": "floor-stone",
+      "name": "Камень · пол 600 × 600",
+      "color": "#d3cec2",
+      "roughness": 0.82,
+      "metalness": 0,
+      "surface": "stone",
+      "tileSize": [0.6, 0.6]
+    }
+  ],
+  "objects": [
+    {
+      "id": "floor",
+      "name": "Пол",
+      "kind": "Floor",
+      "roomId": "bathroom",
+      "position": [0, 0, 0],
+      "rotation": [0, 0, 0],
+      "size": [1800, 70, 2470],
+      "material": "floor-stone",
+      "evidence": "assumed",
+      "surface": {
+        "polygon": [
+          [0, 0],
+          [1800, 0],
+          [1800, 2470],
+          [0, 2470]
+        ],
+        "thickness": 70
+      }
+    },
+    {
+      "id": "ceiling",
+      "name": "Потолок",
+      "kind": "Ceiling",
+      "roomId": "bathroom",
+      "position": [0, 2700, 0],
+      "rotation": [0, 0, 0],
+      "size": [1800, 30, 2470],
+      "material": "paint",
+      "evidence": "assumed",
+      "surface": {
+        "polygon": [
+          [0, 0],
+          [1800, 0],
+          [1800, 2470],
+          [0, 2470]
+        ],
+        "thickness": 30
+      },
+      "cutaway": true
+    },
+    {
+      "id": "wall-north",
+      "name": "Стена ванны",
+      "kind": "Wall",
+      "roomId": "bathroom",
+      "position": [0, 0, -50],
+      "rotation": [0, 0, 0],
+      "size": [1800, 2700, 100],
+      "material": "stone",
+      "evidence": "assumed",
+      "wall": {
+        "start": [0, 0],
+        "end": [1800, 0],
+        "thickness": 100,
+        "height": 2700,
+        "openings": []
+      },
+      "cutaway": false,
+      "note": "Толщина стены направлена наружу от условного внутреннего контура комнаты."
+    },
+    {
+      "id": "wall-west",
+      "name": "Раковина / унитаз",
+      "kind": "Wall",
+      "roomId": "bathroom",
+      "position": [-50, 0, 0],
+      "rotation": [0, 0, 0],
+      "size": [2470, 2700, 100],
+      "material": "stone",
+      "evidence": "assumed",
+      "wall": {
+        "start": [0, 0],
+        "end": [0, 2470],
+        "thickness": 100,
+        "height": 2700,
+        "openings": []
+      },
+      "cutaway": false,
+      "note": "Толщина стены направлена наружу от условного внутреннего контура комнаты."
+    },
+    {
+      "id": "wall-south",
+      "name": "Стирка / полотенца",
+      "kind": "Wall",
+      "roomId": "bathroom",
+      "position": [0, 0, 50],
+      "rotation": [0, 0, 0],
+      "size": [1800, 2700, 100],
+      "material": "stone",
+      "evidence": "assumed",
+      "wall": {
+        "start": [0, 2470],
+        "end": [1800, 2470],
+        "thickness": 100,
+        "height": 2700,
+        "openings": []
+      },
+      "cutaway": true,
+      "note": "Толщина стены направлена наружу от условного внутреннего контура комнаты."
+    },
+    {
+      "id": "wall-east",
+      "name": "Вход",
+      "kind": "Wall",
+      "roomId": "bathroom",
+      "position": [50, 0, 0],
+      "rotation": [0, 0, 0],
+      "size": [2470, 2700, 100],
+      "material": "stone",
+      "evidence": "assumed",
+      "wall": {
+        "start": [1800, 0],
+        "end": [1800, 2470],
+        "thickness": 100,
+        "height": 2700,
+        "openings": [
+          {
+            "id": "entry",
+            "kind": "door",
+            "offset": 850,
+            "width": 900,
+            "bottom": 0,
+            "height": 2100
+          }
+        ]
+      },
+      "cutaway": true,
+      "note": "Толщина стены направлена наружу от условного внутреннего контура комнаты."
+    },
+    {
+      "id": "door",
+      "name": "Входная дверь",
+      "kind": "Door",
+      "roomId": "bathroom",
+      "position": [0, 0, 0],
+      "rotation": [0, 0, 0],
+      "size": [900, 2100, 40],
+      "material": "paint",
+      "evidence": "assumed",
+      "attach": {
+        "wallId": "wall-east",
+        "openingId": "entry"
+      },
+      "params": {
+        "doorAngle": -85
+      },
+      "cutaway": true
+    },
+    {
+      "id": "bathtub",
+      "name": "Ванна 1700 × 700",
+      "kind": "Bathtub",
+      "roomId": "bathroom",
+      "position": [850, 0, 350],
+      "rotation": [0, 0, 0],
+      "size": [1700, 600, 700],
+      "material": "white",
+      "evidence": "assumed"
+    },
+    {
+      "id": "screen",
+      "name": "Экран ванны",
+      "kind": "GlassPartition",
+      "roomId": "bathroom",
+      "position": [325, 600, 700],
+      "rotation": [0, 0, 0],
+      "size": [650, 1400, 8],
+      "material": "glass",
+      "evidence": "assumed"
+    },
+    {
+      "id": "shower",
+      "name": "Душ и смеситель",
+      "kind": "Shower",
+      "roomId": "bathroom",
+      "position": [60, 950, 350],
+      "rotation": [0, 90, 0],
+      "size": [300, 1200, 140],
+      "material": "metal",
+      "evidence": "assumed"
+    },
+    {
+      "id": "vanity",
+      "name": "Подвесная тумба",
+      "kind": "Vanity",
+      "roomId": "bathroom",
+      "position": [225, 350, 1100],
+      "rotation": [0, 90, 0],
+      "size": [600, 700, 450],
+      "material": "oak",
+      "evidence": "assumed",
+      "note": "Корпус и раковина: верх 875 мм; смеситель включён в габарит. Размеры условные."
+    },
+    {
+      "id": "mirror",
+      "name": "Зеркало",
+      "kind": "GlassPartition",
+      "roomId": "bathroom",
+      "position": [15, 1100, 1100],
+      "rotation": [0, 0, 0],
+      "size": [12, 1000, 600],
+      "material": "mirror",
+      "evidence": "assumed"
+    },
+    {
+      "id": "wc-frame",
+      "name": "Короб инсталляции",
+      "kind": "Countertop",
+      "roomId": "bathroom",
+      "position": [100, 0, 1825],
+      "rotation": [0, 0, 0],
+      "size": [200, 1200, 690],
+      "material": "stone",
+      "evidence": "assumed"
+    },
+    {
+      "id": "toilet",
+      "name": "Подвесной унитаз",
+      "kind": "Toilet",
+      "roomId": "bathroom",
+      "position": [460, 200, 1730],
+      "rotation": [0, 90, 0],
+      "size": [360, 230, 520],
+      "material": "white",
+      "evidence": "assumed"
+    },
+    {
+      "id": "flush",
+      "name": "Кнопка смыва",
+      "kind": "GlassPartition",
+      "roomId": "bathroom",
+      "position": [207, 960, 1730],
+      "rotation": [0, 0, 0],
+      "size": [14, 160, 240],
+      "material": "metal",
+      "evidence": "assumed"
+    },
+    {
+      "id": "wc-storage",
+      "name": "Шкаф над инсталляцией",
+      "kind": "Wardrobe",
+      "roomId": "bathroom",
+      "position": [150, 1300, 1825],
+      "rotation": [0, 90, 0],
+      "size": [690, 1100, 300],
+      "material": "paint",
+      "evidence": "assumed"
+    },
+    {
+      "id": "shaft",
+      "name": "Сантехнический короб · обмер",
+      "kind": "Countertop",
+      "roomId": "bathroom",
+      "position": [150, 0, 2320],
+      "rotation": [0, 0, 0],
+      "size": [300, 2700, 300],
+      "material": "stone",
+      "evidence": "assumed"
+    },
+    {
+      "id": "washer",
+      "name": "Узкая стиральная машина",
+      "kind": "Appliance",
+      "roomId": "bathroom",
+      "position": [1475, 0, 2195],
+      "rotation": [0, 180, 0],
+      "size": [600, 850, 450],
+      "material": "white",
+      "evidence": "assumed",
+      "params": {
+        "appliance": "washer"
+      }
+    },
+    {
+      "id": "spot-0",
+      "name": "Потолочный свет 1",
+      "kind": "Spotlight",
+      "roomId": "bathroom",
+      "position": [900, 2630, 1050],
+      "rotation": [0, 0, 0],
+      "size": [90, 70, 90],
+      "material": "white",
+      "evidence": "assumed",
+      "params": {
+        "lumens": 600,
+        "group": "general"
+      },
+      "note": "Предложение света G1/G2, параметры не утверждены."
+    },
+    {
+      "id": "spot-1",
+      "name": "Потолочный свет 2",
+      "kind": "Spotlight",
+      "roomId": "bathroom",
+      "position": [950, 2630, 1850],
+      "rotation": [0, 0, 0],
+      "size": [90, 70, 90],
+      "material": "white",
+      "evidence": "assumed",
+      "params": {
+        "lumens": 600,
+        "group": "general"
+      },
+      "note": "Предложение света G1/G2, параметры не утверждены."
+    },
+    {
+      "id": "mirror-light-0",
+      "name": "Свет зеркала 1",
+      "kind": "LEDStrip",
+      "roomId": "bathroom",
+      "position": [30, 1100, 810],
+      "rotation": [0, 0, 0],
+      "size": [35, 1000, 20],
+      "material": "light",
+      "evidence": "assumed",
+      "params": {
+        "lumens": 450,
+        "group": "mirror"
+      },
+      "note": "Предложение света G1/G2, параметры не утверждены."
+    },
+    {
+      "id": "mirror-light-1",
+      "name": "Свет зеркала 2",
+      "kind": "LEDStrip",
+      "roomId": "bathroom",
+      "position": [30, 1100, 1390],
+      "rotation": [0, 0, 0],
+      "size": [35, 1000, 20],
+      "material": "light",
+      "evidence": "assumed",
+      "params": {
+        "lumens": 450,
+        "group": "mirror"
+      },
+      "note": "Предложение света G1/G2, параметры не утверждены."
+    },
+    {
+      "id": "dim-width",
+      "name": "Ширина",
+      "kind": "DimensionLine",
+      "roomId": "bathroom",
+      "position": [0, 20, 2600],
+      "rotation": [0, 0, 0],
+      "size": [1800, 20, 20],
+      "material": "metal",
+      "evidence": "assumed",
+      "params": {
+        "end": [1800, 20, 2600],
+        "measure": {
+          "entityId": "floor",
+          "axis": "x"
+        }
+      }
+    },
+    {
+      "id": "dim-length",
+      "name": "Глубина",
+      "kind": "DimensionLine",
+      "roomId": "bathroom",
+      "position": [-150, 20, 0],
+      "rotation": [0, 0, 0],
+      "size": [20, 20, 2470],
+      "material": "metal",
+      "evidence": "assumed",
+      "params": {
+        "end": [-150, 20, 2470],
+        "measure": {
+          "entityId": "floor",
+          "axis": "z"
+        }
+      }
+    },
+    {
+      "id": "label",
+      "name": "Подпись комнаты",
+      "kind": "RoomLabel",
+      "roomId": "bathroom",
+      "position": [900, 20, 1550],
+      "rotation": [0, 0, 0],
+      "size": [500, 30, 250],
+      "material": "metal",
+      "evidence": "assumed",
+      "params": {
+        "text": "4,44 м² · обмер нужен"
+      }
+    },
+    {
+      "id": "laundry-tower",
+      "name": "A3 · хозяйственная колонна",
+      "kind": "Wardrobe",
+      "roomId": "bathroom",
+      "position": [1475, 0, 2135],
+      "rotation": [0, 180, 0],
+      "size": [650, 2550, 670],
+      "material": "oak",
+      "evidence": "assumed",
+      "params": {
+        "cabinetDoors": 2,
+        "appliance": "washer"
+      },
+      "note": "Д2: оттенок дуба. Конструкция, открывания, вентиляция и сервисные зазоры требуют проверки."
+    }
+  ]
+}

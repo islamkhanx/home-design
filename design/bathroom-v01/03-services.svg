@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1660" viewBox="0 0 2000 1660">
+<rect x="0" y="0" width="2000" height="1660" fill="#f3f4f1" stroke="none" stroke-width="1" rx="0"/>
+<text x="50" y="59" font-family="Arial" font-size="40" font-weight="700" fill="#243642">Санузел · свет и инженерные точки</text>
+<text x="50" y="98" font-family="Arial" font-size="23" font-weight="400" fill="#243642">03 / 03 · точки потребления и сценарии · маршруты кабелей, трубы и зоны безопасности ещё не утверждены</text>
+<rect x="50" y="120" width="1900" height="43" fill="#fff0d3" stroke="none" stroke-width="1" rx="0"/>
+<text x="66" y="149" font-family="Arial" font-size="22" font-weight="700" fill="#805b25">Размеры предложены для проверки: помещение 1800 × 2470, высота 2700. Это НЕ обмер и НЕ монтажный проект.</text>
+<rect x="50" y="190" width="750" height="980" fill="#fff" stroke="#dce1e2" stroke-width="1" rx="0"/>
+<text x="75" y="230" font-family="Arial" font-size="28" font-weight="700" fill="#243642">План точек</text>
+<text x="75" y="263" font-family="Arial" font-size="19" font-weight="400" fill="#64747d">Начало координат: левый верхний угол у ванны.</text>
+<rect x="830" y="190" width="1120" height="980" fill="#fff" stroke="#dce1e2" stroke-width="1" rx="0"/>
+<text x="855" y="230" font-family="Arial" font-size="28" font-weight="700" fill="#243642">Что подключаем</text>
+<text x="855" y="263" font-family="Arial" font-size="19" font-weight="400" fill="#64747d">X — от левой стены; Y — от стены ванны; Z — от чистого пола.</text>
+<rect x="130.0" y="300.0" width="360.0" height="494.0" fill="#efede7" stroke="#6d7a80" stroke-width="1" rx="0"/>
+<path d="M250.00 300.00 L250.00 794.00" fill="none" stroke="#d5d1c7" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M370.00 300.00 L370.00 794.00" fill="none" stroke="#d5d1c7" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M130.00 420.00 L490.00 420.00" fill="none" stroke="#d5d1c7" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M130.00 540.00 L490.00 540.00" fill="none" stroke="#d5d1c7" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M130.00 660.00 L490.00 660.00" fill="none" stroke="#d5d1c7" stroke-width="0.8" stroke-dasharray=""/>
+<path d="M130.00 780.00 L490.00 780.00" fill="none" stroke="#d5d1c7" stroke-width="0.8" stroke-dasharray=""/>
+<rect x="130.0" y="300.0" width="340.0" height="140.0" fill="#fff" stroke="#667b86" stroke-width="1.6" rx="9"/>
+<rect x="148.0" y="318.0" width="304.0" height="104.0" fill="#dcebed" stroke="#92a6b0" stroke-width="1" rx="20"/>
+<rect x="470.0" y="300.0" width="20.0" height="140.0" fill="#d9d6cf" stroke="#6d7a80" stroke-width="1" rx="0"/>
+<path d="M130.00 440.00 L260.00 440.00" fill="none" stroke="#8bb5bb" stroke-width="4" stroke-dasharray=""/>
+<rect x="130.0" y="460.0" width="90.0" height="120.0" fill="#cfb893" stroke="#6d7a80" stroke-width="1" rx="0"/>
+<rect x="140.0" y="473.0" width="68.0" height="93.0" fill="#fff" stroke="#84959d" stroke-width="1" rx="10"/>
+<rect x="130.0" y="596.0" width="40.0" height="138.0" fill="#d7d1c5" stroke="#6d7a80" stroke-width="1" rx="0"/>
+<rect x="170.0" y="610.0" width="104.0" height="72.0" fill="#fff" stroke="#6d7a80" stroke-width="1.5" rx="22"/>
+<rect x="360.0" y="684.0" width="130.0" height="110.0" fill="#d9e2e7" stroke="#66818f" stroke-width="1.4" rx="0"/>
+<rect x="365.0" y="694.0" width="120.0" height="90.0" fill="#fff" stroke="#66818f" stroke-width="1.2" rx="0"/>
+<path d="M365.00 694.00 L485.00 694.00" fill="none" stroke="#247d86" stroke-width="3" stroke-dasharray=""/>
+<rect x="130.0" y="734.0" width="60.0" height="60.0" fill="#c7c9c7" stroke="#69787d" stroke-width="1.5" rx="0"/>
+<rect x="220.0" y="774.0" width="90.0" height="20.0" fill="#eee6d9" stroke="#9b8462" stroke-width="1.2" rx="0"/>
+<path d="M130.00 300.00 L490.00 300.00" fill="none" stroke="#424f57" stroke-width="5" stroke-dasharray=""/>
+<path d="M130.00 300.00 L130.00 794.00" fill="none" stroke="#424f57" stroke-width="5" stroke-dasharray=""/>
+<path d="M130.00 794.00 L490.00 794.00" fill="none" stroke="#424f57" stroke-width="5" stroke-dasharray=""/>
+<path d="M490.00 300.00 L490.00 470.00" fill="none" stroke="#424f57" stroke-width="5" stroke-dasharray=""/>
+<path d="M490.00 650.00 L490.00 794.00" fill="none" stroke="#424f57" stroke-width="5" stroke-dasharray=""/>
+<path d="M490.00 650.00 L670.00 650.00" fill="none" stroke="#677b87" stroke-width="1.5" stroke-dasharray=""/>
+<path d="M490.0 470.0 Q670.0 470.0 670.0 650.0" fill="none" stroke="#677b87" stroke-width="1.4"/>
+<circle cx="310.0" cy="500.0" r="15" fill="#fff2b6" stroke="#ba944a" stroke-width="2"/>
+<text x="333.0" y="507.0" font-family="Arial" font-size="19" font-weight="400" fill="#243642">L1</text>
+<circle cx="310.0" cy="720.0" r="15" fill="#fff2b6" stroke="#ba944a" stroke-width="2"/>
+<text x="333.0" y="727.0" font-family="Arial" font-size="19" font-weight="400" fill="#243642">L1</text>
+<path d="M130.00 460.00 L130.00 580.00" fill="none" stroke="#d5a13a" stroke-width="5" stroke-dasharray=""/>
+<text x="80" y="535" font-family="Arial" font-size="18" font-weight="700" fill="#a16d1a">L2/3</text>
+<rect x="318.0" y="786.0" width="16" height="16" fill="#247d86" stroke="none" stroke-width="1" rx="0"/>
+<text x="338.0" y="782.0" font-family="Arial" font-size="18" font-weight="700" fill="#247d86">R1</text>
+<rect x="122.0" y="578.0" width="16" height="16" fill="#247d86" stroke="none" stroke-width="1" rx="0"/>
+<text x="142.0" y="574.0" font-family="Arial" font-size="18" font-weight="700" fill="#247d86">R2</text>
+<rect x="252.0" y="786.0" width="16" height="16" fill="#247d86" stroke="none" stroke-width="1" rx="0"/>
+<text x="272.0" y="822.0" font-family="Arial" font-size="18" font-weight="700" fill="#247d86">R3</text>
+<circle cx="524.0" cy="674.0" r="18" fill="#637b85" stroke="#637b85" stroke-width="1"/>
+<text x="518.0" y="681.0" font-family="Arial" font-size="20" font-weight="700" fill="white">S</text>
+<text x="80" y="886" font-family="Arial" font-size="20" font-weight="400" fill="#243642">L1 — общий потолочный свет, 2 прибора.</text>
+<text x="80" y="922" font-family="Arial" font-size="20" font-weight="400" fill="#243642">L2 — фронтальный свет у зеркала.</text>
+<text x="80" y="958" font-family="Arial" font-size="20" font-weight="400" fill="#243642">L3 — слабый ночной свет под тумбой.</text>
+<text x="80" y="994" font-family="Arial" font-size="20" font-weight="400" fill="#243642">S — управление снаружи у входа.</text>
+<text x="80" y="1040" font-family="Arial" font-size="21" font-weight="700" fill="#956a25">Розетки — только кандидаты по месту.</text>
+<text x="80" y="1076" font-family="Arial" font-size="19" font-weight="400" fill="#956a25">До монтажа проверить зоны ванны, высоты,</text>
+<text x="80" y="1108" font-family="Arial" font-size="19" font-weight="400" fill="#956a25">отделку, защиту и инструкции оборудования.</text>
+<rect x="850" y="277" width="1080" height="95" fill="#f3f5f4" stroke="none" stroke-width="1" rx="0"/>
+<text x="870" y="307" font-family="Arial" font-size="23" font-weight="700" fill="#243642">R1 · стиралка</text>
+<text x="1190" y="307" font-family="Arial" font-size="20" font-weight="400" fill="#243642">X 980 / Y 2470 / Z 1100</text>
+<text x="870" y="344" font-family="Arial" font-size="20" font-weight="400" fill="#5c707a">Доступна рядом с машиной, не за корпусом.</text>
+<text x="870" y="410" font-family="Arial" font-size="23" font-weight="700" fill="#243642">R2 · фен / щётка</text>
+<text x="1190" y="410" font-family="Arial" font-size="20" font-weight="400" fill="#243642">X 0 / Y 1430 / Z 1100</text>
+<text x="870" y="447" font-family="Arial" font-size="20" font-weight="400" fill="#5c707a">Кандидат у дальнего края зеркала; проверить зону.</text>
+<rect x="850" y="483" width="1080" height="95" fill="#f3f5f4" stroke="none" stroke-width="1" rx="0"/>
+<text x="870" y="513" font-family="Arial" font-size="23" font-weight="700" fill="#243642">R3 · полотенца</text>
+<text x="1190" y="513" font-family="Arial" font-size="20" font-weight="400" fill="#243642">X 650 / Y 2470 / Z 950</text>
+<text x="870" y="550" font-family="Arial" font-size="20" font-weight="400" fill="#5c707a">Подключение ниже сушителя; тип после выбора прибора.</text>
+<text x="870" y="616" font-family="Arial" font-size="23" font-weight="700" fill="#243642">L1 · потолок</text>
+<text x="1190" y="616" font-family="Arial" font-size="20" font-weight="400" fill="#243642">(900;1000) и (900;2100)</text>
+<text x="870" y="653" font-family="Arial" font-size="20" font-weight="400" fill="#5c707a">Защищённые светильники; мощность по светорасчёту.</text>
+<rect x="850" y="689" width="1080" height="95" fill="#f3f5f4" stroke="none" stroke-width="1" rx="0"/>
+<text x="870" y="719" font-family="Arial" font-size="23" font-weight="700" fill="#243642">L2 · зеркало</text>
+<text x="1190" y="719" font-family="Arial" font-size="20" font-weight="400" fill="#243642">Стороны зеркала, Z 1100–2100</text>
+<text x="870" y="756" font-family="Arial" font-size="20" font-weight="400" fill="#5c707a">Свет на лицо, отдельное управление / диммирование.</text>
+<text x="870" y="822" font-family="Arial" font-size="23" font-weight="700" fill="#243642">L3 · ночь</text>
+<text x="1190" y="822" font-family="Arial" font-size="20" font-weight="400" fill="#243642">Под тумбой, ориентир Z 350</text>
+<text x="870" y="859" font-family="Arial" font-size="20" font-weight="400" fill="#5c707a">Тёплый слабый свет; датчик с ночным режимом.</text>
+<rect x="850" y="895" width="1080" height="95" fill="#f3f5f4" stroke="none" stroke-width="1" rx="0"/>
+<text x="870" y="925" font-family="Arial" font-size="23" font-weight="700" fill="#243642">V · вентиляция</text>
+<text x="1190" y="925" font-family="Arial" font-size="20" font-weight="400" fill="#243642">Место существующего канала неизвестно</text>
+<text x="870" y="962" font-family="Arial" font-size="20" font-weight="400" fill="#5c707a">Проверить тягу, подключение, таймер и доступ.</text>
+<text x="870" y="1028" font-family="Arial" font-size="23" font-weight="700" fill="#243642">БП · подсветка</text>
+<text x="1190" y="1028" font-family="Arial" font-size="20" font-weight="400" fill="#243642">Размещение пока открыто</text>
+<text x="870" y="1065" font-family="Arial" font-size="20" font-weight="400" fill="#5c707a">Сухое доступное место; не замуровывать за потолком.</text>
+<rect x="50" y="1200" width="920" height="390" fill="#fff" stroke="#dce1e2" stroke-width="1" rx="0"/>
+<text x="75" y="1240" font-family="Arial" font-size="28" font-weight="700" fill="#243642">Сценарии</text>
+<text x="75" y="1273" font-family="Arial" font-size="19" font-weight="400" fill="#64747d">Свет для разных задач, управление независимо от вентиляции.</text>
+<text x="77" y="1320" font-family="Arial" font-size="22" font-weight="700" fill="#243642">Уборка / душ</text>
+<text x="342" y="1320" font-family="Arial" font-size="20" font-weight="400" fill="#243642">L1 + L2; яркость по выбранным приборам.</text>
+<text x="77" y="1383" font-family="Arial" font-size="22" font-weight="700" fill="#243642">У зеркала</text>
+<text x="342" y="1383" font-family="Arial" font-size="20" font-weight="400" fill="#243642">L2 + при необходимости L1.</text>
+<text x="77" y="1446" font-family="Arial" font-size="22" font-weight="700" fill="#243642">Ванна вечером</text>
+<text x="342" y="1446" font-family="Arial" font-size="20" font-weight="400" fill="#243642">L2 приглушённый + L3; без света прямо в глаза.</text>
+<text x="77" y="1509" font-family="Arial" font-size="22" font-weight="700" fill="#243642">Ночной вход</text>
+<text x="342" y="1509" font-family="Arial" font-size="20" font-weight="400" fill="#243642">Только L3; датчик не включает яркий общий свет.</text>
+<rect x="1000" y="1200" width="950" height="390" fill="#fff" stroke="#dce1e2" stroke-width="1" rx="0"/>
+<text x="1025" y="1240" font-family="Arial" font-size="28" font-weight="700" fill="#243642">Вода и обслуживание</text>
+<text x="1025" y="1273" font-family="Arial" font-size="19" font-weight="400" fill="#64747d">Сохраняем доступ к соединениям, вентилям и сифонам.</text>
+<text x="1027" y="1320" font-family="Arial" font-size="20" font-weight="400" fill="#243642">Ванна: доступ к сифону через съёмный экран / люк.</text>
+<text x="1027" y="1368" font-family="Arial" font-size="20" font-weight="400" fill="#243642">Инсталляция: обслуживание через штатное окно кнопки.</text>
+<text x="1027" y="1416" font-family="Arial" font-size="20" font-weight="400" fill="#243642">Машина: отдельный доступ к вентилю, сливу и розетке.</text>
+<text x="1027" y="1464" font-family="Arial" font-size="20" font-weight="400" fill="#243642">Гидроизоляция: пол, мокрые стены, ленты углов и манжеты.</text>
+<text x="1027" y="1512" font-family="Arial" font-size="20" font-weight="400" fill="#243642">Защита от протечки: датчики под ванной, тумбой и машиной.</text>
+<text x="60" y="1630" font-family="Arial" font-size="20" font-weight="400" fill="#956a25">В проект заложить PE и дифзащиту ≤ 30 мА; применимость схемы и допустимые зоны подтверждает электрик по нормам РК.</text>
+</svg>

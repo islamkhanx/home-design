@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1100" viewBox="0 0 2000 1100">
+<rect x="0" y="0" width="2000" height="1100" fill="#f5f3ee" stroke="none" stroke-width="1" rx="0"/>
+<text x="50" y="60" font-size="38" font-weight="700" fill="#354943">A3 / СВЕТ И ТОЧКИ ПИТАНИЯ</text>
+<text x="50" y="102" font-size="24" font-weight="400" fill="#354943">Концептуальная схема: группы и места потребителей. Не план для электромонтажа.</text>
+<rect x="50" y="125" width="1900" height="45" fill="#eee2c7" stroke="none" stroke-width="1" rx="0"/>
+<text x="66" y="156" font-size="21" font-weight="400" fill="#795c33">Расположение розеток, IP, защита линий и кабели — после обмеров и проверки применимых электрических зон.</text>
+<rect x="115.0" y="245.0" width="486.00000000000006" height="666.9000000000001" fill="#ded8cb" stroke="#354943" stroke-width="1" rx="0"/>
+<rect x="115.0" y="245.0" width="459.00000000000006" height="189.0" fill="#fafbf7" stroke="#354943" stroke-width="1" rx="12"/>
+<rect x="139.3" y="269.3" width="410.40000000000003" height="140.4" fill="#dce9e4" stroke="#354943" stroke-width="1" rx="18"/>
+<text x="263.5" y="347.6" font-size="24" font-weight="400" fill="#354943">ВАННА</text>
+<rect x="115.0" y="461.0" width="121.50000000000001" height="162.0" fill="#c4a57a" stroke="#354943" stroke-width="1" rx="0"/>
+<rect x="115.0" y="644.6" width="54.0" height="186.3" fill="#ded8cb" stroke="#354943" stroke-width="1" rx="0"/>
+<rect x="169.0" y="663.5" width="140.4" height="97.2" fill="#fafbf7" stroke="#354943" stroke-width="1" rx="19"/>
+<rect x="425.5" y="736.4000000000001" width="175.5" height="175.5" fill="#c4a57a" stroke="#354943" stroke-width="1" rx="0"/>
+<text x="444.40000000000003" y="809.3000000000001" font-size="18" font-weight="400" fill="#354943">КОЛОННА</text>
+<text x="452.5" y="841.7" font-size="18" font-weight="400" fill="#354943">со СМ</text>
+<rect x="115.0" y="830.9000000000001" width="81.0" height="81.0" fill="#a6b0a7" stroke="#354943" stroke-width="1" rx="0"/>
+<text x="120.4" y="874.1" font-size="17" font-weight="400" fill="#354943">СТ*</text>
+<path d="M115.00 245.00 L601.00 245.00" fill="none" stroke="#354943" stroke-width="4" stroke-dasharray=""/>
+<path d="M115.00 245.00 L115.00 911.90" fill="none" stroke="#354943" stroke-width="4" stroke-dasharray=""/>
+<path d="M115.00 911.90 L601.00 911.90" fill="none" stroke="#354943" stroke-width="4" stroke-dasharray=""/>
+<path d="M601.00 245.00 L601.00 474.50" fill="none" stroke="#354943" stroke-width="4" stroke-dasharray=""/>
+<path d="M601.00 717.50 L601.00 911.90" fill="none" stroke="#354943" stroke-width="4" stroke-dasharray=""/>
+<text x="619.9000000000001" y="582.5" font-size="20" font-weight="400" fill="#354943">ВХОД</text>
+<circle cx="358.0" cy="528.5" r="16" fill="#ffe4a0" stroke="#b48a42" stroke-width="2"/>
+<text x="382.3" y="537.95" font-size="20" font-weight="400" fill="#354943">G1a</text>
+<circle cx="371.5" cy="744.5" r="16" fill="#ffe4a0" stroke="#b48a42" stroke-width="2"/>
+<text x="395.8" y="753.95" font-size="20" font-weight="400" fill="#354943">G1b</text>
+<path d="M115.00 461.00 L115.00 623.00" fill="none" stroke="#bdd7d5" stroke-width="7" stroke-dasharray=""/>
+<circle cx="131.2" cy="462.62" r="7" fill="#e5b85b" stroke="none" stroke-width="1"/>
+<circle cx="131.2" cy="621.9200000000001" r="7" fill="#e5b85b" stroke="none" stroke-width="1"/>
+<text x="171.7" y="555.5" font-size="23" font-weight="700" fill="#354943">G2</text>
+<circle cx="595.6" cy="839.0" r="21" fill="#527d8c" stroke="none" stroke-width="1"/>
+<text x="583.6" y="846.0" font-size="19" font-weight="700" fill="#ffffff">R1</text>
+<circle cx="115.0" cy="636.5" r="21" fill="#b47844" stroke="none" stroke-width="1"/>
+<text x="103.0" y="643.5" font-size="19" font-weight="700" fill="#ffffff">R2</text>
+<circle cx="520.0" cy="901.1" r="21" fill="#527d8c" stroke="none" stroke-width="1"/>
+<text x="514.0" y="908.1" font-size="19" font-weight="700" fill="#ffffff">D</text>
+<circle cx="687.4000000000001" cy="728.3" r="21" fill="#527d8c" stroke="none" stroke-width="1"/>
+<text x="681.4000000000001" y="735.3" font-size="19" font-weight="700" fill="#ffffff">S</text>
+<path d="M115.00 223.00 L601.00 223.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M115.00 218.00 L115.00 228.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<path d="M601.00 218.00 L601.00 228.00" fill="none" stroke="#75837c" stroke-width="1.2" stroke-dasharray=""/>
+<text x="333.0" y="214" font-size="18" font-weight="400" fill="#354943">1800*</text>
+<text x="65" y="960" font-size="21" font-weight="400" fill="#354943">* 1800 × 2470 мм — условный контур.</text>
+<text x="65" y="993" font-size="21" font-weight="400" fill="#354943">Высоты розеток пока не назначены.</text>
+<text x="800" y="225" font-size="27" font-weight="700" fill="#354943">2 ГРУППЫ / 4 ИСТОЧНИКА</text>
+<rect x="800" y="250" width="62" height="39" fill="#354943" stroke="none" stroke-width="1" rx="4"/>
+<text x="812" y="277" font-size="22" font-weight="700" fill="#ffffff">G1</text>
+<text x="880" y="275" font-size="23" font-weight="700" fill="#354943">2 потолочные точки</text>
+<text x="880" y="308" font-size="21" font-weight="400" fill="#354943">Общий свет: вход, уборка, пользование санузлом.</text>
+<rect x="800" y="341" width="62" height="39" fill="#354943" stroke="none" stroke-width="1" rx="4"/>
+<text x="812" y="368" font-size="22" font-weight="700" fill="#ffffff">G2</text>
+<text x="880" y="366" font-size="23" font-weight="700" fill="#354943">2 вертикальные линии у зеркала</text>
+<text x="880" y="399" font-size="21" font-weight="400" fill="#354943">Отдельное включение и регулировка яркости.</text>
+<text x="800" y="585" font-size="27" font-weight="700" fill="#354943">ПИТАНИЕ И УПРАВЛЕНИЕ</text>
+<text x="800" y="632" font-size="24" font-weight="700" fill="#354943">R1</text>
+<text x="865" y="632" font-size="22" font-weight="400" fill="#354943">1 розетка СМ — в доступном отсеке колонны.</text>
+<text x="800" y="692" font-size="24" font-weight="700" fill="#354943">R2</text>
+<text x="865" y="692" font-size="22" font-weight="400" fill="#354943">Блок из 2 розеток у тумбы — кандидат, проверить зоны.</text>
+<text x="800" y="752" font-size="24" font-weight="700" fill="#354943">D</text>
+<text x="865" y="752" font-size="22" font-weight="400" fill="#354943">Место под драйверы G2 в верхнем отсеке колонны.</text>
+<text x="800" y="812" font-size="24" font-weight="700" fill="#354943">S</text>
+<text x="865" y="812" font-size="22" font-weight="400" fill="#354943">Управление 2 группами снаружи, со стороны коридора.</text>
+<text x="800" y="904" font-size="23" font-weight="700" fill="#354943">Доступ к драйверам — через дверцу шкафа.</text>
+<text x="800" y="941" font-size="21" font-weight="400" fill="#354943">Количество, мощность и охлаждение — по выбранным светильникам.</text>
+<text x="800" y="978" font-size="21" font-weight="400" fill="#354943">Предварительная трасса: потолок → отдельные спуски к точкам.</text>
+<text x="50" y="1052" font-size="22" font-weight="400" fill="#795c33">Вытяжка, полотенцесушитель и возможный бойлер: питание добавим после выбора их расположения.</text>
+</svg>
