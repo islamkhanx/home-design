@@ -32,6 +32,7 @@ try {
         output: out,
         view: get('--view') ?? 'dollhouse',
         lighting: get('--lighting') ?? 'day',
+        room: get('--room') ?? 'all',
       })
   await launchBlender({
     ...files,

@@ -63,24 +63,25 @@ import { basinGeometry } from '../src/scene/basin.ts'
 test('orthographic framing contains visible geometry on portrait and wide displays', async () => {
   const a = seed(),
     root = await buildCanonical(a)
-  for (const mode of ['dollhouse', 'plan'] as const) {
-    applyVisibility(root, a, 'bathroom', mode, true)
-    for (const aspect of [0.45, 1, 16 / 9, 2.4]) {
-      const camera = makeCamera(fitOrthographic(presets(root)[mode], root, aspect), aspect)
-      camera.updateMatrixWorld(true)
-      const bounds = new T.Box3()
-      root.children.filter((o) => o.visible).forEach((o) => bounds.expandByObject(o))
-      for (const x of [bounds.min.x, bounds.max.x])
-        for (const y of [bounds.min.y, bounds.max.y])
-          for (const z of [bounds.min.z, bounds.max.z]) {
-            const point = new T.Vector3(x, y, z).project(camera)
-            assert.ok(
-              Math.abs(point.x) < 1 && Math.abs(point.y) < 1,
-              `${mode}/${aspect}: clipped geometry`,
-            )
-          }
+  for (const room of ['all', ...a.rooms.filter((r) => r.polygon).map((r) => r.id)])
+    for (const mode of ['dollhouse', 'plan'] as const) {
+      applyVisibility(root, a, room, mode, true)
+      for (const aspect of [0.45, 1, 16 / 9, 2.4]) {
+        const camera = makeCamera(fitOrthographic(presets(root)[mode], root, aspect), aspect)
+        camera.updateMatrixWorld(true)
+        const bounds = new T.Box3()
+        root.children.filter((o) => o.visible).forEach((o) => bounds.expandByObject(o))
+        for (const x of [bounds.min.x, bounds.max.x])
+          for (const y of [bounds.min.y, bounds.max.y])
+            for (const z of [bounds.min.z, bounds.max.z]) {
+              const point = new T.Vector3(x, y, z).project(camera)
+              assert.ok(
+                Math.abs(point.x) < 1 && Math.abs(point.y) < 1,
+                `${mode}/${aspect}: clipped geometry`,
+              )
+            }
+      }
     }
-  }
   disposeTree(root)
 })
 test('ceramic basin has a genuine recessed floor and stays within its envelope', () => {

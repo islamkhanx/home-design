@@ -1,5 +1,6 @@
 /** Browser-free export of the same canonical geometry and procedural texture pixels. */
 import * as T from 'three'
+import { renderNotice } from '../src/scene/provenance.ts'
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js'
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
@@ -109,8 +110,9 @@ export async function exportHeadlessScene({
   output = path.join(projectRoot, 'exports/latest'),
   view = 'dollhouse',
   lighting = 'day',
+  room = 'all',
 } = {}) {
-  if (!['dollhouse', 'interior', 'plan', 'free'].includes(view)) throw new Error('Unknown view')
+  if (!['dollhouse', 'interior', 'plan', 'free', 'ceiling', 'electrical'].includes(view)) throw new Error('Unknown view')
   if (!['day', 'clean', 'evening'].includes(lighting)) throw new Error('Unknown lighting')
   const a = parseApartment(
     JSON.parse(await readFile(input ?? path.join(projectRoot, 'src/data/apartment.json'), 'utf8')),
@@ -119,9 +121,10 @@ export async function exportHeadlessScene({
     throw new Error(
       'File textures require the browser exporter; headless mode supports the shared procedural materials.',
     )
-  const root = await buildCanonical(a),
-    room = a.rooms.find((r) => r.polygon)?.id ?? 'all'
-  applyVisibility(root, a, room, view, true)
+  if (room !== 'all' && !a.rooms.some((r) => r.id === room && r.polygon))
+    throw new Error('Unknown room')
+  const root = await buildCanonical(a)
+  applyVisibility(root, a, room, view, false)
   updateEmitters(root, a, lightingSpecs(a, room, lighting))
   // GLTFExporter only requires FileReader to convert its completed Blob to binary in Node.
   const original = globalThis.FileReader
@@ -143,6 +146,8 @@ export async function exportHeadlessScene({
       sourceRevision: a.revision,
       sourceHash: createHash('sha256').update(JSON.stringify(a)).digest('hex'),
       sourceApartment: a,
+      renderNotice: renderNotice(a, room),
+      roomId: room,
       camera: fitOrthographic(presets(root)[view], root, 16 / 9),
       cameraPresets: presets(root),
       visibleEntityIds: visibleEntities(root),
@@ -175,6 +180,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     output: get('--output'),
     view: get('--view'),
     lighting: get('--lighting'),
+    room: get('--room'),
   })
     .then((r) => console.log(`Exported ${r.parts} canonical mesh parts to ${r.output}`))
     .catch((e) => {

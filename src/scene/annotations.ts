@@ -2,6 +2,7 @@ import * as T from 'three'
 import type { Apartment } from '../domain/schema.ts'
 import { mm } from '../domain/math.ts'
 import { polygonArea } from '../domain/math.ts'
+import { dimensionGuides } from './dimensions.ts'
 function label(text: string, position: T.Vector3) {
   const c = document.createElement('canvas')
   c.width = 640
@@ -15,10 +16,11 @@ function label(text: string, position: T.Vector3) {
   x.fillStyle = '#163b43'
   x.fillText(text, 320, 50)
   const map = new T.CanvasTexture(c),
-    sprite = new T.Sprite(new T.SpriteMaterial({ map, depthTest: false, transparent: true }))
+    sprite = new T.Sprite(new T.SpriteMaterial({ map, depthTest: false, depthWrite: false, transparent: true }))
   sprite.position.copy(position)
   sprite.scale.set(0.66, 0.103, 1)
   sprite.renderOrder = 1000
+  sprite.userData.label = text
   return sprite
 }
 export function makeAnnotations(
@@ -26,8 +28,26 @@ export function makeAnnotations(
   room: string,
   root: T.Group,
   selected?: string | null,
+  ceiling = false,
 ) {
   const g = new T.Group()
+  g.name = 'dimensions'
+  const guides = dimensionGuides(a, room, ceiling)
+  for (const guide of guides) {
+    const material = new T.LineBasicMaterial({ color: '#216c76', depthTest: false, depthWrite: false })
+    const start = new T.Vector3(...guide.start), end = new T.Vector3(...guide.end)
+    const tick = new T.Vector3(0, 1, 0).cross(end.clone().sub(start).normalize()).multiplyScalar(0.055)
+    const points = [start, end,
+      new T.Vector3(...guide.wallStart), start, new T.Vector3(...guide.wallEnd), end,
+      start.clone().sub(tick), start.clone().add(tick), end.clone().sub(tick), end.clone().add(tick)]
+    const line = new T.LineSegments(new T.BufferGeometry().setFromPoints(points), material)
+    line.renderOrder = 999
+    const mark = label(`${Math.round(guide.millimeters)} мм`, new T.Vector3(...guide.label))
+    mark.userData.dimension = true
+    mark.userData.roomId = guide.roomId
+    if (room === 'all') mark.scale.multiplyScalar(1.45)
+    g.add(line, mark)
+  }
   for (const e of a.objects) {
     if (e.visible === false || (room !== 'all' && e.roomId !== room)) continue
     const start = new T.Vector3(...(e.position.map(mm) as [number, number, number]))
@@ -44,6 +64,7 @@ export function makeAnnotations(
       continue
     }
     if (e.kind !== 'DimensionLine' || !e.params?.end) continue
+    if (guides.some((guide) => guide.roomId === e.roomId)) continue
     const end = new T.Vector3(...(e.params.end.map(mm) as [number, number, number]))
     if (e.params.measure) {
       const object = root.children.find((v) => v.userData.entityId === e.params!.measure!.entityId)
@@ -98,4 +119,20 @@ export function makeAnnotations(
       )
   }
   return g
+}
+
+export function makeElectricalAnnotations(a: Apartment, room: string, root: T.Group) {
+  const group = new T.Group()
+  for (const e of a.objects.filter((o) => o.electrical && (room === 'all' || o.roomId === room))) {
+    if (!root.children.some((o) => o.visible && o.userData.entityId === e.id)) continue
+    const p = new T.Vector3(
+      e.position[0] / 1000,
+      (e.position[1] + e.size[1] / 2 + 160) / 1000,
+      e.position[2] / 1000,
+    )
+    const mark = label(`${e.id} · h ${Math.round(e.position[1] + e.size[1] / 2)}`, p)
+    mark.scale.set(0.7, 0.11, 1)
+    group.add(mark)
+  }
+  return group
 }

@@ -1,4 +1,5 @@
 import * as T from 'three'
+import { renderNotice } from './provenance.ts'
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import type { Apartment } from '../domain/schema.ts'
@@ -41,6 +42,8 @@ export async function exportScene(
     sourceRevision: a.revision,
     sourceHash: hash,
     sourceApartment: a,
+    renderNotice: renderNotice(a, room),
+    roomId: room,
     camera,
     cameraPresets: presets(root),
     visibleEntityIds: visibleEntities(root),

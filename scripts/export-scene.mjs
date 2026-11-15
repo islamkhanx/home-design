@@ -8,6 +8,7 @@ export async function exportBrowserScene({
   output = path.join(projectRoot, 'exports/latest'),
   view = 'dollhouse',
   lighting = 'day',
+  room = 'all',
 } = {}) {
   loadLocalEnv()
   const { createServer } = await import('vite'),
@@ -41,6 +42,7 @@ export async function exportBrowserScene({
       await page.evaluate((a) => window.__HOME_DESIGN__.setModel(a), json)
       await page.waitForFunction(() => window.__HOME_DESIGN__.ready)
     }
+    await page.evaluate((r) => window.__HOME_DESIGN__.setRoom(r), room)
     await page.evaluate((v) => window.__HOME_DESIGN__.setView(v), view)
     await page.evaluate((value) => window.__HOME_DESIGN__.setLighting(value), lighting)
     const payload = await page.evaluate(() => window.__HOME_DESIGN__.export())
@@ -79,6 +81,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     output: get('--output'),
     view: get('--view') ?? 'dollhouse',
     lighting: get('--lighting') ?? 'day',
+    room: get('--room') ?? 'all',
   })
     .then((r) => console.log('Exported ' + r.parts + ' mesh parts to ' + r.output))
     .catch((e) => {

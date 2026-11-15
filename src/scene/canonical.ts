@@ -4,13 +4,21 @@ import type { Apartment } from '../domain/schema.ts'
 import { parseApartment } from '../domain/schema.ts'
 import { createEntity } from './components.ts'
 import { buildMaterials, applyMetricUVs } from './materials.ts'
-export type ViewMode = 'dollhouse' | 'plan' | 'interior' | 'free'
+export type ViewMode = 'dollhouse' | 'plan' | 'interior' | 'free' | 'ceiling' | 'electrical'
 export async function buildCanonical(input: Apartment): Promise<T.Group> {
   const a = parseApartment(input),
     materials = await buildMaterials(a.materials),
     root = new T.Group()
   root.name = 'canonical-apartment'
-  root.userData = { schemaVersion: 1, revision: a.revision, units: 'm', sourceUnits: 'mm' }
+  root.userData = {
+    schemaVersion: 1,
+    revision: a.revision,
+    units: 'm',
+    sourceUnits: 'mm',
+    interiorCameras: Object.fromEntries(
+      a.rooms.filter((r) => r.interiorCamera).map((r) => [r.id, r.interiorCamera]),
+    ),
+  }
   for (const e of a.objects)
     if (!['DimensionLine', 'RoomLabel'].includes(e.kind)) root.add(createEntity(e, a, materials))
   root.updateMatrixWorld(true)
@@ -23,22 +31,29 @@ export function applyVisibility(
   room: string,
   mode: ViewMode,
   cutaway: boolean,
+  showCeilings = false,
 ) {
+  const hostWalls = new Set(a.objects.filter((e) => e.electrical && (room === 'all' || e.roomId === room)).map((e) => e.electrical!.wallId))
   for (const g of root.children) {
     const e = a.objects.find((o) => o.id === g.userData.entityId)!
-    g.visible =
-      e.visible !== false &&
-      (room === 'all' || e.roomId === room) &&
-      !(
-        mode === 'plan' &&
-        (e.kind === 'Ceiling' || ['Spotlight', 'TrackLight', 'Pendant'].includes(e.kind))
-      ) &&
-      !(cutaway && mode === 'interior' && e.kind === 'Door') &&
-      !(
-        cutaway &&
-        mode === 'dollhouse' &&
-        (e.cutaway === true || ['Spotlight', 'TrackLight', 'Pendant'].includes(e.kind))
-      )
+    const inRoom = room === 'all' || e.roomId === room || (e.sharedWith?.includes(room) ?? false) || hostWalls.has(e.id)
+    const ceilingPart = ['Ceiling', 'Spotlight', 'TrackLight', 'Pendant'].includes(e.kind)
+    let shown = true
+    if (mode === 'ceiling') shown = ceilingPart
+    else if (mode === 'electrical')
+      shown =
+        ['Floor', 'Wall', 'Window', 'Socket', 'Switch'].includes(e.kind)
+    else if (mode === 'plan') shown = !ceilingPart
+    else if (mode === 'dollhouse' || mode === 'free')
+      shown = e.kind === 'Ceiling' ? showCeilings : !(cutaway && e.cutaway)
+    g.visible = e.visible !== false && inRoom && shown
+  }
+  // Wall-mounted details must never remain suspended after a wall is hidden.
+  const visible = new Set(root.children.filter((g) => g.visible).map((g) => g.userData.entityId))
+  for (const g of root.children) {
+    const e = a.objects.find((o) => o.id === g.userData.entityId)!
+    const wallId = e.electrical?.wallId ?? e.attach?.wallId
+    if (wallId && !visible.has(wallId)) g.visible = false
   }
 }
 export function disposeTree(root: Object3D) {

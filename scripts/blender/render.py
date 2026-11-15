@@ -20,7 +20,8 @@ def configure_device(mode):
                 for d in prefs.devices:d.use=d in devices
                 scene.cycles.device='GPU';return backend
         except (TypeError,RuntimeError):pass
-    if mode=='gpu':raise RuntimeError('GPU requested, but no supported Cycles GPU was found.')
+    if mode=='gpu':raise RuntimeError('GPU requested, but this Blender process detected no supported Cycles GPU. On Apple Silicon, check Metal device access and try launching from your normal Terminal. CPU fallback is disabled.')
+    print('CYCLES_DEVICE_WARNING: No supported GPU detected by this process; automatic CPU fallback.',flush=True)
     scene.cycles.device='CPU';return 'CPU'
 def verify_geometry(meta):
     expected={p['id']:p for p in meta['geometry']}
@@ -87,6 +88,10 @@ def configure_lighting(meta):
         if meta['camera']['type']=='perspective':
             rig=[([hi[0]-.2,hi[1]-.2,center[2]], [lo[0],1,center[2]],100,1.2),
                  ([center[0],hi[1]-.25,lo[2]+.5],[center[0],0,center[2]],70,.8)]
+        elif meta['camera']['position'][1] < lo[1] and meta['camera']['target'][1] > meta['camera']['position'][1]:
+            # The ceiling review is seen from below; illuminate its visible underside.
+            rig=[([center[0]+span*.4,lo[1]-span*.65,center[2]+span*.3],center,650,span),
+                 ([center[0]-span*.4,lo[1]-span*.4,center[2]-span*.3],center,300,span*.8)]
         else:
             rig=[([center[0]+span,hi[1]+span,center[2]+span],center,450,span*1.2),
                  ([center[0]-span,hi[1],center[2]-span],center,180,span),
@@ -139,12 +144,24 @@ def main():
     try:scene.view_settings.view_transform='AgX'
     except TypeError:scene.view_settings.view_transform='Standard'
     camera_from_metadata(meta['camera'],width,height);configure_lighting(meta)
+    notice=meta.get('renderNotice',[])
+    if notice:
+        # Native render stamp is burned into PNGs, independent of the web interface.
+        for key in ('time','date','render_time','frame','frame_range','memory','hostname','camera','lens','scene','marker','filename','sequencer_strip'):
+            attr='use_stamp_'+key
+            if hasattr(scene.render,attr):setattr(scene.render,attr,False)
+        scene.render.use_stamp=True;scene.render.use_stamp_note=True
+        scene.render.use_stamp_labels=False
+        scene.render.stamp_note_text=' | '.join(notice)
+        scene.render.stamp_font_size=max(13,round(width/74))
+        scene.render.stamp_foreground=(.18,.23,.16,1)
+        scene.render.stamp_background=(.96,.95,.91,.94)
     device=configure_device(args.device);print('CYCLES_DEVICE '+device,flush=True)
     try:bpy.ops.render.render(write_still=True)
     except RuntimeError:
         if args.device!='auto' or device=='CPU':raise
         scene.cycles.device='CPU';device='CPU (GPU render failed; automatic fallback)';bpy.ops.render.render(write_still=True)
-    (output.parent/'render-report.json').write_text(json.dumps({'preset':args.preset,'device':device,'resolution':[width,height],'samplesLimit':samples,'sourceHash':meta['sourceHash'],'sourceRevision':meta['sourceRevision'],'geometry':result,'textures':[i.name for i in bpy.data.images],'lightingPreset':meta['lightingPreset'],'colorManagement':scene.view_settings.view_transform,'bitDepth':scene.render.image_settings.color_depth,'lightCount':sum(o.type=='LIGHT' for o in scene.objects)},indent=2))
+    (output.parent/'render-report.json').write_text(json.dumps({'renderNotice':notice,'preset':args.preset,'device':device,'resolution':[width,height],'samplesLimit':samples,'sourceHash':meta['sourceHash'],'sourceRevision':meta['sourceRevision'],'geometry':result,'textures':[i.name for i in bpy.data.images],'lightingPreset':meta['lightingPreset'],'colorManagement':scene.view_settings.view_transform,'bitDepth':scene.render.image_settings.color_depth,'lightCount':sum(o.type=='LIGHT' for o in scene.objects)},indent=2))
     print('RENDER_COMPLETE '+str(output),flush=True)
 if __name__=='__main__':
     try:main()

@@ -41,6 +41,13 @@ try {
     await page.getByRole('button', { name: /Export|Удалить|Добавить|PERFECT/ }).count(),
     0,
   )
+  assert.ok(
+    await page
+      .getByRole('note')
+      .innerText()
+      .then((text) => text.includes('Интерьер сгенерирован автоматически')),
+  )
+  await page.getByRole('button', { name: 'Санузел', exact: true }).click()
   const sourceBefore = await page.evaluate(() => JSON.stringify(window.__HOME_DESIGN__.model))
   for (const [label, type] of [
     ['План', 'orthographic'],
@@ -64,6 +71,14 @@ try {
     sourceBefore,
     'View controls must not change the design',
   )
+  for (const room of ['Спальня', 'Гостиная', 'Кухня-ниша', 'Коридор', 'Лоджия', 'Вся квартира']) {
+    await page.getByRole('button', { name: room, exact: true }).click()
+    assert.equal(
+      await page.getByRole('button', { name: room, exact: true }).getAttribute('aria-pressed'),
+      'true',
+    )
+    await page.screenshot({ path: path.join(out, room + '.png') })
+  }
   const payload = await page.evaluate(() => window.__HOME_DESIGN__.export()),
     glb = Buffer.from(payload.glb, 'base64')
   validateBundle(glb, payload.metadata)

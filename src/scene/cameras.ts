@@ -19,12 +19,34 @@ export function presets(root: T.Group): Record<ViewMode, CameraSpec> {
     span = Math.max(s.x, s.z, 2) * 1.4
   const common = { fov: 66, verticalSpan: span, near: 0.02, far: 200, up: [0, 1, 0] }
   const target = [c.x, c.y, c.z]
+  const floors = root.children.filter((o) => o.visible && o.userData.kind === 'Floor')
+  const wholeHome = floors.length > 1
+  const interior = wholeHome
+    ? undefined
+    : root.userData.interiorCameras?.[floors[0]?.userData.roomId]
   return {
     dollhouse: {
       ...common,
       type: 'orthographic',
-      position: [c.x + span * 1.5, c.y + span * 0.8, c.z - span * 0.25],
+      position: wholeHome
+        ? [c.x + span, c.y + span * 1.5, c.z + span]
+        : interior
+          ? [c.x + span * 0.65, c.y + span * 2.2, c.z + span]
+          : [c.x + span * 1.5, c.y + span * 0.8, c.z - span * 0.25],
       target,
+    },
+    electrical: {
+      ...common,
+      type: 'orthographic',
+      position: [c.x + span, c.y + span * 1.4, c.z + span],
+      target,
+    },
+    ceiling: {
+      ...common,
+      type: 'orthographic',
+      position: [c.x, b.min.y - span * 2, c.z],
+      target,
+      up: [0, 0, 1],
     },
     plan: {
       ...common,
@@ -36,8 +58,16 @@ export function presets(root: T.Group): Record<ViewMode, CameraSpec> {
     interior: {
       ...common,
       type: 'perspective',
-      position: [b.min.x + s.x * 0.91, Math.min(1.55, b.max.y - 0.1), b.min.z + s.z * 0.65],
-      target: [b.min.x + s.x * 0.17, 1.25, b.min.z + s.z * 0.34],
+      position: interior?.position.map((n: number) => n / 1000) ?? [
+        b.min.x + s.x * 0.91,
+        Math.min(1.55, b.max.y - 0.1),
+        b.min.z + s.z * 0.65,
+      ],
+      target: interior?.target.map((n: number) => n / 1000) ?? [
+        b.min.x + s.x * 0.17,
+        1.25,
+        b.min.z + s.z * 0.34,
+      ],
     },
     free: {
       ...common,

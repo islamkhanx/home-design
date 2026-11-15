@@ -96,6 +96,10 @@ Do not stop at a scaffold. Deliver the interactive viewer and offline rendering 
 
 **Core rule: Edit once, visualize instantly with Three.js, and produce final architectural images using Blender Cycles without remodeling the apartment.**
 
+## Publishing
+
+Keep generated images, design drawings, videos, Blender scenes and render exports local by default. Do not stage or push new or modified media unless the user explicitly requests it. Existing tracked media is not automatically excluded by `.gitignore`; inspect the staged paths before every push. Publish source code, model data, tests and documentation without generated media.
+
 ## Design continuity
 
 Read `docs/PROJECT_CONTEXT.md` and `docs/bathroom-spec.json` before proposing changes. Preserve confirmed A3/M1/T1/U1/D2 choices. Do not restore night lighting. Keep proposals separate from decisions. Design studies are inside `design/bathroom-v01`; do not depend on a sibling workspace folder. The app demo is not yet synchronized with all later design decisions; disclose this until integration is complete. Never infer actual wall lengths or quantities from room area alone.

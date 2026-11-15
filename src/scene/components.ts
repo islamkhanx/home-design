@@ -13,7 +13,13 @@ export function createEntity(
 ): T.Group {
   const g = new T.Group()
   g.name = e.id
-  g.userData = { entityId: e.id, kind: e.kind, roomId: e.roomId, evidence: e.evidence }
+  g.userData = {
+    entityId: e.id,
+    kind: e.kind,
+    roomId: e.roomId,
+    evidence: e.evidence,
+    generated: e.generated ?? false,
+  }
   g.position.set(...(e.position.map(mm) as [number, number, number]))
   g.rotation.set(...(e.rotation.map(deg) as [number, number, number]))
   const [w, h, d] = e.size.map(mm),
@@ -104,7 +110,25 @@ export function createEntity(
         )
       }
   }
-  if (e.kind === 'Wall' && e.wall) {
+  if (e.kind === 'Socket' || e.kind === 'Switch') {
+    const count = e.electrical?.gangs ?? 1
+    box(w, h, d - 0.006, 0, h / 2, -0.003, material)
+    const face = d / 2 - 0.005
+    const dark = materials.get('ink') ?? metal
+    for (let i = 0; i < count; i++) {
+      const x = (i - (count - 1) / 2) * 0.071
+      if (e.kind === 'Switch') {
+        box(0.053, 0.056, 0.004, x, h / 2, face + 0.002, white)
+        box(0.018, 0.002, 0.001, x, h * 0.3, face + 0.0045, dark)
+      } else {
+        mesh(new T.CircleGeometry(0.022, 24), white, x, h / 2, face + 0.0005)
+        for (const dx of [-0.009, 0.009])
+          mesh(new T.CircleGeometry(0.003, 12), dark, x + dx, h / 2, face + 0.001)
+        box(0.004, 0.007, 0.002, x, h / 2 + 0.02, face + 0.002, metal)
+        box(0.004, 0.007, 0.002, x, h / 2 - 0.02, face + 0.002, metal)
+      }
+    }
+  } else if (e.kind === 'Wall' && e.wall) {
     const v = e.wall,
       dx = v.end[0] - v.start[0],
       dz = v.end[1] - v.start[1],

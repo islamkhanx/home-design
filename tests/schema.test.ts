@@ -7,7 +7,7 @@ const seed = () =>
 test('seed validates, does not claim measured lengths', () => {
   const a = parseApartment(seed())
   assert.equal(a.documentedArea, 45.99)
-  assert.equal(a.rooms.filter((r) => r.polygon).length, 1)
+  assert.equal(a.rooms.filter((r) => r.polygon).length, 6)
   assert.ok(a.objects.every((o) => o.evidence === 'assumed'))
   assert.ok(dimensionWarnings(a).length > 0)
 })

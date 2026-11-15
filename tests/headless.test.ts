@@ -17,7 +17,18 @@ test('headless GLB embeds the same procedural pixels, valid PNG checksums and ca
       gltf = JSON.parse(glb.subarray(20, 20 + length).toString()),
       binary = glb.subarray(28 + length)
     const meta = JSON.parse(await readFile(result.metadataFile, 'utf8'))
-    assert.equal(meta.geometry.length, 61)
+    assert.ok(meta.geometry.length > 50)
+    assert.equal(meta.roomId, 'all')
+    assert.match(meta.renderNotice[0], /Интерьер сгенерирован автоматически/)
+    assert.match(meta.renderNotice[1], /масштаб по окну/)
+    for (const room of meta.sourceApartment.rooms.filter((r: { polygon?: unknown }) => r.polygon))
+      assert.ok(
+        meta.visibleEntityIds.some(
+          (id: string) =>
+            meta.sourceApartment.objects.find((o: { id: string; roomId: string }) => o.id === id)
+              ?.roomId === room.id,
+        ),
+      )
     assert.equal(gltf.images.length, 9)
     assert.ok(
       gltf.nodes

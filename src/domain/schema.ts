@@ -1,6 +1,8 @@
 import { polygonArea, selfIntersects, pointInPolygon, ringsIntersect } from './math.ts'
 import type { V2, V3, Opening } from './math.ts'
 export const kinds = [
+  'Socket',
+  'Switch',
   'Wall',
   'Floor',
   'Ceiling',
@@ -55,6 +57,16 @@ export interface Entity {
   size: V3
   material: string
   evidence: Evidence
+  generated?: boolean
+  electrical?: {
+    wallId: string
+    offset: number
+    side: 1 | -1
+    gangs: number
+    purpose: string
+    controls: string[]
+  }
+  sharedWith?: string[]
   note?: string
   visible?: boolean
   cutaway?: boolean
@@ -68,7 +80,7 @@ export interface Entity {
     appliance?: 'washer' | 'fridge' | 'oven' | 'dishwasher'
     lumens?: number
     color?: string
-    group?: 'general' | 'mirror' | 'night'
+    group?: 'general' | 'mirror' | 'accent' | 'night'
     intensity?: number
     text?: string
     end?: V3
@@ -79,10 +91,12 @@ export interface Room {
   id: string
   name: string
   documentedArea: number
+  interiorCamera?: { position: V3; target: V3 }
   polygon?: V2[]
   height?: number
   evidence: Evidence
   note: string
+  generated?: boolean
 }
 export interface Apartment {
   schemaVersion: 1
@@ -95,6 +109,16 @@ export interface Apartment {
   rooms: Room[]
   materials: MaterialDef[]
   objects: Entity[]
+  sourcePlan?: {
+    id: string
+    page: number
+    sha256: string
+    method: string
+    referenceLengthMm: number
+    referencePixels: number
+    note: string
+  }
+  generation?: { generator: string; version: number; label: string; note: string }
 }
 function finite(n: unknown): n is number {
   return typeof n === 'number' && Number.isFinite(n) && Math.abs(n) <= 1e7
@@ -160,7 +184,20 @@ export function validateApartment(input: unknown): string[] {
   const ids = new Set<string>(),
     rooms = new Set(a.rooms.map((r) => r.id)),
     mats = new Set(a.materials.map((m) => m.id))
+  if (
+    a.generation &&
+    (typeof a.generation.generator !== 'string' ||
+      !Number.isInteger(a.generation.version) ||
+      typeof a.generation.label !== 'string' ||
+      typeof a.generation.note !== 'string')
+  )
+    errors.push('Invalid generation provenance.')
   for (const r of a.rooms) {
+    if (
+      r.interiorCamera &&
+      (!vector(r.interiorCamera.position, 3) || !vector(r.interiorCamera.target, 3))
+    )
+      errors.push(r.id + ': invalid interior camera.')
     if (r.polygon && !polygon(r.polygon)) errors.push(r.id + ': invalid room polygon.')
     if (!['assumed', 'measured', 'manufacturer'].includes(r.evidence))
       errors.push(r.id + ': missing dimensional provenance.')
@@ -190,6 +227,26 @@ export function validateApartment(input: unknown): string[] {
       continue
     }
     ids.add(o.id)
+    if (['Socket', 'Switch'].includes(o.kind)) {
+      const p = o.electrical,
+        host = a.objects.find((e) => e.id === p?.wallId)
+      if (
+        !p ||
+        !host?.wall ||
+        !finite(p.offset) ||
+        ![1, -1].includes(p.side) ||
+        !Number.isInteger(p.gangs) ||
+        p.gangs < 1 ||
+        p.gangs > 4 ||
+        typeof p.purpose !== 'string' ||
+        !Array.isArray(p.controls) ||
+        p.controls.some((id) => !a.objects.some((e) => e.id === id && e.params?.lumens))
+      )
+        errors.push(o.id + ': invalid electrical point.')
+    }
+
+    if (o.sharedWith && (!Array.isArray(o.sharedWith) || o.sharedWith.some((id) => !rooms.has(id))))
+      errors.push(o.id + ': unknown shared room.')
     if (
       !kinds.includes(o.kind) ||
       !rooms.has(o.roomId) ||

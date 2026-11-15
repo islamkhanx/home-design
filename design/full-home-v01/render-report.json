@@ -1,0 +1,37 @@
+{
+  "renderNotice": [
+    "\u0421\u0433\u0435\u043d\u0435\u0440\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u0435\u0441\u043a\u0438",
+    "\u042d\u0441\u043a\u0438\u0437 \u00b7 \u0440\u0430\u0437\u043c\u0435\u0440\u044b \u0443\u0441\u043b\u043e\u0432\u043d\u044b\u0435 \u00b7 \u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044f \u043e\u0431\u043c\u0435\u0440"
+  ],
+  "preset": "preview",
+  "device": "CPU",
+  "resolution": [
+    960,
+    540
+  ],
+  "samplesLimit": 32,
+  "sourceHash": "e47dc905ad77ae7d8eddfa812723bbcf2ad714d4aa50c50a6c66ac4d6df7b0e4",
+  "sourceRevision": 4,
+  "geometry": {
+    "passed": true,
+    "meshParts": 385,
+    "maxBoundsErrorMeters": 9.5367431640625e-07,
+    "toleranceMeters": 0.0001
+  },
+  "textures": [
+    "floor-stone-color",
+    "floor-stone-normal",
+    "floor-stone-roughness",
+    "oak-color",
+    "oak-normal",
+    "oak-roughness",
+    "Render Result",
+    "stone-color",
+    "stone-normal",
+    "stone-roughness"
+  ],
+  "lightingPreset": "day",
+  "colorManagement": "AgX",
+  "bitDepth": "8",
+  "lightCount": 3
+}

@@ -2,6 +2,7 @@ import { randomBytes, randomUUID } from 'node:crypto'
 import { mkdir, writeFile, readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { detectBlender, launchBlender, projectRoot, PRESETS } from './blender-runtime.mjs'
+import { tourService } from './tour-service.mjs'
 export function validateBundle(glb, metadata) {
   if (
     !Buffer.isBuffer(glb) ||
@@ -39,6 +40,7 @@ export function validateBundle(glb, metadata) {
   return true
 }
 export function localRenderPlugin(env = process.env) {
+  const handleTour=tourService()
   const token = randomBytes(32).toString('hex'),
     jobs = new Map()
   let active = null
@@ -77,6 +79,9 @@ export function localRenderPlugin(env = process.env) {
           }
           if (req.method === 'POST' && req.headers['x-render-token'] !== token)
             return send(res, 403, { error: 'Invalid local render token.' })
+          if (pathname.startsWith('/__local/tour/') && active && req.method === 'POST')
+            return send(res, 409, { error: 'A still render is already running.' })
+          if (await handleTour(req,res,pathname,send)) return
           if (pathname === '/__local/render' && req.method === 'POST') {
             if (active) return send(res, 409, { error: 'A render is already running.' })
             let size = 0,

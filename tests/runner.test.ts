@@ -100,6 +100,7 @@ test('runner rejects remote hosts, cross origins and missing token', async () =>
     403,
   )
   const status = await request('/__local/status', { host: 'localhost:5173' })
+  assert.equal((await request('/__local/tour/start', { host: 'localhost:5173' }, 'POST', '{}')).code,403)
   assert.equal(status.code, 200)
   assert.equal(status.data.available, false)
   assert.equal(status.data.token.length, 64)

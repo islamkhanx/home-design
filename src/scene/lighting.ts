@@ -53,7 +53,13 @@ export function lightingSpecs(a: Apartment, room: string, preset: LightingPreset
       continue
     const group = e.params?.group ?? 'general'
     const factor =
-      group === 'night' ? 0 : preset === 'evening' ? (group === 'mirror' ? 0.28 : 0) : 1
+      group === 'night'
+        ? 0
+        : preset === 'evening'
+          ? group === 'mirror' || group === 'accent'
+            ? 0.28
+            : 0
+          : 1
     if (!factor) continue
     const q = new T.Quaternion().setFromEuler(
         new T.Euler(...(e.rotation.map(deg) as [number, number, number])),
@@ -81,7 +87,7 @@ export function lightingSpecs(a: Apartment, room: string, preset: LightingPreset
 }
 // Photographic exposure normalization for FAST. This is a visual preview, not a lux meter.
 export const FAST_LIGHT_GAIN = 0.055
-export function makeLighting(specs: LightSpec[], preset: LightingPreset) {
+export function makeLighting(specs: LightSpec[], preset: LightingPreset, underside = false) {
   const g = new T.Group()
   g.name = 'presentation-lighting'
   g.add(
@@ -93,7 +99,7 @@ export function makeLighting(specs: LightSpec[], preset: LightingPreset) {
   )
   if (preset === 'day') {
     const key = new T.DirectionalLight('#fff7e8', 2.6)
-    key.position.set(2.8, 5.5, 4.2)
+    key.position.set(2.8, underside ? -4 : 5.5, 4.2)
     key.target.position.set(0.8, 0.6, 1)
     key.castShadow = true
     key.shadow.mapSize.set(2048, 2048)
@@ -107,7 +113,7 @@ export function makeLighting(specs: LightSpec[], preset: LightingPreset) {
     key.shadow.camera.far = 15
     g.add(key, key.target)
     const fill = new T.DirectionalLight('#e9eff8', 0.8)
-    fill.position.set(-2, 2, -2)
+    fill.position.set(-2, underside ? -2 : 2, -2)
     g.add(fill)
   }
   let shadows = 0

@@ -17,7 +17,8 @@ import type { ViewMode } from '../scene/canonical.ts'
 import { makeCamera, presets, snapshotCamera, fitOrthographic } from '../scene/cameras.ts'
 import { makeLighting, lightingSpecs, updateEmitters } from '../scene/lighting.ts'
 import type { LightingPreset } from '../scene/lighting.ts'
-import { makeAnnotations } from '../scene/annotations.ts'
+import { makeAnnotations, makeElectricalAnnotations } from '../scene/annotations.ts'
+import { renderNotice, screenshotWithNotice } from '../scene/provenance.ts'
 import { exportScene } from '../scene/export.ts'
 import { createPresentation, makeMirrors, disposeMirrors } from '../scene/presentation.ts'
 const props = defineProps<{
@@ -26,6 +27,7 @@ const props = defineProps<{
   room: string
   dimensions: boolean
   cutaway: boolean
+  showCeilings: boolean
   lighting: LightingPreset
 }>()
 const emit = defineEmits<{ ready: []; error: [message: string] }>()
@@ -57,7 +59,7 @@ function renderFrame(force = false) {
   dirty = false
   lastFrame = frame
   post ??= createPresentation(renderer, ctx.scene.value, currentCamera)
-  post.render(currentCamera, props.mode === 'plan')
+  post.render(currentCamera, ['plan', 'ceiling'].includes(props.mode))
 }
 render((done) => {
   try {
@@ -83,17 +85,21 @@ function remove(o: Object3D | null) {
 function presentation() {
   dirty = true
   if (!root) return
-  applyVisibility(root, props.model, props.room, props.mode, props.cutaway)
+  applyVisibility(root, props.model, props.room, props.mode, props.cutaway, props.showCeilings)
   const specs = lightingSpecs(props.model, props.room, props.lighting)
   updateEmitters(root, props.model, specs)
   remove(lights)
-  lights = makeLighting(specs, props.lighting)
+  lights = makeLighting(specs, props.lighting, props.mode === 'ceiling')
   ctx.scene.value.add(lights)
   remove(annotations)
-  annotations = props.dimensions ? makeAnnotations(props.model, props.room, root) : null
+  annotations = new T.Group()
+  if (props.mode === 'electrical') annotations.add(makeElectricalAnnotations(props.model, props.room, root))
+  if (props.dimensions) annotations.add(makeAnnotations(props.model, props.room, root, null, props.mode === 'ceiling'))
   if (annotations) ctx.scene.value.add(annotations)
   disposeMirrors(mirrors)
-  mirrors = props.mode === 'plan' ? null : makeMirrors(props.model, props.room)
+  mirrors = ['plan', 'ceiling', 'electrical'].includes(props.mode)
+    ? null
+    : makeMirrors(props.model, props.room)
   if (mirrors) ctx.scene.value.add(mirrors)
   ctx.scene.value.environmentIntensity = props.lighting === 'evening' ? 0.12 : 0.5
   ctx.renderer.invalidate()
@@ -138,7 +144,7 @@ watch(
     resetCamera()
   },
 )
-watch(() => [props.cutaway, props.dimensions, props.lighting], presentation)
+watch(() => [props.cutaway, props.showCeilings, props.dimensions, props.lighting], presentation)
 watch(
   () => ctx.sizes.aspectRatio.value,
   (aspect) => {
@@ -186,7 +192,7 @@ function screenshot() {
   if (!currentCamera) throw new Error('Camera is not ready')
   const r = ctx.renderer.instance as T.WebGLRenderer
   renderFrame(true)
-  return r.domElement.toDataURL('image/png')
+  return screenshotWithNotice(r.domElement, renderNotice(props.model, props.room))
 }
 defineExpose({
   exportCurrent,
@@ -194,6 +200,11 @@ defineExpose({
   resetCamera,
   manifest: () => (root ? geometryManifest(root) : []),
   camera: () => (currentCamera ? snapshotCamera(currentCamera) : null),
+  viewState: () => {
+    const labels: string[] = []
+    annotations?.traverse((o) => { if (o.userData.dimension) labels.push(o.userData.label) })
+    return { visible: root?.children.filter((o) => o.visible).map((o) => o.userData.entityId) ?? [], dimensions: labels }
+  },
 })
 </script>
 <template>
@@ -207,8 +218,8 @@ defineExpose({
     :max-distance="15"
     :min-zoom="0.5"
     :max-zoom="5"
-    :max-polar-angle="mode === 'plan' ? Math.PI : Math.PI / 2 - 0.02"
-    :enable-rotate="mode !== 'plan'"
+    :max-polar-angle="['plan', 'ceiling'].includes(mode) ? Math.PI : Math.PI / 2 - 0.02"
+    :enable-rotate="!['plan', 'ceiling'].includes(mode)"
     @change="ctx.renderer.invalidate()"
   />
 </template>

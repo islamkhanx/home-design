@@ -3,32 +3,96 @@ import { computed, ref, shallowRef, onMounted, onBeforeUnmount, nextTick } from 
 import { TresCanvas } from '@tresjs/core'
 import { ACESFilmicToneMapping, PCFSoftShadowMap } from 'three'
 import SceneBridge from './components/SceneBridge.vue'
+import DocumentWorkspace from './components/DocumentWorkspace.vue'
+import VideoTour from './components/VideoTour.vue'
+import './documentation.css'
 import seed from './data/apartment.json'
 import { parseApartment } from './domain/schema.ts'
 import type { Apartment } from './domain/schema.ts'
 import type { ViewMode } from './scene/canonical.ts'
 import type { LightingPreset } from './scene/lighting.ts'
+import { renderNotice } from './scene/provenance.ts'
+import { polygonArea } from './domain/math.ts'
 import { base64 } from './scene/export.ts'
 const exportMode = new URLSearchParams(location.search).has('export')
+const section = ref(new URLSearchParams(location.search).has('tour') ? 'tour' : new URLSearchParams(location.search).has('documents') ? 'documents' : 'viewer')
 // A presentation, not an editor: the source JSON is the only saved design.
 const model = shallowRef(parseApartment(seed))
-const room = ref('bathroom'),
+const room = ref('all'),
   mode = ref<ViewMode>('dollhouse'),
   lighting = ref<LightingPreset>('day')
 const dimensions = ref(false),
   ready = ref(false),
   error = ref('')
+const cutaway = ref(false), showCeilings = ref(false)
 const bridge = ref<InstanceType<typeof SceneBridge> | null>(null)
 const currentRoom = computed(() => model.value.rooms.find((r) => r.id === room.value))
+const notice = computed(() => renderNotice(model.value, room.value))
+const completeGeometry = computed(() => model.value.rooms.every((r) => r.polygon))
+const roomTitle = computed(
+  () =>
+    currentRoom.value?.name ?? (completeGeometry.value ? 'Вся квартира' : 'Доступная часть модели'),
+)
+const area = computed(() => currentRoom.value?.documentedArea ?? model.value.documentedArea)
+const modelArea = computed(() =>
+  currentRoom.value?.polygon ? (polygonArea(currentRoom.value.polygon) / 1e6).toFixed(2) : null,
+)
+const stories: Record<string, [string, string]> = {
+  all: [
+    'Ваш план. Новый интерьер.',
+    'Контур восстановлен с исходного плана: боковой вход, лоджия за спальней, открытая кухня-ниша. Мебель и отделка предложены автоматически.',
+  ],
+  bathroom: [
+    'Камень. Дуб. Свет.',
+    'Сохранена выбранная композиция A3 / M1 / T1 / Д2. Свет, монтажные привязки и полотенцесушитель ещё в проработке.',
+  ],
+  bedroom: [
+    'Место для тишины.',
+    'Кровать 160 × 200, большой светлый шкаф и ТВ. Рабочее место вынесено в гостиную.',
+  ],
+  living: [
+    'Жить. Работать. Принимать.',
+    'Шалфейный диван, обеденный стол и отдельное рабочее место у окна. Дуб связывает мебель в единую композицию.',
+  ],
+  kitchen: [
+    'Всё под рукой.',
+    'Открытая кухня-ниша: угловой ряд, дубовые фасады, светлый верх и каменная столешница. Соседство помещений сохранено по исходному плану.',
+  ],
+  hall: [
+    'Дом начинается здесь.',
+    'Светлое хранение у входа, зеркало в полный рост и компактная банкетка.',
+  ],
+  loggia: [
+    'Маленькая пауза.',
+    'Кресло, кофейный столик и низкий шкаф. Отдельная спокойная зона для отдыха.',
+  ],
+}
+const electricalPoints = computed(() =>
+  model.value.objects.filter(
+    (o) => o.electrical && (room.value === 'all' || o.roomId === room.value),
+  ),
+)
+const story = computed(
+  () => stories[room.value] ?? [roomTitle.value, currentRoom.value?.note ?? ''],
+)
+async function setRoom(id: string) {
+  if (id !== 'all' && !model.value.rooms.some((r) => r.id === id && r.polygon))
+    throw new Error('Unknown room')
+  room.value = id
+  if (id === 'all' && mode.value === 'interior') mode.value = 'dollhouse'
+  await nextTick()
+}
 const views: [ViewMode, string][] = [
   ['dollhouse', 'Общий вид'],
   ['interior', 'Внутри'],
   ['plan', 'План'],
+  ['electrical', 'Электрика'],
+  ['ceiling', 'Потолки'],
 ]
 const lights: [LightingPreset, string, string][] = [
   ['day', 'Материалы', 'Нейтральный обзорный свет: цвет, фактура и объём.'],
-  ['clean', 'Основной', 'Две потолочные точки и свет у зеркала. Предложение G1 + G2.'],
-  ['evening', 'Вечер', 'Только приглушённый свет у зеркала. Предложение G2.'],
+  ['clean', 'Основной', 'Основные светильники. Предварительный сценарий.'],
+  ['evening', 'Вечер', 'Мягкий локальный свет. В санузле — только зеркало.'],
 ]
 const viewport = ref<HTMLElement | null>(null)
 const fullscreen = ref(false)
@@ -63,12 +127,14 @@ onMounted(() => {
     },
     setModel: async (a: Apartment) => {
       model.value = parseApartment(a)
-      room.value = model.value.rooms.find((r) => r.polygon)?.id ?? ''
+      room.value = 'all'
       ready.value = false
       await nextTick()
     },
+    setRoom,
     setView: async (v: ViewMode) => {
-      if (!['dollhouse', 'plan', 'interior', 'free'].includes(v)) throw new Error('Unknown view')
+      if (!['dollhouse', 'plan', 'interior', 'free', 'ceiling', 'electrical'].includes(v))
+        throw new Error('Unknown view')
       await setView(v)
     },
     export: async () => {
@@ -82,6 +148,7 @@ onMounted(() => {
     },
     screenshot: () => bridge.value!.screenshot(),
     manifest: () => bridge.value!.manifest(),
+    viewState: () => bridge.value!.viewState(),
   }
 })
 </script>
@@ -92,13 +159,35 @@ onMounted(() => {
       <div>
         <p class="eyebrow">HOME / DESIGN STUDY</p>
         <h1>
-          {{ currentRoom?.name }} <span>{{ currentRoom?.documentedArea.toFixed(2) }} м²</span>
+          {{ roomTitle }} <span>{{ area.toFixed(2) }} м² по плану</span>
         </h1>
       </div>
-      <span class="readonly"><i></i> A3 / M1 / T1 / Д2 <span>Дизайн санузла</span></span>
+      <nav class="project-nav" aria-label="Раздел проекта">
+        <button :aria-pressed="section === 'viewer'" @click="section = 'viewer'">
+          3D-визуализация
+        </button>
+        <button :aria-pressed="section === 'documents'" @click="section = 'documents'">
+          Смета и документы
+        </button>
+        <button :aria-pressed="section === 'tour'" @click="section = 'tour'">Видеотур</button>
+      </nav>
     </header>
-    <main>
-      <section ref="viewport" class="viewport" aria-label="Трёхмерный вид санузла">
+    <nav v-if="section === 'viewer'" class="room-nav" aria-label="Помещения">
+      <button v-if="completeGeometry" :aria-pressed="room === 'all'" @click="setRoom('all')">
+        Вся квартира
+      </button>
+      <span v-else class="sample-note">Остальные помещения: геометрия на сверке</span>
+      <button
+        v-for="r in model.rooms.filter((r) => r.polygon)"
+        :key="r.id"
+        :aria-pressed="room === r.id"
+        @click="setRoom(r.id)"
+      >
+        {{ r.name }}
+      </button>
+    </nav>
+    <main v-if="section === 'viewer'">
+      <section ref="viewport" class="viewport" :aria-label="`Трёхмерный вид: ${roomTitle}`">
         <TresCanvas
           shadows
           :shadow-map-type="PCFSoftShadowMap"
@@ -115,14 +204,24 @@ onMounted(() => {
             :mode="mode"
             :room="room"
             :dimensions="dimensions"
-            :cutaway="true"
+            :cutaway="cutaway"
+            :show-ceilings="showCeilings"
             :lighting="lighting"
             @ready="ready = true"
             @error="error = $event"
           />
         </TresCanvas>
         <div class="scene-label">
-          <span>01 — САНУЗЕЛ</span><b>Камень. Дуб. Свет.</b><small>Выбранная композиция · A3</small>
+          <span>{{ roomTitle.toUpperCase() }} / DESIGN STUDY</span><b>{{ story[0] }}</b>
+          <small>{{
+            room === 'bathroom'
+              ? 'Выбранная композиция · A3 / M1 / T1 / Д2'
+              : 'Авторская палитра · дуб / лён / шалфей'
+          }}</small>
+        </div>
+        <div v-if="notice.length" class="generation-notice" role="note">
+          <b>{{ notice[0] }}</b
+          ><span>{{ notice[1] }}</span>
         </div>
         <div class="view-controls">
           <div class="segmented" aria-label="Ракурс">
@@ -130,6 +229,12 @@ onMounted(() => {
               v-for="[id, label] in views"
               :key="id"
               :aria-pressed="mode === id"
+              :disabled="id === 'interior' && room === 'all'"
+              :title="
+                id === 'interior' && room === 'all'
+                  ? 'Выберите помещение для вида изнутри'
+                  : undefined
+              "
               @click="setView(id)"
             >
               {{ label }}
@@ -154,16 +259,19 @@ onMounted(() => {
             mode === 'plan'
               ? 'Пропорции и расположение'
               : 'Потяни, чтобы осмотреть · колесо — приблизить'
-          }}</span
-          ><label><input type="checkbox" v-model="dimensions" />Размеры</label>
+          }}</span>
+          <div class="visibility-controls">
+            <label v-if="mode === 'dollhouse' || mode === 'free'"><input type="checkbox" v-model="cutaway" />Разрез стен</label>
+            <label v-if="mode === 'dollhouse' || mode === 'free'"><input type="checkbox" v-model="showCeilings" />Потолки</label>
+            <label><input type="checkbox" v-model="dimensions" />Размеры</label>
+          </div>
         </div>
       </section>
       <aside>
         <p class="eyebrow">01 / АТМОСФЕРА</p>
-        <h2>Свет меняет<br />восприятие.</h2>
+        <h2>{{ story[0] }}</h2>
         <p class="intro">
-          Один интерьер, три состояния. Сравни фактуру при нейтральном свете и мягкий вечер у
-          зеркала.
+          {{ story[1] }}
         </p>
         <div class="light-options" aria-label="Сценарий света">
           <button
@@ -176,40 +284,98 @@ onMounted(() => {
           </button>
         </div>
         <p class="light-note">{{ lightNote }}</p>
+        <div v-if="mode === 'ceiling'" class="design-status">
+          <b>Потолок · вид снизу</b>
+          <p>
+            Белый матовый потолок, условная отметка 2850 мм. Светильники показаны на своём месте.
+            Тип потолка и закладные — предложение.
+          </p>
+        </div>
+        <div v-if="mode === 'electrical'" class="design-status">
+          <b>Розетки и выключатели · предложение</b>
+          <p>
+            Мебель скрыта, чтобы видеть точки. Высота указана до центра от условного чистого пола.
+            Трассы, защита и монтаж не рассчитаны.
+          </p>
+          <p v-for="p in electricalPoints" :key="p.id">
+            <b>{{ p.id }}</b> · {{ p.name }} · {{ p.electrical?.gangs }}
+            {{ p.kind === 'Socket' ? 'роз.' : 'клав.' }} · h
+            {{ Math.round(p.position[1] + p.size[1] / 2) }} мм
+          </p>
+        </div>
         <div class="divider"></div>
         <p class="eyebrow">02 / ОТДЕЛКА</p>
         <div class="material-row">
           <span class="swatch stone"></span>
-          <div><b>Светлый камень</b><small>M1 / T1 · стены 1200 × 600 · пол 600 × 600</small></div>
+          <div>
+            <b>Светлый камень</b
+            ><small>{{
+              room === 'bathroom'
+                ? 'M1 / T1 · стены 1200 × 600 · пол 600 × 600'
+                : 'Матовый камень · кухня и санузел'
+            }}</small>
+          </div>
         </div>
         <div class="material-row">
           <span class="swatch oak"></span>
-          <div><b>Натуральный дуб</b><small>Д2 · тумба и хозяйственная колонна</small></div>
+          <div>
+            <b>Натуральный дуб</b
+            ><small>{{
+              room === 'bathroom'
+                ? 'Д2 · тумба и хозяйственная колонна'
+                : 'Тёплый оттенок · пол и мебель'
+            }}</small>
+          </div>
         </div>
         <div class="material-row">
-          <span class="swatch ceramic"></span>
-          <div><b>Белая керамика</b><small>Мягкий глянец · сатиновый металл</small></div>
+          <span :class="['swatch', room === 'bathroom' ? 'ceramic' : 'sage']"></span>
+          <div>
+            <b>{{ room === 'bathroom' ? 'Белая керамика' : 'Лён и шалфей' }}</b
+            ><small>{{
+              room === 'bathroom'
+                ? 'Мягкий глянец · сатиновый металл'
+                : 'Мягкие ткани · спокойные акценты'
+            }}</small>
+          </div>
         </div>
         <p class="sample-note">
-          Оттенки и фактуры условные. Д2 определяет цвет дуба; конструкция фасадов и артикулы ещё не
-          выбраны.
+          Оттенки и фактуры условные. Автоматически предложенные мебель и отделка ещё не утверждены.
+          Артикулы не выбраны.
         </p>
         <div class="design-status">
-          <span>В ПРОРАБОТКЕ</span>
-          <p>Полотенцесушитель: место и модель. Деталировка запила У1. Свет и электрика.</p>
+          <span>{{ room === 'bathroom' ? 'В ПРОРАБОТКЕ' : 'АВТОМАТИЧЕСКИЙ ВАРИАНТ' }}</span>
+          <p>
+            {{
+              room === 'bathroom'
+                ? 'Полотенцесушитель: место и модель. Деталировка запила У1. Свет и электрика.'
+                : 'Контур оцифрован по исходному PDF. Мебель и декор предложены автоматически; размеры по масштабу окна, не обмер.'
+            }}
+          </p>
         </div>
         <details>
           <summary>Размеры и допущения</summary>
-          <p>{{ currentRoom?.note }}</p>
+          <p>{{ currentRoom?.note ?? model.generation?.note }}</p>
+          <p v-if="modelArea">
+            Площадь условной модели: {{ modelArea }} м². Площадь по исходному плану:
+            {{ area.toFixed(2) }} м².
+          </p>
+          <p v-if="room === 'all'">
+            45,99 м² — итог по исходному плану с учётной площадью лоджии 1,55 м². Полная площадь
+            лоджии — 3,10 м². Контур оцифрован по чертежу; размер 2,4 м относится к окну, а не к
+            ширине квартиры.
+          </p>
           <p>
-            Подтверждена площадь. Расстановка и монтажные размеры требуют обмеров. Свет показан для
-            сравнения сценариев, а не расчёта освещённости.
+            Площади сверены с исходным PDF. Размеры модели сняты с изображения по масштабу окна;
+            расстановка и монтажные размеры требуют обмеров. Свет показан для сравнения сценариев, а
+            не расчёта освещённости.
           </p>
         </details>
       </aside>
     </main>
+    <DocumentWorkspace v-else-if="section === 'documents'" :model="model" />
+    <VideoTour v-else />
     <footer>
-      <span>A3 · ванна · подвесная тумба · хозяйственная колонна</span
+      <span>Все помещения · единая палитра · санузел A3 / M1 / T1 / Д2</span
       ><span>Эскиз · размеры условные</span>
     </footer>
   </div>
