@@ -1,3 +1,30 @@
+## 21.11.2026 · перенос обеденной группы, ревизия 11
+
+- `npm test`: 98/98; `npm run build`: успешно (предупреждение о размере JS-пакета сохраняется).
+- В канонической модели изменены только стол, два стула и подвес; исходные помещения и архитектура сохранены. Размещение через условную границу открытой кухни/гостиной проверяется по объединению полигонов и настоящим стенам с проёмами.
+- Проверен восточный зазор при отодвигании каждого стула на 300 мм. После пересчёта маршрута устранено срезание угла препятствия между кадрами; focused-проверки генератора, расстановки и тура — 23/23.
+- Два новых Cycles preview 960×540 получены и просмотрены, импорт геометрии пройден. HTML со сравнением с той же камеры и актуальным общим планом: `exports/dining-correction-2026-11-21/dining-layout-correction.html`.
+- Полный видеоролик не пересчитывался. Подробности и ограничения новой расстановки: [DINING_CORRECTION_2026-11-21.md](DINING_CORRECTION_2026-11-21.md).
+
+## 21.11.2026 · покомнатный пересмотр, ревизия 10
+
+- `npm test`: 83/83; `npm run build`: успешно. Сохраняется предупреждение Vite о размере общего JS-пакета.
+- Архитектурная оболочка сравнена с исходной ревизией 9: контуры, стены, проёмы и высоты не изменены. Проверены реальные меши розеток и мебели, полость колонны, посадка кухонной мойки, опоры монитора и подвесов, основные зазоры и дискретные открывания внутренних дверей.
+- Камеры внутри комнат: высота 1600 мм, FOV 58°, полные стены и потолки. Исправлены заслонение открытой дверью на лоджии и направление камеры прихожей; оба результата подтверждены тестовыми PNG Blender.
+- Cycles CPU: 10 кадров 960×540 получены и просмотрены, включая отдельную зону WC. Все 576 частей в каждом GLB прошли проверку при импорте; максимальная ошибка границ около 0,00095 мм при допуске 0,1 мм. Последний кадр добавлен отдельным проверенным batch той же модели; происхождение серии записано в `mergedBatches` итогового индекса.
+- Дополнительно закончены и просмотрены два quality-рендера: гостиная и спальня, 1920×1080, 16-bit PNG, лимит 256 сэмплов с адаптивной выборкой. CPU-время серии — около 22 минут; оба кадра прошли проверку геометрии и исходного хеша.
+- `documents:generate`: 77 листов, 24 SVG, 49 строк предварительной сметы. Размеры обновлены по модели; новые коммерческие цены не запрашивались.
+- Полный браузерный smoke test заблокирован средой: `listen EPERM 127.0.0.1:5173`. Отдельный запуск установленного Chrome для локального HTML также завершился ошибкой; визуальная проверка веб-приложения этим прогоном не заявляется.
+- Детальный разбор и ограничения: [ROOM_REVIEW_2026-11-21.md](ROOM_REVIEW_2026-11-21.md). Результаты Blender фиксируются в `exports/review-2026-11-21/final/index.json` и покадровых отчётах. Проверка геометрии не заменяет обмеры, паспорта оборудования или инженерный проект.
+
+## 15.11.2026 · санузел, ревизия 9
+
+- HPL на влагостойкой МДФ и защита от протечек включены; бойлер и тёплый пол исключены. Реестр различает ответы пользователя и рекомендации ассистента.
+- 49 строк, 3 401 951,42 ₸ база; 3 912 244,13 ₸ с резервом 15%. Excel округляет строки до тенге: 3 912 244 ₸. Защита: 120 000 + 30 000 ₸ без двойного начисления. Изменение цены комплекта на 10 000 ₸ повышает итог Excel на 11 500 ₸.
+- `npm test`: 61/61; `npm run build`: успешно (предупреждение о размере общего JS-пакета). Комплект: 76 листов, 23 схемы, 49 строк сметы.
+- Браузер: основной свет санузла, реальные фото плитки, таблица решений, новая сумма и график проверены; ошибок страницы нет. Browser GLB round trip: 534 части, ошибка границ 0.
+- Blender CPU preview: `exports/bathroom-final/render.png`; импорт геометрии проверен, изображение просмотрено. RGB/CCT и световой поток — приближение для визуализации, не фотометрическая аттестация. Полные обмеры и паспорта остаются условием выпуска в монтаж.
+
 # Протокол проверки
 
 ## 13.11.2026 — смета и комплект документов, ревизия 5
@@ -101,3 +128,30 @@ npm run test:e2e -- --blender
 - Импорт каждого GLB: 521 часть, идентичность и число треугольников совпадают; максимальная ошибка границ 9.5367431640625e-7 м при допуске 0.0001 м.
 - Документный комплект обновлён: 69 листов, 23 SVG; схема E-kitchen проверена в растровом просмотре. Автономный HTML пересобран.
 - Интерактивный браузерный E2E не заявляется: текущая среда блокирует listen на 127.0.0.1:5173. Успешная сборка не считается проверкой браузерного интерфейса.
+
+## Непрерывный видеотур · 15 ноября 2026
+
+- `npm test`: 57/57; `npm run build`: PASS. Проверены все 1440 поз камеры 60-секундного маршрута: высота 1,6 м, отсутствие попаданий в препятствия, ограничение шагов и поворотов, посещение всех комнат. Плотная проверка соединительных сегментов маршрута учитывает стеновые проёмы, дверные полотна и мебель с запасом 140 мм. Закрытая дверь блокирует маршрут в регрессионном тесте.
+- Проверено, что во всех отдельных видах «Внутри» видна вся окружающая геометрия, а камера остаётся привязана к выбранной комнате. Презентационная копия меняет только положения внутренних дверей; исходный JSON не мутируется.
+- Blender Cycles CPU: полный ускоренный тест 24 кадра / 2 секунды / 480 × 270 собран в MP4; число кадров, разрешение и длительность проверены FFprobe. Все части канонического GLB прошли проверку идентификаторов, числа треугольников и границ до рендера. Контактный лист всех участков маршрута просмотрен.
+- Дополнительно просмотрены реальные кадры 960 × 540 / 32 samples с полными стенами, потолками и соседними комнатами. Это проверки кадров и маршрута; полный 60-секундный финал на Metal и интерактивный браузерный E2E в этой проверке не заявляются.
+- Из текущего исполнения Metal не виден даже через системный `MTLCreateSystemDefaultDevice`; GPU-only не подменяется CPU. Полный GPU-рендер запускается из обычного Terminal. Прежние результаты не перезаписываются и не публикуются в git.
+
+
+## Bathroom budget and product photographs · 2026-11-15
+
+- 47 priced budget lines, including hygienic shower supplies and labor exactly once. Browser totals reconcile with the XLSX estimate to rounding (<1 ₸); 15% reserve.
+- Original Laparet Noa photographs on metric wall/floor UVs. Source metadata and hashes retained; no external image URLs in GLB. Headless export embeds the original JPEG bytes.
+- Browser checks: 3D photo requests, materials/supplier cards, budget totals, schedule, no page errors.
+- Cycles preview completed at `exports/bathroom-materials/render.png`; 534 mesh parts, maximum bounds error 0.000000954 m. Imported photo images present in Blender.
+- Towel-warmer proposal moved off the door opening; collision-free walking route test passes. Placement is still an assumption requiring site measurements.
+- Full source tests: 60 passed. Type check and production build passed.
+
+## Studio document package · 21 November 2026
+
+- Compared the live Земстандарт `/sheets` list with the generated catalog: all 29 technical and 3 auxiliary categories match, with no missing or extra categories. Studio services remain separate from generated documents.
+- Current apartment: 180 logical sheets, 77 SVG drawings, 49 estimate lines. Native PDF: 231 physical pages including index and continuations. Estimate scope remains the bathroom.
+- `npm test` and `npm run build` passed. The final 11 studio tests passed after the plumbing overview correction; they cover stable references, exclusions, sparse models, unchanged source data, transformed openings, floor holes, concave tile grids, external switches and escaping.
+- `npm run documents:pdf` completed. Checked representative coverage, plan, corner, floor, tile, switching and elevation pages. All 2,558 generated table-text chunks were found in the PDF text; none were truncated.
+- PDF measurement and painting use the same CoreText layout. The generator detects the specific duplicated SwiftBridging module declaration in this Mac's Command Line Tools and applies a process-local overlay; installed SDK files are not modified.
+- Browser compilation passes. Live browser interaction was not visually verified here because Chrome cannot launch in this environment. Native PDF drawings were visually reviewed.

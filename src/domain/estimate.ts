@@ -1,6 +1,10 @@
 import { polygonArea, wallCells } from './math.ts'
 import type { Apartment } from './schema.ts'
 import type bathroomSpec from '../../docs/bathroom-spec.json'
+import budget from '../data/bathroom-budget.json' with { type: 'json' }
+
+export const bathroomBudget = budget
+export const hasBathroomBudget = (a: Apartment) => a.costPlanId === budget.id
 
 export type DesignSpec = typeof bathroomSpec
 export type CostCategory = 'Материалы' | 'Работы' | 'Оборудование' | 'Прочее'
@@ -48,7 +52,7 @@ export const round = (n: number, precision = 3) => Math.round((n + Number.EPSILO
 // Change detection, not a security signature. Includes geometry, evidence and decisions.
 export function modelKey(a: Apartment, spec: DesignSpec): string {
   let h = 2166136261
-  for (const c of JSON.stringify([a, spec])) h = Math.imul(h ^ c.charCodeAt(0), 16777619)
+  for (const c of JSON.stringify([a, spec, hasBathroomBudget(a) ? budget : null])) h = Math.imul(h ^ c.charCodeAt(0), 16777619)
   return `${a.id}-r${a.revision}-${(h >>> 0).toString(16)}`
 }
 export function takeoff(a: Apartment, roomId: string) {
@@ -67,6 +71,12 @@ export function takeoff(a: Apartment, roomId: string) {
   return { floor: area('Floor'), ceiling: area('Ceiling'), walls, wallNet: walls.length ? walls.reduce((s, w) => s + w.net, 0) : null }
 }
 export function estimateLines(a: Apartment, spec: DesignSpec): CostLine[] {
+  if (hasBathroomBudget(a)) return budget.lines.map(l => ({
+    id: l.id, name: l.name, category: l.category as CostCategory, unit: l.unit,
+    quantity: l.quantity, waste: l.waste, pack: l.pack,
+    source: `Расчёт ${budget.date}: 4,44 м² пола; контур 1,859 × 2,412 м; высота 2,85 м; проём 0,9 × 2,3 м; добавочные поверхности 1,5 м². Объёмы предварительные, не автоматический обмер.`,
+    note: `${l.status}. ${l.note}`,
+  }))
   const q = takeoff(a, 'bathroom')
   const lines: CostLine[] = []
   const add = (id: string, name: string, category: CostCategory, unit: string, quantity: number | null, source: string, note = '', waste = 0) => lines.push({ id, name, category, unit, quantity, source, note, waste, pack: null })
@@ -106,14 +116,22 @@ export function estimateLines(a: Apartment, spec: DesignSpec): CostLine[] {
   add('towel-warmer', 'Электрический полотенцесушитель', 'Оборудование', 'шт.', spec.working_towel_warmer.quantity, 'Наличие подтверждено в bathroom-spec.json', 'Место, модель, мощность и подключение не утверждены.')
   add('sockets', 'Розетки · Э1', 'Оборудование', 'шт.', spec.proposals_not_approved.electrical_scheme.socket_count, 'Предложение Э1', '3 механизма: 1 стиралка, 2 у тумбы. Рамки и защита уточняются; точка полотенцесушителя отдельно.')
   add('controls', 'Управление светом, драйверы и комплектующие', 'Оборудование', 'компл.', null, 'Предложение G1/G2', 'Проверить включение драйверов в цены светильников.')
-  add('leak-protection', 'Защита от протечек', 'Оборудование', 'компл.', null, 'Решение открыто', 'Не считать автоматически выбранной или исключённой.')
-  add('water-heater', 'Бойлер', 'Оборудование', 'шт.', null, 'Решение открыто', 'Не считать автоматически выбранным или исключённым.')
+  if (spec.confirmed.leak_protection) add('leak-protection', 'Защита от протечек', 'Оборудование', 'компл.', 1, 'Наличие подтверждено пользователем', 'Комплект и монтаж оценить отдельно; модель и состав по вводам.')
+  if (spec.confirmed.boiler) add('water-heater', 'Бойлер', 'Оборудование', 'шт.', 1, 'Выбор в спецификации', 'Модель, питание и установка по проекту.')
   return lines
 }
 export function blankInput(line: CostLine): LineInput {
   return { quantity: null, price: null, waste: line.waste, pack: line.pack, supplier: '', quoteDate: '', note: '', excluded: false }
 }
 export function freshDraft(a: Apartment, spec: DesignSpec): EstimateDraft {
+  if (hasBathroomBudget(a)) return {
+    version: 1, projectId: a.id, modelKey: modelKey(a, spec), reservePercent: budget.reservePercent,
+    inputs: Object.fromEntries(estimateLines(a, spec).map((line, i) => [line.id, {
+      ...blankInput(line), price: budget.lines[i].price,
+      supplier: budget.lines[i].url ?? 'Предварительный расчётный лимит; требуется предложение',
+      quoteDate: budget.date, note: budget.lines[i].status,
+    }])), custom: [],
+  }
   return { version: 1, projectId: a.id, modelKey: modelKey(a, spec), reservePercent: 10, inputs: Object.fromEntries(estimateLines(a, spec).map(l => [l.id, blankInput(l)])), custom: [] }
 }
 export function priceLines(lines: CostLine[], draft: EstimateDraft): PricedLine[] {

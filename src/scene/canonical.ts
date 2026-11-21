@@ -4,6 +4,7 @@ import type { Apartment } from '../domain/schema.ts'
 import { parseApartment } from '../domain/schema.ts'
 import { createEntity } from './components.ts'
 import { buildMaterials, applyMetricUVs } from './materials.ts'
+import { roomElectricalPoints } from '../domain/electrical.ts'
 export type ViewMode = 'dollhouse' | 'plan' | 'interior' | 'free' | 'ceiling' | 'electrical'
 export async function buildCanonical(input: Apartment): Promise<T.Group> {
   const a = parseApartment(input),
@@ -33,16 +34,29 @@ export function applyVisibility(
   cutaway: boolean,
   showCeilings = false,
 ) {
-  const hostWalls = new Set(a.objects.filter((e) => e.electrical && (room === 'all' || e.roomId === room)).map((e) => e.electrical!.wallId))
+  root.userData.activeRoom = room
+  const electrical = roomElectricalPoints(a, room)
+  const relatedPoints = new Set(electrical.map(e => e.id))
+  const hostWalls = new Set(
+    electrical
+      .map((e) => e.electrical!.wallId),
+  )
   for (const g of root.children) {
     const e = a.objects.find((o) => o.id === g.userData.entityId)!
-    const inRoom = room === 'all' || e.roomId === room || (e.sharedWith?.includes(room) ?? false) || hostWalls.has(e.id)
+    // Interior cameras look through real openings into adjacent spaces. Filtering
+    // those spaces by room leaves missing walls, floors and reflections.
+    const inRoom =
+      mode === 'interior' ||
+      room === 'all' ||
+      e.roomId === room ||
+      relatedPoints.has(e.id) ||
+      (e.sharedWith?.includes(room) ?? false) ||
+      hostWalls.has(e.id)
     const ceilingPart = ['Ceiling', 'Spotlight', 'TrackLight', 'Pendant'].includes(e.kind)
     let shown = true
     if (mode === 'ceiling') shown = ceilingPart
     else if (mode === 'electrical')
-      shown =
-        ['Floor', 'Wall', 'Window', 'Socket', 'Switch'].includes(e.kind)
+      shown = ['Floor', 'Wall', 'Window', 'Socket', 'Switch'].includes(e.kind)
     else if (mode === 'plan') shown = !ceilingPart
     else if (mode === 'dollhouse' || mode === 'free')
       shown = e.kind === 'Ceiling' ? showCeilings : !(cutaway && e.cutaway)

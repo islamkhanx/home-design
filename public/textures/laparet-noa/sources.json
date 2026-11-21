@@ -1,0 +1,30 @@
+{
+  "images": [
+    {
+      "file": "wall.jpg",
+      "sku": "K952672R0001LPER",
+      "productUrl": "https://santehnica-shop.kz/product/745191.html",
+      "imageUrl": "https://img.santehnica.ru/files/images/resized/products/7/4/7451910-keramogranit-laparet-noa-k952672r0001lper-60-h-120-sm-obreznoy-kremoviy.1766696932.1200x1200.jpeg",
+      "retrievedAt": "2026-11-15",
+      "sha256": "5c6918b90356fa88a6a29f49598e9a40aa76bcb01ac1bb206ca3eb463f498b9f",
+      "mappingMeters": [
+        1.2,
+        0.6
+      ]
+    },
+    {
+      "file": "floor.jpg",
+      "sku": "K952803R0001LPET",
+      "productUrl": "https://santehnica-shop.kz/product/752361.html",
+      "imageUrl": "https://img.santehnica.ru/files/images/resized/products/7/5/7523610-keramogranit-laparet-noa-k952803r0001lpet-60-h-60-sm-kremoviy.1766698332.1200x1200.jpeg",
+      "retrievedAt": "2026-11-15",
+      "sha256": "a98d6ffa5c0ce7b20203fc7856364f2e0e43a64c023d055e5a4eee07c2695cf8",
+      "mappingMeters": [
+        0.6,
+        0.6
+      ]
+    }
+  ],
+  "note": "Original product photographs, not measured PBR scans; color depends on sample and lighting. Copyright remains with the source owner. No open reuse license asserted.",
+  "normalRoughness": "Approximate procedural joint/roughness maps, not manufacturer scans."
+}

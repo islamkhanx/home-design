@@ -1,7 +1,7 @@
 import * as T from 'three'
 
-/** Continuous ceramic shell, including the real recess. All points stay inside the envelope. */
-export function basinGeometry(width: number, height: number, depth: number, rim: number) {
+/** Closed underside and a separate recessed floor; never cap the upper opening. */
+function ceramicShell(profiles: Array<[number, number, number, number]>) {
   const positions: number[] = [],
     indices: number[] = []
   const ring = (w: number, d: number, y: number, radius: number) => {
@@ -16,23 +16,16 @@ export function basinGeometry(width: number, height: number, depth: number, rim:
       }
     }
   }
-  const radius = Math.min(width, depth) * 0.16
-  ring(width * 0.97, depth * 0.97, 0, radius)
-  ring(width, depth, height * 0.12, radius)
-  ring(width, depth, height - 0.008, radius)
-  ring(width - 0.008, depth - 0.008, height, radius)
-  ring(width - rim * 2, depth - rim * 2, height, radius)
-  ring(width - rim * 2 - 0.012, depth - rim * 2 - 0.012, height - 0.012, radius)
-  ring(width - rim * 3, depth - rim * 3, Math.min(height * 0.2, 0.08), radius)
+  for (const profile of profiles) ring(...profile)
   const count = 52
-  for (let j = 0; j < 6; j++)
+  for (let j = 0; j < profiles.length - 1; j++)
     for (let i = 0; i < count; i++) {
       const a = j * count + i,
         b = j * count + ((i + 1) % count)
       indices.push(a, a + count, b, b, a + count, b + count)
     }
   // Close the underside and basin bottom separately; the upper opening stays genuinely hollow.
-  for (const j of [0, 6]) {
+  for (const j of [0, profiles.length - 1]) {
     const center = positions.length / 3
     positions.push(0, positions[j * count * 3 + 1], 0)
     for (let i = 0; i < count; i++) {
@@ -46,4 +39,39 @@ export function basinGeometry(width: number, height: number, depth: number, rim:
   geometry.setIndex(indices)
   geometry.computeVertexNormals()
   return geometry
+}
+
+/** Continuous ceramic shell, including the real recess. All points stay inside the envelope. */
+export function basinGeometry(width: number, height: number, depth: number, rim: number) {
+  const radius = Math.min(width, depth) * 0.16
+  return ceramicShell([
+    [width * 0.97, depth * 0.97, 0, radius],
+    [width, depth, height * 0.12, radius],
+    [width, depth, height - 0.008, radius],
+    [width - 0.008, depth - 0.008, height, radius],
+    [width - rim * 2, depth - rim * 2, height, radius],
+    [width - rim * 2 - 0.012, depth - rim * 2 - 0.012, height - 0.012, radius],
+    [width - rim * 3, depth - rim * 3, Math.min(height * 0.2, 0.08), radius],
+  ])
+}
+
+/** Drop-in flange sits above the worktop; the narrower bowl passes through its cutout. */
+export function dropInSinkGeometry(width: number, height: number, depth: number) {
+  const flangeHeight = Math.min(0.008, height * 0.1),
+    flangeOverhang = Math.min(0.02, width * 0.06, depth * 0.06),
+    bodyWidth = width - flangeOverhang * 2,
+    bodyDepth = depth - flangeOverhang * 2,
+    wall = Math.min(0.012, height * 0.1),
+    shoulder = height - flangeHeight,
+    radius = Math.min(bodyWidth, bodyDepth) * 0.12
+  return ceramicShell([
+    [bodyWidth * 0.94, bodyDepth * 0.94, 0, radius],
+    [bodyWidth, bodyDepth, height * 0.2, radius],
+    [bodyWidth, bodyDepth, shoulder, radius],
+    [width, depth, shoulder, radius],
+    [width, depth, height, radius],
+    [bodyWidth - wall, bodyDepth - wall, height, radius],
+    [bodyWidth - wall * 2, bodyDepth - wall * 2, shoulder - wall / 2, radius],
+    [bodyWidth * 0.86, bodyDepth * 0.86, wall, radius],
+  ])
 }

@@ -5,6 +5,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import type { Apartment } from '../domain/schema.ts'
 import { geometryManifest, visibleEntities, disposeTree } from './canonical.ts'
 import type { CameraSpec } from './cameras.ts'
+import type { ViewMode } from './canonical.ts'
 import { presets } from './cameras.ts'
 import { lightingSpecs } from './lighting.ts'
 import type { LightingPreset } from './lighting.ts'
@@ -14,6 +15,7 @@ export async function exportScene(
   camera: CameraSpec,
   room: string,
   lighting: LightingPreset,
+  view?: ViewMode,
 ) {
   root.updateMatrixWorld(true)
   const exporter = new GLTFExporter()
@@ -48,7 +50,7 @@ export async function exportScene(
     cameraPresets: presets(root),
     visibleEntityIds: visibleEntities(root),
     lightingPreset: lighting,
-    lights: lightingSpecs(a, room, lighting),
+    lights: lightingSpecs(a, view === 'interior' ? 'all' : room, lighting),
     materials: a.materials,
     geometry,
     roundTrip,

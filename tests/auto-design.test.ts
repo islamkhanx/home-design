@@ -77,6 +77,142 @@ test('furnishing cannot generate architecture or place objects in rooms without 
   assert.throws(() => applyGeneratedInteriors(a, []), /архитектура отозвана/)
 })
 
+test('an explicit open placement zone permits furniture across a semantic room boundary', () => {
+  const a = seed()
+  // The minimal proposal deliberately has no lights for generated switch controls.
+  a.objects = a.objects.filter((o) => !o.electrical)
+  const p: Entity = {
+    ...proposal(),
+    roomId: 'living',
+    position: [1900, 0, 4550],
+    size: [900, 750, 900],
+  }
+  assert.throws(() => applyGeneratedInteriors(a, [p]), /за контур/)
+  const b = applyGeneratedInteriors(a, [p], { living: ['living', 'kitchen'] })
+  assert.deepEqual(b.rooms, a.rooms)
+  assert.deepEqual(
+    b.objects.filter((o) => ['Wall', 'Floor', 'Ceiling'].includes(o.kind)),
+    a.objects.filter((o) => ['Wall', 'Floor', 'Ceiling'].includes(o.kind)),
+  )
+  assert.deepEqual(b.objects.find((o) => o.id === p.id)!.position, p.position)
+  assert.throws(
+    () =>
+      applyGeneratedInteriors(a, [{ ...p, position: [100, 0, 4550] }], {
+        living: ['living', 'kitchen'],
+      }),
+    /за контур/,
+  )
+  assert.throws(
+    () =>
+      applyGeneratedInteriors(a, [{ ...proposal(), position: [0, 0, 0] }], {
+        living: ['living', 'kitchen'],
+      }),
+    /за контур/,
+  )
+})
+
+test('placement zones reject an interior gap even when every footprint corner is covered', () => {
+  const a = seed()
+  // Two non-overlapping C-shaped rings enclose a gap inside their joint bounding box.
+  a.rooms.find((r) => r.id === 'living')!.polygon = [
+    [0, 0],
+    [2000, 0],
+    [2000, 500],
+    [500, 500],
+    [500, 1500],
+    [2000, 1500],
+    [2000, 2000],
+    [0, 2000],
+  ]
+  a.rooms.find((r) => r.id === 'kitchen')!.polygon = [
+    [2000, 0],
+    [4000, 0],
+    [4000, 2000],
+    [2000, 2000],
+    [2000, 1500],
+    [3500, 1500],
+    [3500, 500],
+    [2000, 500],
+  ]
+  a.objects = []
+  const p: Entity = {
+    ...proposal(),
+    roomId: 'living',
+    position: [2000, 0, 1000],
+    size: [3400, 750, 1600],
+  }
+  assert.throws(
+    () => applyGeneratedInteriors(a, [p], { living: ['living', 'kitchen'] }),
+    /за контур/,
+  )
+  // Overlapping polygons are a union, not a reason to double-count their area.
+  a.rooms.find((r) => r.id === 'living')!.polygon = [
+    [0, 0],
+    [2500, 0],
+    [2500, 2000],
+    [0, 2000],
+  ]
+  a.rooms.find((r) => r.id === 'kitchen')!.polygon = [
+    [1500, 0],
+    [4000, 0],
+    [4000, 2000],
+    [1500, 2000],
+  ]
+  assert.doesNotThrow(() => applyGeneratedInteriors(a, [p], { living: ['living', 'kitchen'] }))
+})
+
+test('a union zone still rejects a physical partition and respects its actual doorway', () => {
+  const a = seed()
+  a.rooms.find((r) => r.id === 'living')!.polygon = [
+    [0, 0],
+    [2000, 0],
+    [2000, 2000],
+    [0, 2000],
+  ]
+  a.rooms.find((r) => r.id === 'kitchen')!.polygon = [
+    [2000, 0],
+    [4000, 0],
+    [4000, 2000],
+    [2000, 2000],
+  ]
+  const wall: Entity = {
+    ...a.objects.find((o) => o.kind === 'Wall')!,
+    id: 'test-partition',
+    roomId: 'living',
+    position: [0, 0, 0],
+    rotation: [0, 0, 0],
+    wall: { start: [2000, 0], end: [2000, 2000], thickness: 100, height: 2800, openings: [] },
+  }
+  a.objects = [wall]
+  const p: Entity = {
+    ...proposal(),
+    roomId: 'living',
+    position: [2000, 0, 1000],
+    size: [800, 750, 600],
+  }
+  const zones = { living: ['living', 'kitchen'] }
+  assert.throws(() => applyGeneratedInteriors(a, [p], zones), /реальную стену/)
+  wall.wall!.openings.push({
+    id: 'test-opening',
+    kind: 'door',
+    offset: 600,
+    width: 800,
+    bottom: 0,
+    height: 2100,
+  })
+  assert.doesNotThrow(() => applyGeneratedInteriors(a, [p], zones))
+  assert.throws(
+    () => applyGeneratedInteriors(a, [{ ...p, size: [800, 2200, 600] }], zones),
+    /реальную стену/,
+  )
+  assert.throws(() => applyGeneratedInteriors(a, [p], { living: ['kitchen'] }), /зона размещения/)
+  assert.throws(
+    () => applyGeneratedInteriors(a, [p], { living: ['living', 'missing'] }),
+    /зона размещения/,
+  )
+})
+
+import { applyBathroomPlan } from '../src/domain/bathroom-plan.ts'
 import { restoreSourcePlan, SOURCE_RINGS, planPoint } from '../src/domain/source-plan.ts'
 import { generateElectrical } from '../src/domain/electrical.ts'
 import { generateSourceInteriors } from '../src/domain/interior-preset.ts'
@@ -86,13 +222,16 @@ const bathroom = JSON.parse(
 )
 test('regeneration is deterministic and furnishings cannot change traced architecture', () => {
   const source = restoreSourcePlan(seed(), bathroom),
-    generated = generateElectrical(generateSourceInteriors(source))
+    generated = applyBathroomPlan(generateElectrical(generateSourceInteriors(source)))
   assert.deepEqual(generated, seed())
-  assert.deepEqual(generateElectrical(generateSourceInteriors(generated)), generated)
+  assert.deepEqual(
+    applyBathroomPlan(generateElectrical(generateSourceInteriors(generated))),
+    generated,
+  )
   assert.deepEqual(generated.rooms, source.rooms)
   assert.deepEqual(
     generated.objects.filter((o) => !o.generated),
-    source.objects,
+    applyBathroomPlan(source).objects,
   )
   for (const r of source.rooms) assert.deepEqual(r.polygon, SOURCE_RINGS[r.id].map(planPoint))
 })

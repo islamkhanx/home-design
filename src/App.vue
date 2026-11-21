@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, shallowRef, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { computed, ref, shallowRef, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { TresCanvas } from '@tresjs/core'
 import { ACESFilmicToneMapping, PCFSoftShadowMap } from 'three'
 import SceneBridge from './components/SceneBridge.vue'
@@ -10,10 +10,13 @@ import seed from './data/apartment.json'
 import { parseApartment } from './domain/schema.ts'
 import type { Apartment } from './domain/schema.ts'
 import type { ViewMode } from './scene/canonical.ts'
+import { roomSelectionView } from './scene/cameras.ts'
 import type { LightingPreset } from './scene/lighting.ts'
 import { renderNotice } from './scene/provenance.ts'
 import { polygonArea } from './domain/math.ts'
 import { base64 } from './scene/export.ts'
+import { roomElectricalPoints } from './domain/electrical.ts'
+import { planEntities } from './domain/drawings.ts'
 const exportMode = new URLSearchParams(location.search).has('export')
 const section = ref(new URLSearchParams(location.search).has('tour') ? 'tour' : new URLSearchParams(location.search).has('documents') ? 'documents' : 'viewer')
 // A presentation, not an editor: the source JSON is the only saved design.
@@ -24,6 +27,8 @@ const room = ref('all'),
 const dimensions = ref(false),
   ready = ref(false),
   error = ref('')
+watch(mode, value => { if (value === 'plan') dimensions.value = true })
+const dimensionItems = computed(() => planEntities(model.value, room.value))
 const cutaway = ref(false), showCeilings = ref(false)
 const bridge = ref<InstanceType<typeof SceneBridge> | null>(null)
 const currentRoom = computed(() => model.value.rooms.find((r) => r.id === room.value))
@@ -44,7 +49,7 @@ const stories: Record<string, [string, string]> = {
   ],
   bathroom: [
     'Камень. Дуб. Свет.',
-    'Сохранена выбранная композиция A3 / M1 / T1 / Д2. Свет, монтажные привязки и полотенцесушитель ещё в проработке.',
+    'A3 / M1 / T1 / Д2. На стенах и полу — фото Laparet Noa. Гигиенический душ включён; смета, поставщики и график доступны в документах. Монтажные привязки предварительные.',
   ],
   bedroom: [
     'Место для тишины.',
@@ -68,9 +73,7 @@ const stories: Record<string, [string, string]> = {
   ],
 }
 const electricalPoints = computed(() =>
-  model.value.objects.filter(
-    (o) => o.electrical && (room.value === 'all' || o.roomId === room.value),
-  ),
+  roomElectricalPoints(model.value, room.value),
 )
 const story = computed(
   () => stories[room.value] ?? [roomTitle.value, currentRoom.value?.note ?? ''],
@@ -79,7 +82,7 @@ async function setRoom(id: string) {
   if (id !== 'all' && !model.value.rooms.some((r) => r.id === id && r.polygon))
     throw new Error('Unknown room')
   room.value = id
-  if (id === 'all' && mode.value === 'interior') mode.value = 'dollhouse'
+  mode.value = roomSelectionView(mode.value, id)
   await nextTick()
 }
 const views: [ViewMode, string][] = [
@@ -258,7 +261,9 @@ onMounted(() => {
           <span>{{
             mode === 'plan'
               ? 'Пропорции и расположение'
-              : 'Потяни, чтобы осмотреть · колесо — приблизить'
+              : mode === 'interior'
+                ? 'Нажми на сцену · WASD — идти · Shift — быстрее · потяни мышью — оглядеться · колесо — масштаб'
+                : 'Потяни, чтобы осмотреть · колесо — приблизить'
           }}</span>
           <div class="visibility-controls">
             <label v-if="mode === 'dollhouse' || mode === 'free'"><input type="checkbox" v-model="cutaway" />Разрез стен</label>
@@ -291,24 +296,30 @@ onMounted(() => {
             Тип потолка и закладные — предложение.
           </p>
         </div>
-        <div v-if="mode === 'electrical'" class="design-status">
+        <div v-if="mode === 'electrical' || mode === 'plan'" class="design-status">
           <b>Розетки и выключатели · предложение</b>
           <p>
-            Мебель скрыта, чтобы видеть точки. Высота указана до центра от условного чистого пола.
+            {{ mode === 'electrical' ? 'Мебель скрыта, чтобы видеть точки.' : 'Точки показаны вместе с мебелью.' }} Высота указана до центра от условного чистого пола.
             Трассы, защита и монтаж не рассчитаны.
           </p>
           <p v-for="p in electricalPoints" :key="p.id">
             <b>{{ p.id }}</b> · {{ p.name }} · {{ p.electrical?.gangs }}
             {{ p.kind === 'Socket' ? 'роз.' : 'клав.' }} · h
             {{ Math.round(p.position[1] + p.size[1] / 2) }} мм
+            <small v-if="room !== 'all' && p.roomId !== room"> · вне помещения, управление его светом</small>
           </p>
+        </div>
+        <div v-if="dimensions && dimensionItems.length && mode !== 'electrical' && mode !== 'ceiling'" class="design-status furniture-dimensions">
+          <b>Габариты мебели и оборудования</b>
+          <p>Ш × В × Г, мм — локальные размеры модели до поворота. Предварительно, не размеры для заказа. Тумба показана вместе с чашей и смесителем.</p>
+          <p v-for="item in dimensionItems" :key="item.id"><b>{{ item.name }}</b><br>{{ item.size.join(' × ') }} мм</p>
         </div>
         <div class="divider"></div>
         <p class="eyebrow">02 / ОТДЕЛКА</p>
         <div class="material-row">
-          <span class="swatch stone"></span>
+          <span class="swatch stone" :style="room === 'bathroom' ? { backgroundImage: 'url(/textures/laparet-noa/wall.jpg)', backgroundSize: 'cover' } : undefined"></span>
           <div>
-            <b>Светлый камень</b
+            <b>{{ room === 'bathroom' ? 'Laparet Noa · кремовый' : 'Светлый камень' }}</b
             ><small>{{
               room === 'bathroom'
                 ? 'M1 / T1 · стены 1200 × 600 · пол 600 × 600'
@@ -339,15 +350,14 @@ onMounted(() => {
           </div>
         </div>
         <p class="sample-note">
-          Оттенки и фактуры условные. Автоматически предложенные мебель и отделка ещё не утверждены.
-          Артикулы не выбраны.
+          {{ room === 'bathroom' ? 'Плитка показана фотографиями выбранных для сметы артикулов; тон и партию проверить по образцу. Фасады HPL на влагостойкой МДФ; дубовый декор пока условный. Свет санузла: 4000 K, CRI ≥90.' : 'Оттенки и фактуры условные. Автоматически предложенные мебель и отделка ещё не утверждены; артикулы не выбраны.' }}
         </p>
         <div class="design-status">
           <span>{{ room === 'bathroom' ? 'В ПРОРАБОТКЕ' : 'АВТОМАТИЧЕСКИЙ ВАРИАНТ' }}</span>
           <p>
             {{
               room === 'bathroom'
-                ? 'Полотенцесушитель: место и модель. Деталировка запила У1. Свет и электрика.'
+                ? 'Обмеры, паспорта изделий, монтажные привязки электрики и деталировка У1. Свет 4000 K и состав оборудования уже определены.'
                 : 'Контур оцифрован по исходному PDF. Мебель и декор предложены автоматически; размеры по масштабу окна, не обмер.'
             }}
           </p>

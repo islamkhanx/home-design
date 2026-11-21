@@ -3,6 +3,7 @@
 import Foundation
 import AppKit
 import CoreGraphics
+import CoreText
 import PDFKit
 
 struct Table: Decodable { let headers: [String]; let rows: [[String]] }
@@ -21,16 +22,34 @@ func attrs(_ size: CGFloat, _ bold: Bool = false, _ shade: NSColor = ink) -> [NS
     let style = NSMutableParagraphStyle(); style.lineBreakMode = .byWordWrapping; style.lineSpacing = 2
     return [.font: NSFont.systemFont(ofSize: size, weight: bold ? .semibold : .regular), .foregroundColor: shade, .paragraphStyle: style]
 }
-func textHeight(_ text: String, _ width: CGFloat, _ size: CGFloat = 10, _ bold: Bool = false) -> CGFloat {
-    ceil((text as NSString).boundingRect(with: NSSize(width: width, height: 10000), options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: attrs(size,bold)).height)
+func textLayout(_ value: String, _ width: CGFloat, _ size: CGFloat, _ bold: Bool, _ shade: NSColor) -> (frame: CTFrame, height: CGFloat) {
+    let label=NSAttributedString(string:value,attributes:attrs(size,bold,shade))
+    let setter=CTFramesetterCreateWithAttributedString(label)
+    let suggested=CTFramesetterSuggestFrameSizeWithConstraints(setter,CFRange(location:0,length:0),nil,CGSize(width:width,height:10000),nil)
+    var height=ceil(suggested.height)+2
+    // Use precisely the same layout for measurement and painting. NSString's
+    // boundingRect/draw(in:) pair disagrees on wrapped hyphenated sheet IDs.
+    while true {
+        let path=CGPath(rect:CGRect(x:0,y:0,width:width,height:height),transform:nil)
+        let frame=CTFramesetterCreateFrame(setter,CFRange(location:0,length:0),path,nil)
+        let visible=CTFrameGetVisibleStringRange(frame)
+        if visible.location+visible.length>=label.length {return (frame,height)}
+        height+=size+4
+        guard height<10000 else {fatalError("Text does not fit its layout frame")}
+    }
+}
+func textHeight(_ value: String, _ width: CGFloat, _ size: CGFloat = 10, _ bold: Bool = false) -> CGFloat {
+    textLayout(value,width,size,bold,ink).height
 }
 @discardableResult func text(_ value: String, _ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ size: CGFloat = 10, _ bold: Bool = false, _ shade: NSColor = ink) -> CGFloat {
-    let h = textHeight(value,width,size,bold)
-    (value as NSString).draw(in: NSRect(x:x,y:y,width:width,height:h+2), withAttributes:attrs(size,bold,shade))
-    return h
+    let layout=textLayout(value,width,size,bold,shade)
+    guard let context=NSGraphicsContext.current?.cgContext else {fatalError("No text drawing context")}
+    context.saveGState();context.translateBy(x:x,y:y+layout.height);context.scaleBy(x:1,y:-1)
+    context.textMatrix = .identity;CTFrameDraw(layout.frame,context);context.restoreGState()
+    return layout.height
 }
 
-// Render only the SVG primitives emitted by drawings.ts. Unknown elements fail closed.
+// Render only the SVG primitives emitted by the document generators. Unknown elements fail closed.
 final class SVG: NSObject, XMLParserDelegate {
     let ctx: CGContext
     var error: String?
@@ -44,9 +63,14 @@ final class SVG: NSObject, XMLParserDelegate {
         ctx.saveGState()
         defer { ctx.restoreGState() }
         ctx.setLineWidth(v("stroke-width",1))
-        if a["stroke-dasharray"] != nil {ctx.setLineDash(phase:0,lengths:[4,3])}
-        if let fill = a["fill"] {ctx.setFillColor(color(fill).cgColor)}
-        if let stroke = a["stroke"] {ctx.setStrokeColor(color(stroke).cgColor)}
+        if let dash = a["stroke-dasharray"], dash != "none" {
+            let lengths=dash.split(whereSeparator:{$0.isWhitespace || $0 == ","}).compactMap {Double($0)}.map {CGFloat($0)}
+            if !lengths.isEmpty && lengths.allSatisfy({$0>=0}) && lengths.contains(where:{$0>0}) {ctx.setLineDash(phase:0,lengths:lengths)}
+        }
+        let fill=a["fill"] ?? "#000000", stroke=a["stroke"] ?? "none"
+        let hasFill=fill != "none" && name != "line", hasStroke=stroke != "none"
+        if hasFill {ctx.setFillColor(color(fill).cgColor)}
+        if hasStroke {ctx.setStrokeColor(color(stroke).cgColor)}
         let path=CGMutablePath()
         switch name {
         case "rect": path.addRect(CGRect(x:v("x"),y:v("y"),width:v("width"),height:v("height")))
@@ -61,19 +85,26 @@ final class SVG: NSObject, XMLParserDelegate {
         default: error="Unsupported SVG element: \(name)";parser.abortParsing();return
         }
         ctx.addPath(path)
-        if name=="line" {ctx.strokePath()}
-        else if a["stroke"] != nil && a["fill"] != nil {ctx.drawPath(using:.fillStroke)}
-        else if a["stroke"] != nil {ctx.strokePath()}
-        else {ctx.fillPath()}
+        if hasFill && hasStroke {ctx.drawPath(using:.fillStroke)}
+        else if hasStroke {ctx.strokePath()}
+        else if hasFill {ctx.fillPath()}
+        else {ctx.beginPath()}
     }
     func parser(_ parser: XMLParser, foundCharacters string: String) {content += string}
     func parser(_ parser: XMLParser, didEndElement name: String, namespaceURI: String?, qualifiedName: String?) {
         guard name=="text" else {return}
+        guard attributes["fill"] != "none" else {return}
         let size=CGFloat(Double(attributes["font-size"] ?? "13") ?? 13)
         let x=CGFloat(Double(attributes["x"] ?? "0") ?? 0), y=CGFloat(Double(attributes["y"] ?? "0") ?? 0)
-        let width=(content as NSString).size(withAttributes:attrs(size)).width+4
-        let shift=attributes["text-anchor"] == "middle" ? width/2 : 0
-        text(content,x-shift,y-size,width,size,false,color(attributes["fill"] ?? "30372f"))
+        let weight=attributes["font-weight"] ?? "normal", bold=weight=="bold" || (Int(weight) ?? 400)>=600
+        let label=NSAttributedString(string:content,attributes:attrs(size,bold,color(attributes["fill"] ?? "30372f")))
+        let rendered=CTLineCreateWithAttributedString(label)
+        let advance=CGFloat(CTLineGetTypographicBounds(rendered,nil,nil,nil))
+        let anchor=attributes["text-anchor"] ?? "start"
+        let shift=anchor=="end" ? advance : anchor=="middle" ? advance/2 : 0
+        // SVG y is the text baseline; CoreText preserves it exactly in this flipped canvas.
+        ctx.saveGState();ctx.textMatrix=CGAffineTransform(scaleX:1,y:-1)
+        ctx.textPosition=CGPoint(x:x-shift,y:y);CTLineDraw(rendered,ctx);ctx.restoreGState()
     }
 }
 
@@ -86,8 +117,11 @@ var box=CGRect(x:0,y:0,width:W,height:H)
 guard let consumer=CGDataConsumer(url:output as CFURL), let ctx=CGContext(consumer:consumer,mediaBox:&box,[kCGPDFContextTitle:dossier.title,kCGPDFContextCreator:"Home Design document generator"] as CFDictionary) else {fatalError("Cannot create PDF")}
 var page=0, y: CGFloat=0
 var sheetTitle="", sheetId="", sheetStatus=""
+var pageContentTop: CGFloat=0
+var pagesBySheet: [String:[Int]]=[:], drawingsBySheet: [String:[Int]]=[:]
 func beginPage(_ continuation: Bool=false) {
     page+=1;ctx.beginPDFPage(nil);ctx.saveGState();ctx.translateBy(x:0,y:H);ctx.scaleBy(x:1,y:-1)
+    pagesBySheet[sheetId,default:[]].append(page)
     NSGraphicsContext.saveGraphicsState();NSGraphicsContext.current=NSGraphicsContext(cgContext:ctx,flipped:true)
     ctx.setFillColor(NSColor.white.cgColor);ctx.fill(CGRect(x:0,y:0,width:W,height:H))
     text("HOME / DOCUMENTS",margin,25,220,9,true,olive)
@@ -96,6 +130,7 @@ func beginPage(_ continuation: Bool=false) {
     y=60
     y+=text(sheetTitle+(continuation ? " · продолжение" : ""),margin,y,contentWidth,21,false)+8
     y+=text(sheetStatus,margin,y,contentWidth,9,true,color("937235"))+14
+    pageContentTop=y
 }
 func endPage() {
     ctx.setStrokeColor(color("d7ddcd").cgColor);ctx.setLineWidth(0.5);ctx.move(to:CGPoint(x:margin,y:H-36));ctx.addLine(to:CGPoint(x:W-margin,y:H-36));ctx.strokePath()
@@ -139,7 +174,12 @@ for sheet in dossier.sheets {
         }
     }
     if let svg=sheet.svg {
+        // Keep model annotations legible when notes fill the preceding page.
+        // A fresh page offers roughly 410 pt for the 660-unit drawing canvas.
+        if H-55-y < 350 && y > pageContentTop+1 {endPage();beginPage(true)}
         let available=H-55-y, scale=min(contentWidth/820,available/660)
+        guard scale>0 else {fatalError("No space for drawing on sheet \(sheet.id)")}
+        drawingsBySheet[sheet.id,default:[]].append(page)
         ctx.saveGState();ctx.translateBy(x:margin+(contentWidth-820*scale)/2,y:y);ctx.scaleBy(x:scale,y:scale);ctx.clip(to:CGRect(x:0,y:0,width:820,height:660))
         let renderer=SVG(ctx), parser=XMLParser(data:Data(svg.utf8));parser.delegate=renderer
         guard parser.parse(),renderer.error==nil else {fatalError(renderer.error ?? "Invalid SVG")}
@@ -147,12 +187,13 @@ for sheet in dossier.sheets {
     }
     if let table=sheet.table {
         let columns=table.headers.count
+        guard columns>0,table.rows.allSatisfy({$0.count==columns}) else {fatalError("Invalid table columns on sheet \(sheet.id)")}
         let weights:[CGFloat] = columns==6 ? [0.16,0.30,0.08,0.16,0.14,0.16] : Array(repeating:1/CGFloat(columns),count:columns)
         let widths=weights.map{$0*contentWidth/weights.reduce(0,+)}
         drawRow(table.headers,widths,true)
         for (i,row) in table.rows.enumerated() {
             let pieces=row.map {Array($0)}
-            let segments=max(1,(pieces.map{$0.count}.max() ?? 0)+299)/300
+            let segments=max(1,((pieces.map{$0.count}.max() ?? 0)+299)/300)
             for segment in 0..<max(1,segments) {
                 let cells=pieces.map { chars -> String in
                     let start=segment*300
@@ -186,5 +227,14 @@ if args.count>3 {
         try rep.representation(using:.png,properties:[:])!.write(to:dir.appendingPathComponent(String(format:"page-%03d.png",index+1)))
     }
     try allText.write(to:dir.appendingPathComponent("text.txt"),atomically:true,encoding:.utf8)
+    let pageMap: [String:Any] = [
+        "revision":dossier.revision,
+        "pageCount":page,
+        "indexPages":pagesBySheet["INDEX"] ?? [],
+        "sheets":dossier.sheets.map { sheet -> [String:Any] in
+            ["id":sheet.id,"title":sheet.title,"pages":pagesBySheet[sheet.id] ?? [],"drawingPages":drawingsBySheet[sheet.id] ?? []]
+        }
+    ]
+    try JSONSerialization.data(withJSONObject:pageMap,options:[.prettyPrinted,.sortedKeys,.withoutEscapingSlashes]).write(to:dir.appendingPathComponent("page-map.json"))
 }
 print("PDF written: \(output.path) (\(page) pages; selectable text and vector diagrams verified)")

@@ -4,9 +4,21 @@
     "name": "Ванна 1700 × 700",
     "kind": "Bathtub",
     "roomId": "bathroom",
-    "position": [850, 0, 350],
-    "rotation": [0, 0, 0],
-    "size": [1700, 600, 700],
+    "position": [
+      850,
+      0,
+      350
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "size": [
+      1700,
+      600,
+      700
+    ],
     "material": "white",
     "evidence": "assumed"
   },
@@ -15,9 +27,21 @@
     "name": "Экран ванны",
     "kind": "GlassPartition",
     "roomId": "bathroom",
-    "position": [325, 600, 700],
-    "rotation": [0, 0, 0],
-    "size": [650, 1400, 8],
+    "position": [
+      325,
+      600,
+      700
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "size": [
+      650,
+      1400,
+      8
+    ],
     "material": "glass",
     "evidence": "assumed"
   },
@@ -26,9 +50,21 @@
     "name": "Душ и смеситель",
     "kind": "Shower",
     "roomId": "bathroom",
-    "position": [60, 950, 350],
-    "rotation": [0, 90, 0],
-    "size": [300, 1200, 140],
+    "position": [
+      60,
+      950,
+      350
+    ],
+    "rotation": [
+      0,
+      90,
+      0
+    ],
+    "size": [
+      300,
+      1200,
+      140
+    ],
     "material": "metal",
     "evidence": "assumed"
   },
@@ -37,9 +73,21 @@
     "name": "Подвесная тумба",
     "kind": "Vanity",
     "roomId": "bathroom",
-    "position": [225, 350, 1100],
-    "rotation": [0, 90, 0],
-    "size": [600, 700, 450],
+    "position": [
+      225,
+      350,
+      1024
+    ],
+    "rotation": [
+      0,
+      90,
+      0
+    ],
+    "size": [
+      500,
+      700,
+      450
+    ],
     "material": "oak",
     "evidence": "assumed",
     "note": "Корпус и раковина: верх 875 мм; смеситель включён в габарит. Размеры условные."
@@ -49,9 +97,21 @@
     "name": "Зеркало",
     "kind": "GlassPartition",
     "roomId": "bathroom",
-    "position": [15, 1100, 1100],
-    "rotation": [0, 0, 0],
-    "size": [12, 1000, 600],
+    "position": [
+      15,
+      1100,
+      1024
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "size": [
+      12,
+      1000,
+      450
+    ],
     "material": "mirror",
     "evidence": "assumed"
   },
@@ -60,9 +120,21 @@
     "name": "Короб инсталляции",
     "kind": "Countertop",
     "roomId": "bathroom",
-    "position": [100, 0, 1825],
-    "rotation": [0, 0, 0],
-    "size": [200, 1200, 690],
+    "position": [
+      100,
+      0,
+      1905
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "size": [
+      200,
+      1200,
+      690
+    ],
     "material": "stone",
     "evidence": "assumed"
   },
@@ -71,9 +143,21 @@
     "name": "Подвесной унитаз",
     "kind": "Toilet",
     "roomId": "bathroom",
-    "position": [460, 200, 1730],
-    "rotation": [0, 90, 0],
-    "size": [360, 230, 520],
+    "position": [
+      460,
+      200,
+      1679
+    ],
+    "rotation": [
+      0,
+      90,
+      0
+    ],
+    "size": [
+      360,
+      230,
+      520
+    ],
     "material": "white",
     "evidence": "assumed"
   },
@@ -82,9 +166,21 @@
     "name": "Кнопка смыва",
     "kind": "GlassPartition",
     "roomId": "bathroom",
-    "position": [207, 960, 1730],
-    "rotation": [0, 0, 0],
-    "size": [14, 160, 240],
+    "position": [
+      207,
+      960,
+      1679
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "size": [
+      14,
+      160,
+      240
+    ],
     "material": "metal",
     "evidence": "assumed"
   },
@@ -93,9 +189,21 @@
     "name": "Шкаф над инсталляцией",
     "kind": "Wardrobe",
     "roomId": "bathroom",
-    "position": [150, 1300, 1825],
-    "rotation": [0, 90, 0],
-    "size": [690, 1100, 300],
+    "position": [
+      150,
+      1300,
+      1905
+    ],
+    "rotation": [
+      0,
+      90,
+      0
+    ],
+    "size": [
+      690,
+      1100,
+      300
+    ],
     "material": "paint",
     "evidence": "assumed"
   },
@@ -104,9 +212,21 @@
     "name": "Узкая стиральная машина",
     "kind": "Appliance",
     "roomId": "bathroom",
-    "position": [1475, 0, 2195],
-    "rotation": [0, 180, 0],
-    "size": [600, 850, 450],
+    "position": [
+      1475,
+      0,
+      2195
+    ],
+    "rotation": [
+      0,
+      180,
+      0
+    ],
+    "size": [
+      600,
+      850,
+      450
+    ],
     "material": "white",
     "evidence": "assumed",
     "params": {
@@ -118,9 +238,21 @@
     "name": "Потолочный свет 1",
     "kind": "Spotlight",
     "roomId": "bathroom",
-    "position": [900, 2630, 1050],
-    "rotation": [0, 0, 0],
-    "size": [90, 70, 90],
+    "position": [
+      900,
+      2630,
+      1050
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "size": [
+      90,
+      70,
+      90
+    ],
     "material": "white",
     "evidence": "assumed",
     "params": {
@@ -134,9 +266,21 @@
     "name": "Потолочный свет 2",
     "kind": "Spotlight",
     "roomId": "bathroom",
-    "position": [950, 2630, 1850],
-    "rotation": [0, 0, 0],
-    "size": [90, 70, 90],
+    "position": [
+      950,
+      2630,
+      1850
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "size": [
+      90,
+      70,
+      90
+    ],
     "material": "white",
     "evidence": "assumed",
     "params": {
@@ -150,9 +294,21 @@
     "name": "Свет зеркала 1",
     "kind": "LEDStrip",
     "roomId": "bathroom",
-    "position": [30, 1100, 810],
-    "rotation": [0, 0, 0],
-    "size": [35, 1000, 20],
+    "position": [
+      30,
+      1100,
+      760
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "size": [
+      35,
+      1000,
+      20
+    ],
     "material": "light",
     "evidence": "assumed",
     "params": {
@@ -166,9 +322,21 @@
     "name": "Свет зеркала 2",
     "kind": "LEDStrip",
     "roomId": "bathroom",
-    "position": [30, 1100, 1390],
-    "rotation": [0, 0, 0],
-    "size": [35, 1000, 20],
+    "position": [
+      30,
+      1100,
+      1288
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "size": [
+      35,
+      1000,
+      20
+    ],
     "material": "light",
     "evidence": "assumed",
     "params": {
@@ -182,9 +350,21 @@
     "name": "A3 · хозяйственная колонна",
     "kind": "Wardrobe",
     "roomId": "bathroom",
-    "position": [1475, 0, 2135],
-    "rotation": [0, 180, 0],
-    "size": [650, 2550, 670],
+    "position": [
+      1475,
+      0,
+      2135
+    ],
+    "rotation": [
+      0,
+      180,
+      0
+    ],
+    "size": [
+      650,
+      2550,
+      560
+    ],
     "material": "oak",
     "evidence": "assumed",
     "params": {

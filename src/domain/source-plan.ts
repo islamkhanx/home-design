@@ -60,6 +60,14 @@ const NOTE =
 
 export function restoreSourcePlan(input: Apartment, bathroom: Entity[]): Apartment {
   const a = structuredClone(input)
+  for (const m of [
+    { id: 'floor-oak', name: 'Пол · светлый дуб · предложение', color: '#c3a780', roughness: 0.74, metalness: 0, surface: 'oak' as const },
+    { id: 'ceiling-white', name: 'Потолок · матовый белый', color: '#f5f3ee', roughness: 0.95, metalness: 0 },
+  ]) {
+    const i = a.materials.findIndex(existing => existing.id === m.id)
+    if (i < 0) a.materials.push(m)
+    else a.materials[i] = m
+  }
   a.objects = []
   a.revision = 6
   a.sourcePlan = {
@@ -117,7 +125,7 @@ export function restoreSourcePlan(input: Apartment, bathroom: Entity[]): Apartme
       name: `Пол · ${r.name}`,
       size: [w, 70, d],
       surface: { polygon: r.polygon, thickness: 70 },
-      material: ['bathroom', 'loggia'].includes(r.id) ? 'stone' : 'oak',
+      material: ['bathroom', 'loggia'].includes(r.id) ? 'stone' : 'floor-oak',
     })
     entity(r.id === 'bathroom' ? 'ceiling' : `source-${r.id}-ceiling`, r.id, 'Ceiling', {
       name: `Потолок · ${r.name}`,
@@ -125,6 +133,7 @@ export function restoreSourcePlan(input: Apartment, bathroom: Entity[]): Apartme
       size: [w, 30, d],
       surface: { polygon: r.polygon, thickness: 30 },
       cutaway: true,
+      material: 'ceiling-white',
     })
   }
   function wall(
@@ -286,7 +295,7 @@ export function restoreSourcePlan(input: Apartment, bathroom: Entity[]): Apartme
     }
     if (['laundry-tower', 'washer'].includes(o.id)) {
       o.position[0] = bw - 335
-      o.position[2] = bd - (o.id === 'washer' ? 275 : 335)
+      o.position[2] = o.id === 'washer' ? bd - o.size[2] / 2 - 67 : bd - o.size[2] / 2
     }
     if (o.kind === 'Spotlight') o.position[1] = 2780
     o.note =
@@ -299,12 +308,14 @@ export function restoreSourcePlan(input: Apartment, bathroom: Entity[]): Apartme
     string,
     { position: [number, number, number]; target: [number, number, number] }
   > = {
-    bathroom: { position: [1700, 1550, 1750], target: [300, 1100, 950] },
-    bedroom: { position: [2700, 1550, 100], target: [1300, 950, -2700] },
-    loggia: { position: [2850, 1450, -4730], target: [1000, 700, -4730] },
-    hall: { position: [4300, 1550, 1550], target: [2200, 1000, 1550] },
-    kitchen: { position: [1850, 1550, 5750], target: [650, 1100, 3250] },
-    living: { position: [1050, 1550, 9200], target: [2200, 1000, 7000] },
+    bathroom: { position: [1050, 1600, 1650], target: [500, 1150, 600] },
+    bedroom: { position: [2750, 1600, -1000], target: [900, 1150, -2600] },
+    // Stay west of the open balcony door; look down enough to include both seats and floor.
+    loggia: { position: [1950, 1600, -4700], target: [300, 800, -4750] },
+    // Look across the entrance toward the mirror and bench from the clear circulation area.
+    hall: { position: [2200, 1600, 2250], target: [3800, 1150, 1000] },
+    kitchen: { position: [1800, 1600, 5800], target: [800, 1200, 3250] },
+    living: { position: [1600, 1600, 9250], target: [2100, 1200, 6900] },
   }
   for (const r of a.rooms) r.interiorCamera = cameras[r.id]
   return parseApartment(a)

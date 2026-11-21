@@ -48,6 +48,19 @@ try {
       .then((text) => text.includes('Интерьер сгенерирован автоматически')),
   )
   await page.getByRole('button', { name: 'Санузел', exact: true }).click()
+  await page.waitForFunction(()=>window.__HOME_DESIGN__.viewState().walking)
+  const eyeBefore=await page.evaluate(()=>window.__HOME_DESIGN__.viewState().camera.position)
+  await page.locator('canvas').first().focus()
+  await page.keyboard.down('w')
+  try {
+    await page.waitForFunction(before=>{
+      const p=window.__HOME_DESIGN__.viewState().camera.position
+      return Math.hypot(p[0]-before[0],p[2]-before[2])>.02
+    },eyeBefore,{timeout:5000})
+  } finally {await page.keyboard.up('w')}
+  const eyeAfter=await page.evaluate(()=>window.__HOME_DESIGN__.viewState().camera.position)
+  assert.equal(eyeAfter[1],eyeBefore[1],'Walking must stay at eye height')
+  await page.getByRole('button',{name:'Вернуть исходный ракурс'}).click()
   const sourceBefore = await page.evaluate(() => JSON.stringify(window.__HOME_DESIGN__.model))
   for (const [label, type] of [
     ['План', 'orthographic'],

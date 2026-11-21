@@ -3,6 +3,7 @@ import type { Apartment } from '../domain/schema.ts'
 import { mm } from '../domain/math.ts'
 import { polygonArea } from '../domain/math.ts'
 import { dimensionGuides } from './dimensions.ts'
+import { roomElectricalPoints } from '../domain/electrical.ts'
 function label(text: string, position: T.Vector3) {
   const c = document.createElement('canvas')
   c.width = 640
@@ -100,6 +101,19 @@ export function makeAnnotations(
     )
   }
   const object = root.children.find((v) => v.userData.entityId === selected && v.visible)
+  if (!ceiling && room !== 'all') {
+    for (const e of a.objects.filter(e => e.roomId === room && ['Vanity', 'Wardrobe', 'Cabinet', 'Bed', 'Sofa', 'Table'].includes(e.kind))) {
+      const mesh = root.children.find(v => v.userData.entityId === e.id && v.visible)
+      if (!mesh) continue
+      const bounds = new T.Box3().setFromObject(mesh, true)
+      const center = bounds.getCenter(new T.Vector3())
+      const mark = label(e.size.map(Math.round).join(' × ') + ' мм', new T.Vector3(center.x, bounds.max.y + 0.08, center.z))
+      mark.scale.set(0.9, 0.14, 1)
+      mark.userData.dimension = true
+      mark.userData.entityId = e.id
+      g.add(mark)
+    }
+  }
   if (object) {
     const b = new T.Box3().setFromObject(object, true),
       s = b.getSize(new T.Vector3())
@@ -123,7 +137,7 @@ export function makeAnnotations(
 
 export function makeElectricalAnnotations(a: Apartment, room: string, root: T.Group) {
   const group = new T.Group()
-  for (const e of a.objects.filter((o) => o.electrical && (room === 'all' || o.roomId === room))) {
+  for (const e of roomElectricalPoints(a, room)) {
     if (!root.children.some((o) => o.visible && o.userData.entityId === e.id)) continue
     const p = new T.Vector3(
       e.position[0] / 1000,

@@ -4,6 +4,9 @@ from pathlib import Path
 import bpy
 from mathutils import Vector,Matrix
 PRESETS={'preview':(960,540,32,.08),'quality':(1920,1080,256,.02),'ultra':(3840,2160,1024,.008)}
+REVIEW_WATTS_PER_SQUARE_METER=5.0
+# A photographic display calibration, not LED electrical watts or a lux model.
+FIXTURE_VISUAL_WATTS_PER_LUMEN=1/60
 def vec(v):
     # glTF/Three Y-up -> Blender Z-up: +90 degrees about X.
     return Vector((v[0],-v[2],v[1]))
@@ -64,6 +67,49 @@ def camera_from_metadata(spec,width,height):
 def linear(hexcolor):
     c=[int(hexcolor.lstrip('#')[i:i+2],16)/255 for i in (0,2,4)]
     return tuple(v/12.92 if v<=.04045 else ((v+.055)/1.055)**2.4 for v in c)
+def polygon_contains(point,poly):
+    x,z=point;inside=False
+    for a,b in zip(poly,poly[1:]+poly[:1]):
+        if (a[1]>z)!=(b[1]>z) and x<(b[0]-a[0])*(z-a[1])/(b[1]-a[1])+a[0]:inside=not inside
+    return inside
+def room_review_geometry(room):
+    """Return actual polygon area and a safe interior softbox anchor, in meters."""
+    poly=[(p[0]/1000,p[1]/1000) for p in room.get('polygon',[])]
+    if len(poly)<3:return None
+    edges=list(zip(poly,poly[1:]+poly[:1]))
+    cross=[a[0]*b[1]-b[0]*a[1] for a,b in edges];signed=sum(cross)/2
+    if abs(signed)<1e-8:return None
+    center=(sum((a[0]+b[0])*c for (a,b),c in zip(edges,cross))/(6*signed),
+            sum((a[1]+b[1])*c for (a,b),c in zip(edges,cross))/(6*signed))
+    if not polygon_contains(center,poly):
+        # Concave polygons can have an exterior centroid. Interior scan intervals
+        # offer a deterministic fallback without inventing or changing geometry.
+        levels=sorted(set(p[1] for p in poly));candidates=[]
+        for z in [(a+b)/2 for a,b in zip(levels,levels[1:])]:
+            intersections=sorted(a[0]+(z-a[1])*(b[0]-a[0])/(b[1]-a[1])
+                for a,b in edges if (a[1]>z)!=(b[1]>z))
+            for left,right in zip(intersections[::2],intersections[1::2]):
+                candidates.append((right-left,((left+right)/2,z)))
+        if not candidates:return None
+        center=max(candidates,key=lambda item:item[0])[1]
+    def edge_distance(a,b):
+        dx,dz=b[0]-a[0],b[1]-a[1];den=dx*dx+dz*dz
+        t=max(0,min(1,((center[0]-a[0])*dx+(center[1]-a[1])*dz)/den)) if den else 0
+        return math.hypot(center[0]-a[0]-t*dx,center[1]-a[1]-t*dz)
+    clearance=min(edge_distance(a,b) for a,b in edges)
+    return abs(signed),center,min(1.8,max(.15,min(math.sqrt(abs(signed))*.55,clearance*1.6)))
+def indoor_review_rig(rooms,source):
+    rig=[]
+    for room in rooms:
+        geometry=room_review_geometry(room)
+        if geometry is None:continue
+        area,(x,z),size=geometry
+        ceilings=[o['position'][1]/1000 for o in source.get('objects',[])
+            if o.get('kind')=='Ceiling' and o.get('roomId')==room.get('id') and o.get('visible') is not False]
+        ceiling=min(ceilings) if ceilings else room.get('height',2850)/1000
+        y=max(.3,ceiling-.2)
+        rig.append(([x,y,z],[x,0,z],area*REVIEW_WATTS_PER_SQUARE_METER,size))
+    return rig
 def configure_lighting(meta):
     scene=bpy.context.scene
     for obj in list(scene.objects):
@@ -85,7 +131,15 @@ def configure_lighting(meta):
         lo=[min(p['min'][i] for p in parts) for i in range(3)]
         hi=[max(p['max'][i] for p in parts) for i in range(3)]
         center=[(a+b)/2 for a,b in zip(lo,hi)];span=max(hi[0]-lo[0],hi[2]-lo[2],1)
-        if meta['camera']['type']=='perspective':
+        review_rooms=meta.get('walkthroughRooms') or (meta.get('sourceApartment',{}).get('rooms') if meta['camera']['type']=='perspective' else None)
+        if review_rooms:
+            # A fixed daylight review rig in every room avoids lighting popping
+            # or disappearing as the walking camera crosses a doorway.
+            # Normalize by floor area, so a 4 m² bathroom no longer receives the
+            # same 140 W photographic lamp as a large living room. This is a
+            # material-review rig, deliberately distinct from installed lights.
+            rig=indoor_review_rig(review_rooms,meta.get('sourceApartment',{}))
+        elif meta['camera']['type']=='perspective':
             rig=[([hi[0]-.2,hi[1]-.2,center[2]], [lo[0],1,center[2]],100,1.2),
                  ([center[0],hi[1]-.25,lo[2]+.5],[center[0],0,center[2]],70,.8)]
         elif meta['camera']['position'][1] < lo[1] and meta['camera']['target'][1] > meta['camera']['position'][1]:
@@ -102,8 +156,9 @@ def configure_lighting(meta):
             obj.rotation_euler=(vec(target)-obj.location).to_track_quat('-Z','Y').to_euler()
     for spec in meta['lights']:
         data=bpy.data.lights.new(spec['id'],type='AREA' if spec['type']=='area' else 'SPOT' if spec['type']=='spot' else 'POINT')
-        # Approximate white LED luminous efficacy; this is NOT a certified lux calculation.
-        data.energy=spec['power']/100;data.color=linear(spec['color'])
+        # Preserve declared fixture flux and color in metadata; this display gain
+        # is calibrated for readable interior images, not electrical load or lux.
+        data.energy=spec['power']*FIXTURE_VISUAL_WATTS_PER_LUMEN;data.color=linear(spec['color'])
         if data.type=='AREA':data.shape='RECTANGLE';data.size=max(.02,spec.get('width',.04));data.size_y=max(.02,spec.get('height',.5))
         else:data.shadow_soft_size=spec.get('size',.06)
         if data.type=='SPOT':data.spot_size=math.pi/1.4;data.spot_blend=.7
@@ -138,7 +193,7 @@ def main():
     scene.cycles.max_bounces=12;scene.cycles.diffuse_bounces=6;scene.cycles.glossy_bounces=6;scene.cycles.transmission_bounces=8;scene.cycles.transparent_max_bounces=8
     scene.cycles.adaptive_min_samples=16;scene.cycles.sample_clamp_indirect=5;scene.cycles.seed=17
     scene.render.film_transparent=False
-    scene.view_settings.exposure={'day':.3,'clean':1.2,'evening':.7}.get(meta['lightingPreset'],.3)
+    scene.view_settings.exposure={'day':.3,'clean':1.5,'evening':.7}.get(meta['lightingPreset'],.3)
     scene.render.image_settings.file_format='PNG';scene.render.image_settings.color_mode='RGBA';scene.render.image_settings.color_depth='8' if args.preset=='preview' else '16'
     scene.render.film_transparent=False;scene.render.filepath=str(output)
     try:scene.view_settings.view_transform='AgX'
@@ -161,7 +216,7 @@ def main():
     except RuntimeError:
         if args.device!='auto' or device=='CPU':raise
         scene.cycles.device='CPU';device='CPU (GPU render failed; automatic fallback)';bpy.ops.render.render(write_still=True)
-    (output.parent/'render-report.json').write_text(json.dumps({'renderNotice':notice,'preset':args.preset,'device':device,'resolution':[width,height],'samplesLimit':samples,'sourceHash':meta['sourceHash'],'sourceRevision':meta['sourceRevision'],'geometry':result,'textures':[i.name for i in bpy.data.images],'lightingPreset':meta['lightingPreset'],'colorManagement':scene.view_settings.view_transform,'bitDepth':scene.render.image_settings.color_depth,'lightCount':sum(o.type=='LIGHT' for o in scene.objects)},indent=2))
+    (output.parent/'render-report.json').write_text(json.dumps({'renderNotice':notice,'preset':args.preset,'device':device,'resolution':[width,height],'samplesLimit':samples,'sourceHash':meta['sourceHash'],'sourceRevision':meta['sourceRevision'],'geometry':result,'textures':[i.name for i in bpy.data.images],'lightingPreset':meta['lightingPreset'],'colorManagement':scene.view_settings.view_transform,'bitDepth':scene.render.image_settings.color_depth,'lightCount':sum(o.type=='LIGHT' for o in scene.objects),'lightingCalibration':{'method':'Photographic approximation; not a lux calculation','reviewWattsPerSquareMeter':REVIEW_WATTS_PER_SQUARE_METER,'fixtureVisualWattsPerLumen':FIXTURE_VISUAL_WATTS_PER_LUMEN,'exposureStops':scene.view_settings.exposure}},indent=2))
     print('RENDER_COMPLETE '+str(output),flush=True)
 if __name__=='__main__':
     try:main()

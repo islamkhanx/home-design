@@ -123,18 +123,35 @@ export async function buildMaterials(
       material.normalScale.set(0.4, 0.4)
     }
     if (d.texture && loader) {
-      material.map?.dispose()
-      material.map = await loader.loadAsync(d.texture)
-      material.map.colorSpace = T.SRGBColorSpace
-      material.map.wrapS = material.map.wrapT = T.RepeatWrapping
-      material.map.repeat.set(...(d.repeat ?? [1, 1]))
-      delete material.userData.metersPerTile
+      try {
+        const photo = await loader.loadAsync(d.texture)
+        photo.colorSpace = T.SRGBColorSpace
+        // Match raw-image embedding in the browser-free GLB exporter.
+        photo.flipY = false
+        photo.anisotropy = 8
+        photo.wrapS = photo.wrapT = T.RepeatWrapping
+        photo.repeat.set(...(d.repeat ?? [1, 1]))
+        material.map?.dispose()
+        material.map = photo
+        // A product photograph represents one tile, not one mesh face.
+        if (d.tileSize) material.userData.metersPerTile = d.tileSize
+        else delete material.userData.metersPerTile
+      } catch {
+        material.userData.textureFallback = { color: d.texture }
+        console.warn(`Color texture unavailable for ${d.id}; using the generated or base material.`, d.texture)
+      }
     }
     if (d.normalTexture && loader) {
-      material.normalMap?.dispose()
-      material.normalMap = await loader.loadAsync(d.normalTexture)
-      material.normalMap.wrapS = material.normalMap.wrapT = T.RepeatWrapping
-      material.normalMap.repeat.set(...(d.repeat ?? [1, 1]))
+      try {
+        const normal = await loader.loadAsync(d.normalTexture)
+        normal.wrapS = normal.wrapT = T.RepeatWrapping
+        normal.repeat.set(...(d.repeat ?? [1, 1]))
+        material.normalMap?.dispose()
+        material.normalMap = normal
+      } catch {
+        material.userData.textureFallback = { ...material.userData.textureFallback, normal: d.normalTexture }
+        console.warn(`Normal texture unavailable for ${d.id}; keeping the generated or base normal.`, d.normalTexture)
+      }
     }
     result.set(d.id, material)
   }

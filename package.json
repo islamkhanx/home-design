@@ -7,9 +7,12 @@
     "node": ">=22.16"
   },
   "scripts": {
+    "predev": "npm run textures:fetch -- --optional",
     "dev": "vite --host 127.0.0.1",
+    "prebuild": "npm run textures:fetch -- --optional",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
+    "pretest": "npm run textures:fetch -- --optional",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "test:core": "node --experimental-strip-types --test tests/math.test.ts tests/schema.test.ts tests/runner.test.ts tests/kitchen.test.ts",
     "test:geometry": "node --experimental-strip-types --test tests/geometry.test.ts",
@@ -18,6 +21,8 @@
     "render:preview": "node --experimental-strip-types scripts/render.mjs preview",
     "render:quality": "node --experimental-strip-types scripts/render.mjs quality",
     "render:ultra": "node --experimental-strip-types scripts/render.mjs ultra",
+    "render:review": "node --experimental-strip-types scripts/review-render.mjs",
+    "review:gallery": "node scripts/review-gallery.mjs",
     "doctor": "node scripts/doctor.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -27,7 +32,8 @@
     "documents:pdf": "node --experimental-strip-types scripts/generate-documents.mjs --pdf",
     "generate:apartment": "node --experimental-strip-types scripts/generate-apartment.mjs",
     "tour": "node --experimental-strip-types scripts/video-tour.mjs",
-    "tour:pause": "node --experimental-strip-types scripts/video-tour.mjs --pause"
+    "tour:pause": "node --experimental-strip-types scripts/video-tour.mjs --pause",
+    "textures:fetch": "node scripts/fetch-material-textures.mjs"
   },
   "dependencies": {
     "@tresjs/core": "5.10.1",

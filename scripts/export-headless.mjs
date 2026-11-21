@@ -14,7 +14,8 @@ import {
   visibleEntities,
   disposeTree,
 } from '../src/scene/canonical.ts'
-import { presets, fitOrthographic } from '../src/scene/cameras.ts'
+import { presets, fitOrthographic, safeIndoorCamera } from '../src/scene/cameras.ts'
+import { prepareWalkthroughApartment } from '../src/scene/walking-space.ts'
 import { lightingSpecs, updateEmitters } from '../src/scene/lighting.ts'
 import { proceduralPixels } from '../src/scene/materials.ts'
 import { parseApartment } from '../src/domain/schema.ts'
@@ -51,7 +52,7 @@ function png(pixels, size, flip = true) {
     chunk('IEND', Buffer.alloc(0)),
   ])
 }
-function embedSurfaces(buffer, materials) {
+async function embedSurfaces(buffer, materials) {
   const source = Buffer.from(buffer),
     jsonSize = source.readUInt32LE(12)
   const gltf = JSON.parse(source.subarray(20, 20 + jsonSize).toString())
@@ -61,33 +62,52 @@ function embedSurfaces(buffer, materials) {
   gltf.samplers ??= []
   const sampler =
     gltf.samplers.push({ magFilter: 9729, minFilter: 9987, wrapS: 10497, wrapT: 10497 }) - 1
-  const texture = (pixels, size, name) => {
+  const imageTexture = (bytes, name, mimeType) => {
     binary = Buffer.concat([binary, Buffer.alloc((4 - (binary.length % 4)) % 4)])
-    const bytes = png(pixels, size),
-      offset = binary.length
+    const offset = binary.length
     binary = Buffer.concat([binary, bytes])
     const view =
       gltf.bufferViews.push({ buffer: 0, byteOffset: offset, byteLength: bytes.length }) - 1
-    const image = gltf.images.push({ bufferView: view, mimeType: 'image/png', name }) - 1
+    const image = gltf.images.push({ bufferView: view, mimeType, name }) - 1
     return gltf.textures.push({ source: image, sampler }) - 1
+  }
+  const texture = (pixels, size, name) => imageTexture(png(pixels, size), name, 'image/png')
+  const fileTexture = async (url, name) => {
+    if (!/^\/textures\/[^?]+\.(png|jpe?g)$/i.test(url) || url.includes('..'))
+      throw new Error(`Unsupported local texture: ${url}`)
+    let bytes
+    try { bytes = await readFile(path.join(projectRoot, 'public', url)) }
+    catch (error) {
+      if (error.code !== 'ENOENT') throw error
+      console.warn(`Local texture unavailable; using the generated or base material: ${url}`)
+      return null
+    }
+    return imageTexture(bytes, name, /\.png$/i.test(url) ? 'image/png' : 'image/jpeg')
   }
   for (const definition of materials) {
     const pixels = proceduralPixels(definition)
-    if (!pixels) continue
-    const color = texture(pixels.colors, pixels.size, definition.id + '-color')
-    const normal = texture(pixels.normals, pixels.size, definition.id + '-normal')
-    const packed = new Uint8ClampedArray(pixels.rough)
+    if (!pixels && !definition.texture && !definition.normalTexture) continue
+    const photo = definition.texture ? await fileTexture(definition.texture, definition.id + '-photo') : null
+    const suppliedNormal = definition.normalTexture ? await fileTexture(definition.normalTexture, definition.id + '-normal') : null
+    const color = photo ?? (pixels ? texture(pixels.colors, pixels.size, definition.id + '-color') : null)
+    const normal = suppliedNormal ?? (pixels ? texture(pixels.normals, pixels.size, definition.id + '-normal') : null)
+    const fallback = {
+      ...(definition.texture && photo === null ? { color: definition.texture } : {}),
+      ...(definition.normalTexture && suppliedNormal === null ? { normal: definition.normalTexture } : {}),
+    }
+    const packed = new Uint8ClampedArray(pixels?.rough ?? [])
     // glTF roughness lives in G; metalness in B (the scalar factor is applied separately).
     for (let i = 0; i < packed.length; i += 4) {
       packed[i] = 255
       packed[i + 2] = 255
     }
-    const roughness = texture(packed, pixels.size, definition.id + '-roughness')
+    const roughness = pixels ? texture(packed, pixels.size, definition.id + '-roughness') : null
     for (const material of gltf.materials)
       if (material.name === definition.id) {
-        material.pbrMetallicRoughness.baseColorTexture = { index: color }
-        material.pbrMetallicRoughness.metallicRoughnessTexture = { index: roughness }
-        material.normalTexture = { index: normal, scale: 0.4 }
+        if (color !== null) material.pbrMetallicRoughness.baseColorTexture = { index: color }
+        if (roughness !== null) material.pbrMetallicRoughness.metallicRoughnessTexture = { index: roughness }
+        if (normal !== null) material.normalTexture = { index: normal, scale: 0.4 }
+        if (Object.keys(fallback).length) material.extras = { ...material.extras, textureFallback: fallback }
       }
   }
   gltf.buffers[0].byteLength = binary.length
@@ -105,27 +125,35 @@ function embedSurfaces(buffer, materials) {
   binaryHeader.writeUInt32LE(0x004e4942, 4)
   return Buffer.concat([header, json, binaryHeader, binary])
 }
+/** Presentation camera coordinates are meters. They never alter the source apartment.
+ * @param {{input?: string, output?: string, view?: string, lighting?: string, room?: string, camera?: {position: number[], target: number[], fov?: number}}} [options]
+ */
 export async function exportHeadlessScene({
   input,
   output = path.join(projectRoot, 'exports/latest'),
   view = 'dollhouse',
   lighting = 'day',
   room = 'all',
+  camera,
 } = {}) {
   if (!['dollhouse', 'interior', 'plan', 'free', 'ceiling', 'electrical'].includes(view)) throw new Error('Unknown view')
   if (!['day', 'clean', 'evening'].includes(lighting)) throw new Error('Unknown lighting')
-  const a = parseApartment(
+  if (camera && (view !== 'interior' ||
+      ![camera.position, camera.target].every((v) => Array.isArray(v) && v.length === 3 && v.every(Number.isFinite)) ||
+      (camera.fov !== undefined && (!Number.isFinite(camera.fov) || camera.fov < 20 || camera.fov > 120))))
+    throw new Error('An interior camera requires finite 3D position/target in meters and a valid field of view.')
+  const source = parseApartment(
     JSON.parse(await readFile(input ?? path.join(projectRoot, 'src/data/apartment.json'), 'utf8')),
   )
-  if (a.materials.some((m) => m.texture || m.normalTexture))
-    throw new Error(
-      'File textures require the browser exporter; headless mode supports the shared procedural materials.',
-    )
-  if (room !== 'all' && !a.rooms.some((r) => r.id === room && r.polygon))
+  if (room !== 'all' && !source.rooms.some((r) => r.id === room && r.polygon))
     throw new Error('Unknown room')
+  // The browser uses these declared open-door poses for indoor viewing. Stage the
+  // same copy here; its hash and sourceApartment must describe the exported GLB.
+  const a = view === 'interior' ? prepareWalkthroughApartment(source) : source
   const root = await buildCanonical(a)
   applyVisibility(root, a, room, view, false)
-  updateEmitters(root, a, lightingSpecs(a, room, lighting))
+  const specs = lightingSpecs(a, view === 'interior' ? 'all' : room, lighting)
+  updateEmitters(root, a, specs)
   // GLTFExporter only requires FileReader to convert its completed Blob to binary in Node.
   const original = globalThis.FileReader
   globalThis.FileReader = class {
@@ -137,8 +165,15 @@ export async function exportHeadlessScene({
     }
   }
   try {
+    const cameraRoom = view === 'interior' && room === 'all'
+      ? (a.rooms.find((r) => r.id === 'hall' && r.polygon) ?? a.rooms.find((r) => r.polygon))?.id
+      : room
+    const cameraPresets = presets(root, cameraRoom)
+    if (camera) cameraPresets.interior = { ...cameraPresets.interior, ...camera }
+    if (view === 'interior')
+      cameraPresets.interior = safeIndoorCamera(cameraPresets.interior, a, root, cameraRoom)
     const raw = await new GLTFExporter().parseAsync(root, { binary: true, onlyVisible: false })
-    const glb = embedSurfaces(raw, a.materials)
+    const glb = await embedSurfaces(raw, a.materials)
     const metadata = {
       schemaVersion: 1,
       units: 'm',
@@ -148,11 +183,11 @@ export async function exportHeadlessScene({
       sourceApartment: a,
       renderNotice: renderNotice(a, room),
       roomId: room,
-      camera: fitOrthographic(presets(root)[view], root, 16 / 9),
-      cameraPresets: presets(root),
+      camera: fitOrthographic(cameraPresets[view], root, 16 / 9),
+      cameraPresets,
       visibleEntityIds: visibleEntities(root),
       lightingPreset: lighting,
-      lights: lightingSpecs(a, room, lighting),
+      lights: specs,
       materials: a.materials,
       geometry: geometryManifest(root),
       exportedAt: new Date().toISOString(),

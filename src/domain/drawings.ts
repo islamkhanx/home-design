@@ -1,6 +1,7 @@
 import { Euler, Matrix4, Vector3 } from 'three'
 import { deg } from './math.ts'
 import type { Apartment, Entity } from './schema.ts'
+import { roomElectricalPoints } from './electrical.ts'
 
 export const escapeHtml = (value: unknown) => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!))
 const n = (v: number) => Math.round(v * 100) / 100
@@ -15,12 +16,13 @@ const wrap = (title: string, body: string) => `<svg xmlns="http://www.w3.org/200
 export function planEntities(a: Apartment, roomId: string) {
   return a.objects.filter(o => o.roomId === roomId && !['Floor','Ceiling','Wall','Door','Window','Socket','Switch','DimensionLine','RoomLabel','Spotlight','LEDStrip','TrackLight','Pendant'].includes(o.kind))
 }
-export function planSvg(a: Apartment, roomId: string, layer: 'furniture' | 'ceiling' | 'electrical' = 'furniture'): string {
+export function planSvg(a: Apartment, roomId: string, layer: 'furniture' | 'ceiling' | 'electrical' | 'coordination' = 'furniture'): string {
   const room = a.rooms.find(r => r.id === roomId)
+  const furniture = layer === 'furniture' || layer === 'coordination'
   if (!room?.polygon) return wrap('Нет геометрии', svgText(410, 320, 'Для плана необходимы обмеры и геометрия.'))
   const xs = room.polygon.map(p => p[0]), zs = room.polygon.map(p => p[1])
   const minX = Math.min(...xs), maxX = Math.max(...xs), minZ = Math.min(...zs), maxZ = Math.max(...zs)
-  const scale = Math.min(580 / (maxX - minX), 490 / (maxZ - minZ))
+  const scale = Math.min(580 / (maxX - minX), (layer === 'coordination' ? 450 : 490) / (maxZ - minZ))
   const ox = 410 - (maxX + minX) / 2 * scale, oz = 315 - (maxZ + minZ) / 2 * scale
   const xy = (x: number, z: number) => [ox + x * scale, oz + z * scale]
   const polygon = (points: number[][], fill: string, stroke = '#757a6a', dashed = false) => `<polygon points="${points.map(p => xy(p[0], p[1]).map(n).join(',')).join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="1.3"${dashed ? ' stroke-dasharray="4 3"' : ''}/>`
@@ -42,9 +44,9 @@ export function planSvg(a: Apartment, roomId: string, layer: 'furniture' | 'ceil
     const [w,,d] = o.size
     const points = (o.surface?.polygon ?? [[-w/2,-d/2],[w/2,-d/2],[w/2,d/2],[-w/2,d/2]]).map(([x,z]) => { const p = transform(o,x,0,z); return [p[0],p[2]] })
     const mat = a.materials.find(m => m.id === o.material)
-    body += polygon(points, layer !== 'furniture' ? '#f3f3ee' : mat?.color ?? '#ddd', '#777c70', o.kind === 'Appliance')
+    body += polygon(points, !furniture ? '#f3f3ee' : mat?.color ?? '#ddd', '#777c70', o.kind === 'Appliance')
     const [x,y] = xy(o.position[0],o.position[2])
-    if (layer === 'furniture') markers.push({x,y,index:i+1})
+    if (furniture) markers.push({x,y,index:i+1})
   })
   const placed: {x:number;y:number}[] = []
   for (const m of markers) {
@@ -60,11 +62,11 @@ export function planSvg(a: Apartment, roomId: string, layer: 'furniture' | 'ceil
       body += `<circle cx="${n(x)}" cy="${n(y)}" r="13" fill="#f3dfaa" stroke="#947a32"/>` + svgText(x,y+4,`L${i+1}`,10)
     })
   }
-  if(layer === 'electrical') {
+  if(layer === 'electrical' || layer === 'coordination') {
     const labels: {x:number;y:number}[]=[]
-    for(const e of a.objects.filter(o=>o.roomId===roomId&&o.electrical)) {
+    for(const e of roomElectricalPoints(a,roomId)) {
       const [x,y]=xy(e.position[0],e.position[2]);const color=e.kind==='Socket'?'#245b59':'#a56b28'
-      let lx=Math.max(120,Math.min(690,x+(x<410?90:-90))),ly=y
+      let lx=layer === 'coordination' ? 725 : Math.max(120,Math.min(690,x+(x<410?90:-90))),ly=y
       while(labels.some(p=>Math.abs(p.x-lx)<150&&Math.abs(p.y-ly)<26))ly+=26
       labels.push({x:lx,y:ly})
       body+=line(x,y,lx,ly,color)+`<circle cx="${n(x)}" cy="${n(y)}" r="7" fill="${color}"/>`
@@ -73,12 +75,23 @@ export function planSvg(a: Apartment, roomId: string, layer: 'furniture' | 'ceil
     }
     body+=svgText(410,592,'E — розетки / S — выключатели · h до центра · предложение',12)
   }
+  if(layer === 'coordination') {
+    const measured = items.map((o,i)=>({o,index:i+1})).filter(({o})=>['Vanity','Wardrobe','Appliance','Bathtub','Toilet'].includes(o.kind) || o.id==='mirror').sort((a,b)=>a.o.position[2]-b.o.position[2])
+    measured.forEach(({o,index},i)=>{
+      const [x,y]=xy(o.position[0],o.position[2]),ly=100+i*(440/Math.max(1,measured.length-1))
+      body+=line(x,y,200,ly,'#8b9586')
+      body+=`<rect x="6" y="${n(ly-22)}" width="194" height="44" rx="3" fill="#ffffff" stroke="#8b9586"/>`
+      body+=svgText(103,ly-6,`${index}. ${o.name.replace('A3 · ','')}`,9)
+      body+=svgText(103,ly+11,o.size.join(' × '),12)
+    })
+    body+=svgText(410,572,'Габариты: Ш × В × Г, мм · локальные оси до поворота',12)
+  }
   if(layer === 'ceiling')body+=svgText(410,592,`Матовый потолок · отметка ${a.objects.find(o=>o.roomId===roomId&&o.kind==='Ceiling')?.position[1] ?? '—'} мм · предложение`,12)
   const [left,top] = xy(minX,minZ), [right,bottom] = xy(maxX,maxZ)
   body += line(left,top-35,right,top-35) + line(left,top-42,left,top-23) + line(right,top-42,right,top-23) + svgText((left+right)/2,top-43,`${n(maxX-minX)} мм`)
   body += line(right+35,top,right+35,bottom) + line(right+27,top,right+43,top) + line(right+27,bottom,right+43,bottom) + svgText(right+48,(top+bottom)/2,`${n(maxZ-minZ)} мм`,12,'start')
   body += svgText(410,625,'УСЛОВНАЯ МОДЕЛЬ · миллиметры · не обмер и не монтажный план',12)
-  return wrap(layer === 'furniture' ? 'План расстановки' : layer === 'electrical' ? 'Предложение электрики' : 'Предложение потолка и света', body)
+  return wrap(layer === 'coordination' ? 'Мебель, размеры и электрические точки' : layer === 'furniture' ? 'План расстановки' : layer === 'electrical' ? 'Предложение электрики' : 'Предложение потолка и света', body)
 }
 
 export function elevationSvg(o: Entity, tile: [number, number]): string {

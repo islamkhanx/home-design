@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, watch, ref } from 'vue'
+import { onMounted, onBeforeUnmount, watch, ref, nextTick } from 'vue'
 import { useTresContext, useLoop } from '@tresjs/core'
 import { OrbitControls } from '@tresjs/cientos'
 import * as T from 'three'
@@ -15,6 +15,8 @@ import {
 } from '../scene/canonical.ts'
 import type { ViewMode } from '../scene/canonical.ts'
 import { makeCamera, presets, snapshotCamera, fitOrthographic } from '../scene/cameras.ts'
+import { bindIndoorControls } from '../scene/indoor-controls.ts'
+import { prepareWalkthroughApartment, walkingSpace, safeWalkingStart } from '../scene/walking-space.ts'
 import { makeLighting, lightingSpecs, updateEmitters } from '../scene/lighting.ts'
 import type { LightingPreset } from '../scene/lighting.ts'
 import { makeAnnotations, makeElectricalAnnotations } from '../scene/annotations.ts'
@@ -40,6 +42,8 @@ let root: T.Group | null = null,
   currentCamera: T.PerspectiveCamera | T.OrthographicCamera | null = null
 let post: ReturnType<typeof createPresentation> | undefined
 let mirrors: T.Group | null = null
+let releaseIndoorControls: (() => void) | undefined
+let sceneModel = props.model
 const { render } = useLoop()
 let dirty = true,
   lastFrame = ''
@@ -86,14 +90,14 @@ function presentation() {
   dirty = true
   if (!root) return
   applyVisibility(root, props.model, props.room, props.mode, props.cutaway, props.showCeilings)
-  const specs = lightingSpecs(props.model, props.room, props.lighting)
+  const specs = lightingSpecs(props.model, props.mode === 'interior' ? 'all' : props.room, props.lighting)
   updateEmitters(root, props.model, specs)
   remove(lights)
   lights = makeLighting(specs, props.lighting, props.mode === 'ceiling')
   ctx.scene.value.add(lights)
   remove(annotations)
   annotations = new T.Group()
-  if (props.mode === 'electrical') annotations.add(makeElectricalAnnotations(props.model, props.room, root))
+  if (props.mode === 'electrical' || props.mode === 'plan') annotations.add(makeElectricalAnnotations(props.model, props.room, root))
   if (props.dimensions) annotations.add(makeAnnotations(props.model, props.room, root, null, props.mode === 'ceiling'))
   if (annotations) ctx.scene.value.add(annotations)
   disposeMirrors(mirrors)
@@ -107,26 +111,46 @@ function presentation() {
 function resetCamera() {
   dirty = true
   if (!root) return
+  releaseIndoorControls?.()
+  releaseIndoorControls = undefined
   const spec = fitOrthographic(presets(root)[props.mode], root, ctx.sizes.aspectRatio.value || 1.6)
+  // Reserve space for outer dimension labels and plan controls, not only meshes.
+  if (props.mode === 'plan') spec.verticalSpan *= 1.25
   if (currentCamera) ctx.camera.deregisterCamera(currentCamera)
   currentCamera = makeCamera(spec, ctx.sizes.aspectRatio.value || 1.6)
   ctx.camera.registerCamera(currentCamera, true)
   target.value = spec.target as [number, number, number]
   cameraKey.value++
+  // Wait for the old orbit controller to unmount before attaching indoor input.
+  const camera = currentCamera
+  const space = props.mode === 'interior' ? walkingSpace(sceneModel,root) : null
+  if(space) {
+    const polygon=sceneModel.rooms.find(r=>r.id===props.room)?.polygon?.map(p=>p.map(n=>n/1000))??[]
+    const p=safeWalkingStart([camera.position.x,camera.position.z],space,polygon)
+    camera.position.x=p[0];camera.position.z=p[1];camera.updateMatrixWorld()
+  }
+  nextTick(() => {
+    if (!alive || camera !== currentCamera || props.mode !== 'interior') return
+    releaseIndoorControls = bindIndoorControls(camera as T.PerspectiveCamera,
+      (ctx.renderer.instance as T.WebGLRenderer).domElement,
+      () => { dirty = true; ctx.renderer.invalidate() },space!.free)
+  })
   ctx.renderer.invalidate()
 }
 watch(
-  () => props.model,
+  () => [props.model,props.mode === 'interior'],
   async () => {
     const token = ++generation
     try {
-      const next = await buildCanonical(props.model)
+      const nextModel=props.mode === 'interior' ? prepareWalkthroughApartment(props.model) : props.model
+      const next = await buildCanonical(nextModel)
       if (token !== generation || !alive) {
         disposeTree(next)
         return
       }
       remove(root)
       root = next
+      sceneModel = nextModel
       ctx.scene.value.add(root)
       presentation()
       resetCamera()
@@ -175,6 +199,7 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   alive = false
+  releaseIndoorControls?.()
   generation++
   const r = ctx.renderer.instance as T.WebGLRenderer
   for (const o of [root, lights, annotations]) remove(o)
@@ -186,7 +211,7 @@ onBeforeUnmount(() => {
 })
 async function exportCurrent() {
   if (!root || !currentCamera) throw new Error('Scene is not ready')
-  return exportScene(root, props.model, snapshotCamera(currentCamera), props.room, props.lighting)
+  return exportScene(root, sceneModel, snapshotCamera(currentCamera), props.room, props.lighting, props.mode)
 }
 function screenshot() {
   if (!currentCamera) throw new Error('Camera is not ready')
@@ -203,12 +228,14 @@ defineExpose({
   viewState: () => {
     const labels: string[] = []
     annotations?.traverse((o) => { if (o.userData.dimension) labels.push(o.userData.label) })
-    return { visible: root?.children.filter((o) => o.visible).map((o) => o.userData.entityId) ?? [], dimensions: labels }
+    return { visible: root?.children.filter((o) => o.visible).map((o) => o.userData.entityId) ?? [], dimensions: labels,
+      camera:currentCamera?snapshotCamera(currentCamera):null,walking:!!releaseIndoorControls }
   },
 })
 </script>
 <template>
   <OrbitControls
+    v-if="mode !== 'interior'"
     :key="cameraKey"
     :target="target"
     make-default

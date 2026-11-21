@@ -1,10 +1,9 @@
 """Render a resumable frame sequence from the exact canonical GLB."""
-import argparse, json, math, struct, sys, time
+import argparse, json, struct, sys, time
 from pathlib import Path
 import bpy
 sys.path.insert(0,str(Path(__file__).parent))
 from render import verify_geometry, camera_from_metadata, configure_lighting, configure_device, vec
-from mathutils import Matrix
 
 def atomic_json(path,value):
     temp=path.with_suffix('.tmp')
@@ -17,21 +16,6 @@ def valid_png(path,width,height):
             header=f.read(24);f.seek(-12,2);tail=f.read()
         return header[:8]==b'\x89PNG\r\n\x1a\n' and struct.unpack('>II',header[16:24])==(width,height) and tail==b'\x00\x00\x00\x00IEND\xaeB`\x82'
     except (OSError,ValueError,struct.error):return False
-
-def animate_camera(camera,spec,t):
-    # Smooth start/stop. Interior: fixed eye point, gentle pan; never cross walls.
-    ease=t*t*(3-2*t)
-    pos=vec(spec['position']);target=vec(spec['target'])
-    if spec['type']=='perspective':
-        direction=target-pos
-        direction=Matrix.Rotation(math.radians(-4+8*ease),4,'Z')@direction
-        target=pos+direction
-    else:
-        camera.data.ortho_scale=spec['verticalSpan']*(1.07-.07*ease)
-    camera.location=pos
-    direction=(target-pos).normalized();up=vec(spec['up']).normalized()
-    right=direction.cross(up).normalized();up=right.cross(direction).normalized()
-    camera.rotation_euler=Matrix((right,up,-direction)).transposed().to_euler()
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--directory',required=True)
@@ -82,9 +66,13 @@ def main():
             if (out/'pause.request').exists():
                 update(phase='paused',message='Paused; completed frames are saved');return
             if frame in complete:continue
-            t=(frame-shot['startFrame'])/max(1,shot['endFrame']-shot['startFrame'])
-            animate_camera(scene.camera,shot['camera'],t)
-            update(frame=frame,shot=shot['title'],message='Rendering frame')
+            pose=plan['walkthrough']['frames'][frame-1]
+            camera=scene.camera;camera.location=vec(pose['position'])
+            direction=(vec(pose['target'])-camera.location).normalized()
+            camera.rotation_euler=direction.to_track_quat('-Z','Y').to_euler()
+            title=plan['roomNames'].get(pose['room'],shot['title'])
+            scene.render.stamp_note_text=title+' | '+' | '.join(shot['renderNotice'])
+            update(frame=frame,shot=title,message='Rendering frame')
             temp=frames/f'{frame:06}.partial.png';scene.render.filepath=str(temp)
             before=time.monotonic()
             try:bpy.ops.render.render(write_still=True)

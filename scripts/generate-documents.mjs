@@ -39,16 +39,37 @@ const files={
   'dossier.json':JSON.stringify(dossier,null,2),
   'estimate-draft.json':JSON.stringify(draft,null,2),
   'estimate.csv':estimateCsv(priced),
-  'manifest.json':JSON.stringify({revision:dossier.revision,generatedAt:dossier.generatedAt,scope:dossier.scope,status:'preliminary-not-for-construction',totals:estimateTotals(priced,draft.reservePercent),sheets:dossier.sheets.map(({id,title,status})=>({id,title,status}))},null,2),
+  'studio-coverage.json':JSON.stringify({reference:dossier.reference,revision:dossier.revision,coverage:dossier.coverage},null,2),
+  'manifest.json':JSON.stringify({revision:dossier.revision,generatedAt:dossier.generatedAt,scope:dossier.scope,status:'preliminary-not-for-construction',reference:dossier.reference,coverage:dossier.coverage,totals:estimateTotals(priced,draft.reservePercent),sheets:dossier.sheets.map(({id,title,status})=>({id,title,status}))},null,2),
 }
 for(const [name,content] of Object.entries(files))await fs.writeFile(path.join(out,name),content)
 for(const sheet of dossier.sheets)if(sheet.svg)await fs.writeFile(path.join(out,'drawings',sheet.id+'.svg'),sheet.svg)
 if(pdf) {
   if(process.platform!=='darwin') throw new Error(`PDF backend requires macOS. Open ${path.join(out,'documents.html')} in a browser and print to PDF.`)
-  const cache=path.join(root,'.artifacts/swift-module-cache')
+  const selected=spawnSync('xcrun',['--find','swift'],{encoding:'utf8',timeout:10000})
+  const swift=selected.status===0?selected.stdout.trim():'swift'
+  const swiftFlags=[]
+  // Some Command Line Tools installations ship the identical SwiftBridging
+  // declaration twice. Mask only that exact duplicate for this invocation;
+  // leave the installed toolchain and all other module declarations untouched.
+  if(path.isAbsolute(swift)) {
+    const include=path.resolve(path.dirname(swift),'../include/swift')
+    const original=path.join(include,'module.modulemap')
+    const maps=await Promise.all([original,path.join(include,'bridging.modulemap')].map(file=>fs.readFile(file,'utf8').catch(error=>{if(error.code==='ENOENT')return '';throw error})))
+    const definition=text=>text.replace(/\/\/[^\n]*/g,'').replace(/\s+/g,' ').trim()
+    if(maps.every(text=>definition(text)==='module SwiftBridging { header "bridging" export * }')) {
+      const support=path.join(root,'.artifacts/document-swift')
+      await fs.mkdir(support,{recursive:true})
+      const empty=path.join(support,'empty.modulemap'),overlay=path.join(support,'overlay.json')
+      await fs.writeFile(empty,'// Duplicate SwiftBridging is provided by bridging.modulemap.\n')
+      await fs.writeFile(overlay,JSON.stringify({version:0,roots:[{type:'file',name:original,'external-contents':empty}]}))
+      swiftFlags.push('-vfsoverlay',overlay)
+    }
+  }
+  const cache=path.join(root,swiftFlags.length?'.artifacts/swift-document-vfs-cache':'.artifacts/swift-module-cache')
   await fs.mkdir(cache,{recursive:true})
-  const result=spawnSync('swift',['-module-cache-path',cache,path.join(root,'scripts/print-documents.swift'),path.join(out,'dossier.json'),path.join(out,'documents.pdf'),path.join(out,'qa')],{stdio:'inherit',timeout:120000,killSignal:'SIGKILL'})
+  const result=spawnSync(swift,[...swiftFlags,'-module-cache-path',cache,path.join(root,'scripts/print-documents.swift'),path.join(out,'dossier.json'),path.join(out,'documents.pdf'),path.join(out,'qa')],{stdio:'inherit',timeout:180000,killSignal:'SIGKILL'})
   if(result.error)throw result.error
   if(result.status!==0)throw new Error(`PDF generation failed (${result.signal??result.status}); HTML and CSV are available in ${out}`)
 }
-console.log(JSON.stringify({output:out,sheets:dossier.sheets.length,drawings:dossier.sheets.filter(s=>s.svg).length,lines:priced.length,status:'preliminary'},null,2))
+console.log(JSON.stringify({output:out,documentTypes:dossier.coverage.length,sheets:dossier.sheets.length,drawings:dossier.sheets.filter(s=>s.svg).length,lines:priced.length,status:'preliminary'},null,2))

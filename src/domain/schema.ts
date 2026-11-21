@@ -74,6 +74,8 @@ export interface Entity {
   surface?: { polygon: V2[]; holes?: V2[][]; thickness: number }
   attach?: { wallId: string; openingId: string }
   params?: {
+    fixture?: 'hygienicShower' | 'towelWarmer' | 'diningChair' | 'officeChair' | 'armchair' | 'mediaScreen' | 'monitor' | 'roundTable' | 'rug' | 'bench' | 'blindCorner' | 'sinkBase' | 'kitchenTap' | 'hob' | 'extractorHood' | 'dropInSink' | 'artwork'
+    sinkCutout?: { center: [number, number]; size: [number, number] }
     doorAngle?: number
     shelves?: number
     cabinetDoors?: number
@@ -99,6 +101,7 @@ export interface Room {
   generated?: boolean
 }
 export interface Apartment {
+  costPlanId?: string
   schemaVersion: 1
   id: string
   name: string
@@ -315,6 +318,13 @@ export function validateApartment(input: unknown): string[] {
     }
     if ((o.kind === 'Door' || o.kind === 'Window') && !o.attach)
       errors.push(o.id + ': opening attachment required.')
+    if (o.params?.sinkCutout) {
+      const c = o.params.sinkCutout
+      if (o.kind !== 'Countertop' || !vector(c.center, 2) || !vector(c.size, 2) ||
+          c.size.some(n => n <= 0) || Math.abs(c.center[0]) + c.size[0] / 2 >= o.size[0] / 2 ||
+          Math.abs(c.center[1]) + c.size[1] / 2 >= o.size[2] / 2)
+        errors.push(o.id + ': invalid sink cutout')
+    }
     if (o.params?.end && !vector(o.params.end, 3))
       errors.push(o.id + ': invalid annotation endpoint.')
     if (

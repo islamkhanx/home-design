@@ -2,11 +2,18 @@ import type { Apartment, Entity } from './schema.ts'
 import { parseApartment } from './schema.ts'
 
 export const ELECTRICAL_KINDS = ['Socket', 'Switch']
+/** Include controls outside a room when they operate fixtures inside it. */
+export function roomElectricalPoints(a: Apartment, roomId: string): Entity[] {
+  const fixtures = new Set(a.objects.filter(o => o.roomId === roomId).map(o => o.id))
+  return a.objects.filter(o => o.visible !== false && o.electrical && (
+    roomId === 'all' || o.roomId === roomId || o.electrical.controls.some(id => fixtures.has(id))
+  ))
+}
 /** Locations are a design proposal; no cable routes, ratings or compliance claim. */
 export function generateElectrical(input: Apartment): Apartment {
   const a = structuredClone(input)
   a.objects = a.objects.filter((o) => !(o.generated && o.electrical))
-  a.revision = 7
+  a.revision = Math.max(a.revision, 7)
   const note =
     'Электрика: автоматическое предложение. Высоты до центра от условного чистого пола; сверить по обмерам, мебели и инженерному проекту. Трассы и защита не назначены.'
   if (!a.notes.includes(note)) a.notes.push(note)
@@ -71,7 +78,7 @@ export function generateElectrical(input: Apartment): Apartment {
     'bathroom',
     'Socket',
     'wall-west',
-    atZ('wall-west', 1400),
+    atZ('wall-west', 1420),
     1100,
     -1,
     2,
@@ -81,12 +88,12 @@ export function generateElectrical(input: Apartment): Apartment {
     'E02',
     'bathroom',
     'Socket',
-    'wall-east',
-    atZ('wall-east', 2200),
+    'wall-south',
+    1120,
     1250,
+    -1,
     1,
-    1,
-    'Стиральная машина · доступный отсек колонны',
+    'Стиральная машина · рядом с колонной, зоны и отключение проверить',
   )
   mount(
     'S01',
@@ -160,7 +167,7 @@ export function generateElectrical(input: Apartment): Apartment {
     'living',
     'Socket',
     'source-living-west',
-    atZ('source-living-west', 7300),
+    atZ('source-living-west', 7700),
     1200,
     -1,
     3,
@@ -171,7 +178,7 @@ export function generateElectrical(input: Apartment): Apartment {
     'living',
     'Socket',
     'source-living-west',
-    atZ('source-living-west', 9000),
+    atZ('source-living-west', 9400),
     950,
     -1,
     3,
@@ -193,7 +200,7 @@ export function generateElectrical(input: Apartment): Apartment {
     'living',
     'Socket',
     'source-living-east',
-    atZ('source-living-east', 7700),
+    atZ('source-living-east', 9050),
     450,
     1,
     2,
@@ -227,7 +234,7 @@ export function generateElectrical(input: Apartment): Apartment {
     'bedroom',
     'Socket',
     'source-bedroom-west',
-    atZ('source-bedroom-west', -3750),
+    atZ('source-bedroom-west', -3590),
     650,
     -1,
     2,
@@ -238,7 +245,7 @@ export function generateElectrical(input: Apartment): Apartment {
     'bedroom',
     'Socket',
     'source-bedroom-west',
-    atZ('source-bedroom-west', -1750),
+    atZ('source-bedroom-west', -1590),
     650,
     -1,
     2,
@@ -249,7 +256,7 @@ export function generateElectrical(input: Apartment): Apartment {
     'bedroom',
     'Socket',
     'source-bedroom-east',
-    atZ('source-bedroom-east', -2750),
+    atZ('source-bedroom-east', -2590),
     1200,
     1,
     3,

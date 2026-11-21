@@ -1,5 +1,9 @@
 import * as T from 'three'
 import type { ViewMode } from './canonical.ts'
+import type { Apartment } from '../domain/schema.ts'
+import { pointInPolygon } from '../domain/math.ts'
+import type { V2 } from '../domain/math.ts'
+import { safeWalkingStart, walkingSpace } from './walking-space.ts'
 export interface CameraSpec {
   type: 'orthographic' | 'perspective'
   position: number[]
@@ -10,20 +14,24 @@ export interface CameraSpec {
   near: number
   far: number
 }
-export function presets(root: T.Group): Record<ViewMode, CameraSpec> {
+export function roomSelectionView(mode: ViewMode, room: string): ViewMode {
+  if (['plan', 'electrical', 'ceiling'].includes(mode)) return mode
+  return room === 'all' ? 'dollhouse' : 'interior'
+}
+export function presets(root: T.Group, interiorRoom?: string): Record<ViewMode, CameraSpec> {
   const b = new T.Box3()
   for (const child of root.children) if (child.visible) b.expandByObject(child)
   if (b.isEmpty()) b.set(new T.Vector3(0, 0, 0), new T.Vector3(3, 2.7, 4))
   const c = b.getCenter(new T.Vector3()),
     s = b.getSize(new T.Vector3()),
     span = Math.max(s.x, s.z, 2) * 1.4
-  const common = { fov: 66, verticalSpan: span, near: 0.02, far: 200, up: [0, 1, 0] }
+  const common = { fov: 58, verticalSpan: span, near: 0.02, far: 200, up: [0, 1, 0] }
   const target = [c.x, c.y, c.z]
   const floors = root.children.filter((o) => o.visible && o.userData.kind === 'Floor')
   const wholeHome = floors.length > 1
-  const interior = wholeHome
-    ? undefined
-    : root.userData.interiorCameras?.[floors[0]?.userData.roomId]
+  const interior =
+    root.userData.interiorCameras?.[interiorRoom ?? root.userData.activeRoom] ??
+    (wholeHome ? undefined : root.userData.interiorCameras?.[floors[0]?.userData.roomId])
   return {
     dollhouse: {
       ...common,
@@ -75,6 +83,34 @@ export function presets(root: T.Group): Record<ViewMode, CameraSpec> {
       position: [c.x + span, c.y + span * 0.65, c.z + span],
       target,
     },
+  }
+}
+
+/** Match the browser's collision correction while retaining the camera's look direction. */
+export function safeIndoorCamera(
+  spec: CameraSpec,
+  apartment: Apartment,
+  root: T.Group,
+  room: string,
+): CameraSpec {
+  const polygon = apartment.rooms.find((r) => r.id === room)?.polygon
+  if (!polygon) throw new Error('An indoor camera requires a room with a floor polygon.')
+  const position = [...spec.position]
+  const floor = polygon.map((p) => p.map((n) => n / 1000) as V2)
+  const space = walkingSpace(apartment, root)
+  const safe = safeWalkingStart(
+    [position[0], position[2]],
+    { free: (p) => pointInPolygon(p as V2, floor) && space.free(p) },
+    floor,
+  )
+  const dx = safe[0] - position[0], dz = safe[1] - position[2]
+  position[0] = safe[0]
+  position[2] = safe[1]
+  return {
+    ...spec,
+    position,
+    target: [spec.target[0] + dx, spec.target[1], spec.target[2] + dz],
+    up: [...spec.up],
   }
 }
 export function makeCamera(
