@@ -4,9 +4,27 @@ import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 export const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 export const PRESETS = {
+  draft: { width: 480, height: 270, samples: 16, threshold: 0.12 },
   preview: { width: 960, height: 540, samples: 32, threshold: 0.08 },
   quality: { width: 1920, height: 1080, samples: 256, threshold: 0.02 },
   ultra: { width: 3840, height: 2160, samples: 1024, threshold: 0.008 },
+}
+/** Progress comes from Blender's stages/sample counters, never from a timer. */
+export function parseRenderProgress(line) {
+  const event = line.match(/RENDER_PROGRESS (\{[^\n]+\})/)
+  if (event) {
+    try { return JSON.parse(event[1]) } catch {}
+  }
+  const device = line.match(/CYCLES_DEVICE (.+)/)
+  if (device) return { device: device[1].trim() }
+  const samples = line.match(/(?:Sample\s+|Rendering\s+)(\d+)\s*\/\s*(\d+)/i)
+  if (samples) {
+    const completed = Number(samples[1]), total = Number(samples[2])
+    if (total > 0) return { phase: 'rendering', progress: .12 + .83 * Math.min(1, completed / total), samplesCompleted: completed, samplesTotal: total }
+  }
+  if (/Denoising/i.test(line)) return { phase: 'denoising', progress: .96 }
+  if (/RENDER_COMPLETE /.test(line)) return { phase: 'done', progress: 1 }
+  return null
 }
 export function detectBlender(env = process.env) {
   const configured = env.BLENDER_PATH
@@ -43,13 +61,16 @@ export function launchBlender(
     output,
     preset = 'quality',
     device = 'auto',
+    look = 'photoreal',
     onLog = () => {},
+    onProgress = () => {},
     onSpawn = () => {},
   },
   env = process.env,
 ) {
   if (!PRESETS[preset]) throw new Error('Unknown render preset')
   if (!['auto', 'cpu', 'gpu'].includes(device)) throw new Error('Unknown Cycles device')
+  if (!['photoreal', 'review'].includes(look)) throw new Error('Unknown render look')
   const binary = detectBlender(env)
   if (!binary) throw new Error('Blender not found. Install Blender or set BLENDER_PATH in .env.')
   const args = [
@@ -70,6 +91,8 @@ export function launchBlender(
     preset,
     '--device',
     device,
+    '--look',
+    look,
   ]
   // An old PNG must never be mistaken for the result of a failed new run.
   rmSync(path.resolve(output), { force: true })
@@ -81,10 +104,11 @@ export function launchBlender(
       shell: false,
     })
     onSpawn(child)
-    let errorTail = '',
+    let errorTail = '', pending = '',
       finished = false
     const timeout = setTimeout(
       () => {
+        finished = true
         child.kill('SIGTERM')
         reject(new Error('Render exceeded 60 minutes. Process terminated.'))
       },
@@ -94,6 +118,13 @@ export function launchBlender(
       const s = String(chunk)
       errorTail = (errorTail + s).slice(-4000)
       onLog(s)
+      pending += s
+      const lines = pending.split(/[\r\n]+/)
+      pending = lines.pop() ?? ''
+      for (const line of lines) {
+        const progress = parseRenderProgress(line)
+        if (progress) onProgress(progress)
+      }
     }
     child.stdout.on('data', log)
     child.stderr.on('data', log)

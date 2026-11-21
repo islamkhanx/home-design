@@ -20,8 +20,13 @@ export async function buildCanonical(input: Apartment): Promise<T.Group> {
       a.rooms.filter((r) => r.interiorCamera).map((r) => [r.id, r.interiorCamera]),
     ),
   }
-  for (const e of a.objects)
-    if (!['DimensionLine', 'RoomLabel'].includes(e.kind)) root.add(createEntity(e, a, materials))
+  for (const e of a.objects) {
+    if (['DimensionLine', 'RoomLabel'].includes(e.kind)) continue
+    const scopedMaterials = e.materialOverrides ? new Map(materials) : materials
+    for (const [from, to] of Object.entries(e.materialOverrides ?? {}))
+      scopedMaterials.set(from, materials.get(to)!)
+    root.add(createEntity(e, a, scopedMaterials))
+  }
   root.updateMatrixWorld(true)
   applyMetricUVs(root)
   return root

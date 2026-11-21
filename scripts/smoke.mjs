@@ -5,7 +5,7 @@ import path from 'node:path'
 import { createServer } from 'vite'
 import { chromium } from 'playwright'
 import { projectRoot, loadLocalEnv, detectBlender, launchBlender } from './blender-runtime.mjs'
-import { validateBundle } from './local-render-plugin.mjs'
+import { validateBundle } from './render-bundle.mjs'
 loadLocalEnv()
 const out = path.join(projectRoot, '.artifacts/smoke')
 await mkdir(out, { recursive: true })
@@ -62,12 +62,34 @@ try {
   assert.equal(eyeAfter[1],eyeBefore[1],'Walking must stay at eye height')
   await page.getByRole('button',{name:'Вернуть исходный ракурс'}).click()
   const sourceBefore = await page.evaluate(() => JSON.stringify(window.__HOME_DESIGN__.model))
+  await page.getByRole('button', { name: 'Гостиная', exact: true }).click()
+  const canvas = page.locator('canvas').first()
+  await canvas.focus()
+  await page.keyboard.press('ArrowRight')
+  await canvas.hover({ position: { x: 400, y: 280 } })
+  const initialFov = await page.evaluate(() => window.__HOME_DESIGN__.viewState().camera.fov)
+  await page.mouse.wheel(0, -150)
+  await page.waitForFunction(fov => window.__HOME_DESIGN__.viewState().camera.fov !== fov, initialFov)
+  const cameraBeforeStudy = await page.evaluate(() => window.__HOME_DESIGN__.viewState().camera)
+  await page.evaluate(() => window.__HOME_DESIGN__.setStudy('clay-arch'))
+  await page.getByRole('note').getByText('Глина и арки · предложение').waitFor()
+  assert.deepEqual(await page.evaluate(() => window.__HOME_DESIGN__.viewState().camera), cameraBeforeStudy,
+    'Changing the interior keeps eye position, direction and lens while walking')
+  const activeStyle = await page.evaluate(() => window.__HOME_DESIGN__.export())
+  assert.match(activeStyle.metadata.sourceApartment.generation.label, /Глина и арки/)
+  assert.equal(activeStyle.metadata.roundTrip.passed, true)
+  await page.evaluate(() => window.__HOME_DESIGN__.setStudy('current'))
+  await page.getByRole('note').getByText('Интерьер сгенерирован автоматически').waitFor()
+  assert.deepEqual(await page.evaluate(() => window.__HOME_DESIGN__.viewState().camera), cameraBeforeStudy,
+    'Switching back restores the design at the same camera')
+  await page.getByRole('button', { name: 'Санузел', exact: true }).click()
   for (const [label, type] of [
     ['План', 'orthographic'],
     ['Внутри', 'perspective'],
     ['Общий вид', 'orthographic'],
   ]) {
     await page.getByRole('button', { name: label, exact: true }).click()
+    await page.waitForFunction(() => window.__HOME_DESIGN__.ready)
     const result = await page.evaluate(() => window.__HOME_DESIGN__.export())
     assert.equal(result.metadata.camera.type, type)
     assert.equal(result.metadata.roundTrip.passed, true)

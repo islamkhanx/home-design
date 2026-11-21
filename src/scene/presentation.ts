@@ -58,6 +58,7 @@ export function createPresentation(renderer: T.WebGLRenderer, scene: T.Scene, ca
 export function makeMirrors(model: Apartment, room: string) {
   const group = new T.Group()
   group.name = 'presentation-reflections'
+  let reflecting = false
   for (const e of model.objects) {
     if (e.material !== 'mirror' || e.visible === false || (room !== 'all' && e.roomId !== room))
       continue
@@ -74,10 +75,16 @@ export function makeMirrors(model: Apartment, room: string) {
     holder.rotation.set(...(e.rotation.map(T.MathUtils.degToRad) as [number, number, number]))
     mirror.position.set(thinX ? w / 2 + 0.0003 : 0, h / 2, thinX ? 0 : d / 2 + 0.0003)
     if (thinX) mirror.rotation.y = Math.PI / 2
-    // Normal/depth passes must never recursively render a mirror.
+    // A reflection pass can see other mirrors through an open door.
     const reflect = mirror.onBeforeRender.bind(mirror)
     mirror.onBeforeRender = (...args) => {
-      if (!args[1].overrideMaterial) reflect(...args)
+      if (reflecting || args[1].overrideMaterial) return
+      reflecting = true
+      try {
+        reflect(...args)
+      } finally {
+        reflecting = false
+      }
     }
     holder.add(mirror)
     group.add(holder)

@@ -20,7 +20,7 @@ import { lightingSpecs, updateEmitters } from '../src/scene/lighting.ts'
 import { proceduralPixels } from '../src/scene/materials.ts'
 import { parseApartment } from '../src/domain/schema.ts'
 import { projectRoot } from './blender-runtime.mjs'
-import { validateBundle } from './local-render-plugin.mjs'
+import { validateBundle } from './render-bundle.mjs'
 
 function png(pixels, size, flip = true) {
   const chunk = (type, data) => {
@@ -126,7 +126,7 @@ async function embedSurfaces(buffer, materials) {
   return Buffer.concat([header, json, binaryHeader, binary])
 }
 /** Presentation camera coordinates are meters. They never alter the source apartment.
- * @param {{input?: string, output?: string, view?: string, lighting?: string, room?: string, camera?: {position: number[], target: number[], fov?: number}}} [options]
+ * @param {{input?: string, output?: string, view?: string, lighting?: string, room?: string, conceptLighting?: {roomId: string, style: string, label?: string, roomIds?: string[]}, camera?: {position: number[], target: number[], fov?: number}}} [options]
  */
 export async function exportHeadlessScene({
   input,
@@ -135,6 +135,7 @@ export async function exportHeadlessScene({
   lighting = 'day',
   room = 'all',
   camera,
+  conceptLighting,
 } = {}) {
   if (!['dollhouse', 'interior', 'plan', 'free', 'ceiling', 'electrical'].includes(view)) throw new Error('Unknown view')
   if (!['day', 'clean', 'evening'].includes(lighting)) throw new Error('Unknown lighting')
@@ -147,6 +148,9 @@ export async function exportHeadlessScene({
   )
   if (room !== 'all' && !source.rooms.some((r) => r.id === room && r.polygon))
     throw new Error('Unknown room')
+  if (conceptLighting && (conceptLighting.roomId !== room || room === 'bathroom' ||
+      !/^[a-z][a-z0-9-]{0,39}$/.test(conceptLighting.style)))
+    throw new Error('Invalid concept lighting scope')
   // The browser uses these declared open-door poses for indoor viewing. Stage the
   // same copy here; its hash and sourceApartment must describe the exported GLB.
   const a = view === 'interior' ? prepareWalkthroughApartment(source) : source
@@ -181,13 +185,18 @@ export async function exportHeadlessScene({
       sourceRevision: a.revision,
       sourceHash: createHash('sha256').update(JSON.stringify(a)).digest('hex'),
       sourceApartment: a,
-      renderNotice: renderNotice(a, room),
+      renderNotice: conceptLighting ? [
+        `${conceptLighting.label ?? source.generation?.label ?? conceptLighting.style} · концепция интерьера`,
+        'Контур по исходному плану · нужен обмер · в проект не внесено',
+      ] : renderNotice(a, room),
       roomId: room,
       camera: fitOrthographic(cameraPresets[view], root, 16 / 9),
       cameraPresets,
       visibleEntityIds: visibleEntities(root),
       lightingPreset: lighting,
+      ...(conceptLighting ? { conceptLighting } : {}),
       lights: specs,
+      photorealLights: lightingSpecs(a, 'all', 'clean'),
       materials: a.materials,
       geometry: geometryManifest(root),
       exportedAt: new Date().toISOString(),

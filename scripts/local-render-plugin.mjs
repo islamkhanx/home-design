@@ -3,47 +3,22 @@ import { mkdir, writeFile, readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { detectBlender, launchBlender, projectRoot, PRESETS } from './blender-runtime.mjs'
 import { tourService } from './tour-service.mjs'
-export function validateBundle(glb, metadata) {
-  if (
-    !Buffer.isBuffer(glb) ||
-    glb.length < 20 ||
-    glb.readUInt32LE(0) !== 0x46546c67 ||
-    glb.readUInt32LE(4) !== 2 ||
-    glb.readUInt32LE(8) !== glb.length
-  )
-    throw new Error('Invalid GLB header or length.')
-  const jsonLength = glb.readUInt32LE(12)
-  if (glb.readUInt32LE(16) !== 0x4e4f534a || jsonLength > glb.length - 20)
-    throw new Error('Missing GLB JSON.')
-  const data = JSON.parse(glb.subarray(20, 20 + jsonLength).toString())
-  for (const asset of [...(data.images ?? []), ...(data.buffers ?? [])])
-    if (asset.uri && !asset.uri.startsWith('data:'))
-      throw new Error('GLB must embed textures and buffers.')
-  if (
-    metadata?.schemaVersion !== 1 ||
-    metadata.units !== 'm' ||
-    !Array.isArray(metadata.geometry) ||
-    metadata.geometry.length > 100000 ||
-    !Array.isArray(metadata.visibleEntityIds) ||
-    !metadata.camera
-  )
-    throw new Error('Invalid scene metadata.')
-  const finiteVector = (v) =>
-    Array.isArray(v) &&
-    v.length === 3 &&
-    v.every((x) => typeof x === 'number' && Number.isFinite(x) && Math.abs(x) < 1e5)
-  for (const p of metadata.geometry)
-    if (typeof p.id !== 'string' || !finiteVector(p.min) || !finiteVector(p.max))
-      throw new Error('Invalid geometry manifest.')
-  for (const key of ['position', 'target', 'up'])
-    if (!finiteVector(metadata.camera[key])) throw new Error('Invalid camera.')
-  return true
-}
-export function localRenderPlugin(env = process.env) {
-  const handleTour=tourService()
+import { designService } from './design-service.mjs'
+import { validateBundle } from './render-bundle.mjs'
+export { validateBundle } from './render-bundle.mjs'
+// Service/storage injection keeps integration tests independent of real,
+// possibly still-running jobs. Production always uses persisted service locks.
+export function localRenderPlugin(env = process.env, {
+  createTourService = tourService,
+  createDesignService = designService,
+  renderDirectory = path.join(projectRoot, '.renders'),
+} = {}) {
+  const handleTour=createTourService()
   const token = randomBytes(32).toString('hex'),
     jobs = new Map()
   let active = null
+  let reserved = false
+  const handleDesign = createDesignService({env, isBusy: async () => !!active || await handleTour.isBusy()})
   const send = (res, code, data) => {
     res.statusCode = code
     res.setHeader('Content-Type', 'application/json')
@@ -55,6 +30,7 @@ export function localRenderPlugin(env = process.env) {
     configureServer(server) {
       server.httpServer?.on('close', () => {
         for (const j of jobs.values()) j.child?.kill('SIGTERM')
+        handleDesign.close()
       })
       server.middlewares.use(async (req, res, next) => {
         if (!req.url?.startsWith('/__local/')) return next()
@@ -72,6 +48,7 @@ export function localRenderPlugin(env = process.env) {
             return send(res, 200, {
               available,
               token,
+              busy: !!active || reserved || await handleDesign.isBusy() || await handleTour.isBusy(),
               message: available
                 ? 'Blender найден. Рендер выполняется на этом компьютере.'
                 : 'Blender не установлен или не найден. Задай BLENDER_PATH в .env.',
@@ -79,8 +56,14 @@ export function localRenderPlugin(env = process.env) {
           }
           if (req.method === 'POST' && req.headers['x-render-token'] !== token)
             return send(res, 403, { error: 'Invalid local render token.' })
-          if (pathname.startsWith('/__local/tour/') && active && req.method === 'POST')
-            return send(res, 409, { error: 'A still render is already running.' })
+          const isStart = req.method === 'POST' && (pathname === '/__local/render' || /^\/__local\/tour\/(start|resume)$/.test(pathname) || pathname === '/__local/design/start')
+          if (isStart && (active || reserved || await handleDesign.isBusy() || await handleTour.isBusy()))
+            return send(res, 409, { error: 'A render or video tour is already running.' })
+          // Another start may have reserved the slot while the disk lock was read.
+          if (isStart && reserved) return send(res, 409, { error: 'A render is starting.' })
+          if (isStart) reserved = true
+          try {
+          if (await handleDesign(req,res,pathname,send)) return
           if (await handleTour(req,res,pathname,send)) return
           if (pathname === '/__local/render' && req.method === 'POST') {
             if (active) return send(res, 409, { error: 'A render is already running.' })
@@ -95,7 +78,8 @@ export function localRenderPlugin(env = process.env) {
             const body = JSON.parse(Buffer.concat(chunks).toString()),
               glb = Buffer.from(body.glb ?? '', 'base64')
             validateBundle(glb, body.metadata)
-            if (!PRESETS[body.preset] || !['auto', 'cpu', 'gpu'].includes(body.device))
+            const look = body.look ?? 'photoreal'
+            if (!PRESETS[body.preset] || !['auto', 'cpu', 'gpu'].includes(body.device) || !['photoreal','review'].includes(look))
               return send(res, 400, { error: 'Invalid preset or device.' })
             if (!detectBlender(env))
               return send(res, 503, { error: 'Blender not found. Set BLENDER_PATH.' })
@@ -104,14 +88,14 @@ export function localRenderPlugin(env = process.env) {
             const id = randomUUID()
             active = id
             try {
-              const dir = path.join(projectRoot, '.renders', id)
+              const dir = path.join(renderDirectory, id)
               await mkdir(dir, { recursive: true })
               const sceneFile = path.join(dir, 'scene.glb'),
                 metadataFile = path.join(dir, 'scene.metadata.json'),
                 output = path.join(dir, 'render.png')
               await writeFile(sceneFile, glb)
               await writeFile(metadataFile, JSON.stringify(body.metadata, null, 2))
-              const job = { id, status: 'running', log: '', output }
+              const job = { id, status: 'running', phase: 'starting', progress: 0, log: '', output, startedAt: Date.now(), preset: body.preset, look }
               jobs.set(id, job)
               launchBlender(
                 {
@@ -120,6 +104,8 @@ export function localRenderPlugin(env = process.env) {
                   output,
                   preset: body.preset,
                   device: body.device,
+                  look,
+                  onProgress: (update) => { if(job.status === 'running') Object.assign(job, update) },
                   onLog: (s) => {
                     job.log = (job.log + s).slice(-24000)
                   },
@@ -128,15 +114,17 @@ export function localRenderPlugin(env = process.env) {
                 env,
               )
                 .then(() => {
-                  if (job.status !== 'cancelled') job.status = 'done'
+                  if (job.status !== 'cancelled') { job.status = 'done'; job.phase = 'done'; job.progress = 1 }
                 })
                 .catch((e) => {
                   if (job.status !== 'cancelled') {
                     job.status = 'error'
+                    job.phase = 'error'
                     job.error = e.message
                   }
                 })
                 .finally(() => {
+                  job.finishedAt = Date.now()
                   active = null
                   delete job.child
                 })
@@ -151,9 +139,11 @@ export function localRenderPlugin(env = process.env) {
             const j = jobs.get(match[2])
             if (!j) return send(res, 404, { error: 'Unknown render job.' })
             if (match[1] === 'jobs' && req.method === 'GET')
-              return send(res, 200, { id: j.id, status: j.status, log: j.log, error: j.error })
+              return send(res, 200, { id: j.id, status: j.status, phase:j.phase, progress:j.progress, samplesCompleted:j.samplesCompleted, samplesTotal:j.samplesTotal, device:j.device, elapsedSeconds:((j.finishedAt ?? Date.now())-j.startedAt)/1000, log: j.log, error: j.error, preset:j.preset, look:j.look })
             if (match[1] === 'cancel' && req.method === 'POST') {
+              if (j.status !== 'running') return send(res, 409, {error:'This render is no longer running.'})
               j.status = 'cancelled'
+              j.phase = 'cancelled'
               j.child?.kill('SIGTERM')
               return send(res, 200, { status: 'cancelled' })
             }
@@ -165,6 +155,7 @@ export function localRenderPlugin(env = process.env) {
             }
           }
           send(res, 404, { error: 'Unknown local route.' })
+          } finally { if (isStart) reserved = false }
         } catch (e) {
           send(res, 400, { error: e.message })
         }

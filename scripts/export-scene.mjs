@@ -49,7 +49,7 @@ export async function exportBrowserScene({
     if (errors.length) throw new Error('Browser errors: ' + errors.join('\n'))
     await mkdir(output, { recursive: true })
     const glb = Buffer.from(payload.glb, 'base64')
-    const { validateBundle } = await import('./local-render-plugin.mjs')
+    const { validateBundle } = await import('./render-bundle.mjs')
     validateBundle(glb, payload.metadata)
     await writeFile(path.join(output, 'scene.glb'), glb)
     await writeFile(

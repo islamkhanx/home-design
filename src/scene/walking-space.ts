@@ -6,7 +6,7 @@ export const CLEARANCE = 0.14
 export function safeWalkingStart(
   p: number[],
   space: { free: (p: number[]) => boolean },
-  polygon: number[][],
+  polygon?: number[][],
 ) {
   if (space.free(p)) return p
   for (let radius = 0.025; radius <= 0.8; radius += 0.025)
@@ -15,7 +15,7 @@ export function safeWalkingStart(
         p[0] + Math.cos((i * Math.PI) / 24) * radius,
         p[1] + Math.sin((i * Math.PI) / 24) * radius,
       ]
-      if (inside(q, polygon) && space.free(q)) return q
+      if ((!polygon || inside(q, polygon)) && space.free(q)) return q
     }
   throw new Error('Нет свободного места для камеры в этой комнате. Проверьте расстановку мебели.')
 }
@@ -72,22 +72,17 @@ export function walkingSpace(a: Apartment, root: T.Group) {
       })
     }
   }
-  const kinds = new Map(a.objects.map((e) => [e.id, e.kind]))
-  const obstacles = geometryManifest(root).filter(
-    (b) =>
-      ![
-        'Floor',
-        'Ceiling',
-        'Spotlight',
-        'TrackLight',
-        'Pendant',
-        'LEDStrip',
-        'Socket',
-        'Switch',
-      ].includes(kinds.get(b.entityId) ?? '') &&
+  const entities = new Map(a.objects.map((e) => [e.id, e]))
+  const passableKinds = new Set([
+    'Floor', 'Ceiling', 'Spotlight', 'TrackLight', 'Pendant', 'LEDStrip', 'Socket', 'Switch',
+  ])
+  const obstacles = geometryManifest(root).filter((b) => {
+    const entity = entities.get(b.entityId)
+    return entity?.visible !== false &&
+      !passableKinds.has(entity?.kind ?? '') &&
       b.max[1] > 0.12 &&
-      b.min[1] < EYE_HEIGHT + 0.15,
-  )
+      b.min[1] < EYE_HEIGHT + 0.15
+  })
   function supported(p: number[]) {
     return (
       polygons.some((poly) => inside(p, poly)) ||

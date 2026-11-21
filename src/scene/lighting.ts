@@ -4,6 +4,8 @@ import { mm, deg } from '../domain/math.ts'
 export type LightingPreset = 'day' | 'evening' | 'clean'
 export type LightSpec = {
   id: string
+  /** Multiple lamps can belong to one declared fixture. */
+  entityId?: string
   type: 'point' | 'spot' | 'area'
   position: number[]
   target: number[]
@@ -15,7 +17,11 @@ export type LightSpec = {
 }
 const emitterBase = new WeakMap<T.Mesh, number[]>()
 export function updateEmitters(root: T.Group, a: Apartment, specs: LightSpec[]) {
-  const powers = new Map(specs.map((s) => [s.id, s.power]))
+  const powers = new Map<string, number>()
+  for (const spec of specs) {
+    const id = spec.entityId ?? spec.id
+    powers.set(id, (powers.get(id) ?? 0) + spec.power)
+  }
   for (const entity of root.children) {
     const source = a.objects.find((e) => e.id === entity.userData.entityId)
     if (!source || !['LEDStrip', 'Spotlight', 'TrackLight', 'Pendant'].includes(source.kind))
@@ -52,12 +58,13 @@ export function lightingSpecs(a: Apartment, room: string, preset: LightingPreset
     )
       continue
     const group = e.params?.group ?? 'general'
+    const wallAccent = e.kind === 'LEDStrip' && e.roomId !== 'bathroom' && Boolean(e.params?.designStyle) && group === 'accent'
     const factor =
       group === 'night'
         ? 0
         : preset === 'evening'
           ? group === 'mirror' || group === 'accent'
-            ? 0.28
+            ? wallAccent ? 0.65 : 0.28
             : 0
           : 1
     if (!factor) continue
@@ -70,20 +77,56 @@ export function lightingSpecs(a: Apartment, room: string, preset: LightingPreset
       ...((vertical ? [1, 0, 0] : [0, -1, 0]) as [number, number, number]),
     ).applyQuaternion(q)
     if (vertical) p.add(new T.Vector3(0, mm(e.size[1]) / 2, 0).applyQuaternion(q))
-    p.addScaledVector(dir, 0.025)
-    specs.push({
+    if (wallAccent && !vertical) {
+      // Position the emitter just below the profile and graze the wall beneath it.
+      p.add(new T.Vector3(0, -.012, mm(e.size[2]) / 2).applyQuaternion(q))
+      dir.set(0, -1, -.3).normalize().applyQuaternion(q)
+    } else p.addScaledVector(dir, 0.025)
+    const style = e.params?.designStyle
+    const pendantForm = e.kind === 'Pendant' ? e.params?.lightForm : undefined
+    const linearTrack = e.kind === 'TrackLight' && style === 'hitech'
+    if (linearTrack)
+      p.add(new T.Vector3(0, mm(e.size[1]) * .57 + .023, 0).applyQuaternion(q))
+    const spec: LightSpec = {
       id: e.id,
-      type: e.kind === 'LEDStrip' ? 'area' : 'spot',
+      type: pendantForm ? (pendantForm === 'disc' ? 'area' : 'point')
+        : e.kind === 'LEDStrip' || linearTrack || (e.kind === 'Pendant' && style === 'hitech') ? 'area'
+          : e.kind === 'Pendant' && (style === 'classic' || style === 'japandi') ? 'point' : 'spot',
       position: p.toArray(),
       target: p.clone().add(dir).toArray(),
       color: e.params?.color ?? '#ffe6bc',
       power: (e.params?.lumens ?? 500) * factor,
       size: 0.06,
-      width: mm(vertical ? e.size[2] : e.size[0]),
-      height: mm(vertical ? e.size[1] : e.size[2]),
-    })
+      width: mm(vertical ? e.size[2] : e.size[0]) * (linearTrack ? .94 : 1),
+      height: mm(vertical ? e.size[1] : e.size[2]) * (linearTrack ? .7 : 1),
+    }
+    if (pendantForm === 'cluster') {
+      const shadeHeight = Math.min(mm(e.size[1]) * .56, mm(Math.min(e.size[0], e.size[2])) * .71)
+      for (let i = 0; i < 3; i++) {
+        const offset = new T.Vector3(mm(e.size[0]) * (i - 1) * .28, i * shadeHeight * .22, 0).applyQuaternion(q)
+        const position = p.clone().add(offset)
+        specs.push({ ...spec, id: `${e.id}:globe-${i + 1}`, entityId: e.id,
+          position: position.toArray(), target: position.clone().add(dir).toArray(), power: spec.power / 3 })
+      }
+    } else if (e.kind === 'TrackLight' && style && !linearTrack) {
+      for (let i = 0; i < 3; i++) {
+        const offset = new T.Vector3(mm(e.size[0]) * (i - 1) * .33, 0, 0).applyQuaternion(q)
+        specs.push({ ...spec, id: `${e.id}:lamp-${i + 1}`, entityId: e.id,
+          position: p.clone().add(offset).toArray(), target: p.clone().add(offset).add(dir).toArray(), power: spec.power / 3 })
+      }
+    } else specs.push(spec)
   }
   return specs
+}
+
+/** Show the proposed fixtures at reduced power alongside the daytime review rig. */
+export function presentationLightSpecs(a: Apartment, room: string, preset: LightingPreset): LightSpec[] {
+  if (preset !== 'day') return lightingSpecs(a, room, preset)
+  const proposed = new Set(a.objects.filter(entity => entity.params?.designStyle && entity.roomId !== 'bathroom').map(entity => entity.id))
+  if (!proposed.size) return []
+  return lightingSpecs(a, room, 'clean')
+    .filter(spec => proposed.has(spec.entityId ?? spec.id))
+    .map(spec => ({ ...spec, power: spec.power * .55 }))
 }
 // Photographic exposure normalization for FAST. This is a visual preview, not a lux meter.
 export const FAST_LIGHT_GAIN = 0.055
@@ -118,6 +161,16 @@ export function makeLighting(specs: LightSpec[], preset: LightingPreset, undersi
   }
   let shadows = 0
   for (const spec of specs) {
+    if (spec.type === 'point') {
+      const light = new T.PointLight(spec.color, (spec.power * FAST_LIGHT_GAIN) / (4 * Math.PI), 10, 2)
+      light.position.fromArray(spec.position)
+      light.castShadow = shadows++ < 4
+      light.shadow.mapSize.set(1024, 1024)
+      light.shadow.bias = -0.0001
+      light.shadow.normalBias = 0.004
+      g.add(light)
+      continue
+    }
     if (spec.type === 'area') {
       const width = Math.max(0.02, spec.width ?? 0.04),
         height = Math.max(0.02, spec.height ?? 0.5)

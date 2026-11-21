@@ -5,6 +5,9 @@ import { ACESFilmicToneMapping, PCFSoftShadowMap } from 'three'
 import SceneBridge from './components/SceneBridge.vue'
 import DocumentWorkspace from './components/DocumentWorkspace.vue'
 import VideoTour from './components/VideoTour.vue'
+import PhotorealPanel from './components/PhotorealPanel.vue'
+import DesignImages from './components/DesignImages.vue'
+import LiveDesignPicker from './components/LiveDesignPicker.vue'
 import './documentation.css'
 import seed from './data/apartment.json'
 import { parseApartment } from './domain/schema.ts'
@@ -17,22 +20,97 @@ import { polygonArea } from './domain/math.ts'
 import { base64 } from './scene/export.ts'
 import { roomElectricalPoints } from './domain/electrical.ts'
 import { planEntities } from './domain/drawings.ts'
-const exportMode = new URLSearchParams(location.search).has('export')
-const section = ref(new URLSearchParams(location.search).has('tour') ? 'tour' : new URLSearchParams(location.search).has('documents') ? 'documents' : 'viewer')
+import { wallMaterialForRoom } from './domain/wall-finishes.ts'
+import { applyDesignStudy, DESIGN_VARIANTS, FEATURED_DESIGN_STUDIES } from './domain/design-variants.ts'
+const query = new URLSearchParams(location.search)
+const exportMode = query.has('export')
+const section = ref(query.has('design') ? 'design' : query.has('tour') ? 'tour' : query.has('documents') ? 'documents' : 'viewer')
 // A presentation, not an editor: the source JSON is the only saved design.
 const model = shallowRef(parseApartment(seed))
-const room = ref('all'),
-  mode = ref<ViewMode>('dollhouse'),
-  lighting = ref<LightingPreset>('day')
+const studyModels = new Map<string, Apartment>()
+const studyChoices = [
+  ...DESIGN_VARIANTS.filter(variant => variant.id === 'current'),
+  ...FEATURED_DESIGN_STUDIES.flatMap(id => DESIGN_VARIANTS.filter(variant => variant.id === id)),
+  ...DESIGN_VARIANTS.filter(variant => variant.category === 'concept' && variant.reference && !FEATURED_DESIGN_STUDIES.includes(variant.id)),
+  ...DESIGN_VARIANTS.filter(variant => variant.category === 'concept' && !variant.reference),
+]
+const requestedStudy = ref('current')
+const activeStudy = ref('current')
+const previewModel = computed(() => studyModels.get(requestedStudy.value) ?? model.value)
+const shownModel = shallowRef(model.value)
+const activeConcept = computed(() => activeStudy.value === 'current' ? undefined : studyChoices.find(variant => variant.id === activeStudy.value))
+const studySwitching = computed(() => requestedStudy.value !== activeStudy.value)
+const walkingEntry = !exportMode && query.has('walk')
+  ? model.value.rooms.find(candidate => candidate.id === 'living' && candidate.polygon)?.id
+  : undefined
+const room = ref(walkingEntry ?? 'all'),
+  mode = ref<ViewMode>(walkingEntry ? 'interior' : 'dollhouse'),
+  lighting = ref<LightingPreset>(walkingEntry && query.get('light') === 'evening' ? 'evening' : 'day')
 const dimensions = ref(false),
   ready = ref(false),
   error = ref('')
 watch(mode, value => { if (value === 'plan') dimensions.value = true })
-const dimensionItems = computed(() => planEntities(model.value, room.value))
+const dimensionItems = computed(() => planEntities(shownModel.value, room.value))
 const cutaway = ref(false), showCeilings = ref(false)
 const bridge = ref<InstanceType<typeof SceneBridge> | null>(null)
+const photoMode = ref(false)
+const photo = ref<{ url: string; title: string } | null>(null)
+function selectStudy(id: string) {
+  if (!studyChoices.some(variant => variant.id === id)) return
+  try {
+    if (id !== 'current' && !studyModels.has(id))
+      studyModels.set(id, applyDesignStudy(model.value, id))
+    error.value = ''
+    requestedStudy.value = id
+    if (mode.value === 'interior') viewport.value?.querySelector('canvas')?.focus({ preventScroll: true })
+  } catch (failure) {
+    error.value = failure instanceof Error ? failure.message : String(failure)
+  }
+}
+function cycleStudy(step: number) {
+  const index = studyChoices.findIndex(variant => variant.id === requestedStudy.value)
+  selectStudy(studyChoices[(index + step + studyChoices.length) % studyChoices.length].id)
+}
+function studyShortcut(event: KeyboardEvent) {
+  if (exportMode || photoMode.value || mode.value !== 'interior' || event.repeat || event.metaKey || event.ctrlKey || event.altKey ||
+      !(event.target instanceof HTMLCanvasElement)) return
+  if (event.code !== 'BracketLeft' && event.code !== 'BracketRight') return
+  event.preventDefault()
+  cycleStudy(event.code === 'BracketRight' ? 1 : -1)
+}
+function sceneReady(source: Apartment) {
+  shownModel.value = source
+  const match = [...studyModels].find(([, candidate]) => candidate === source)
+  activeStudy.value = match?.[0] ?? 'current'
+  requestedStudy.value = activeStudy.value
+  ready.value = true
+}
+async function exportPhotoScene() {
+  if (!bridge.value || !ready.value || mode.value !== 'interior') throw new Error('Выберите готовый ракурс изнутри комнаты.')
+  return bridge.value.exportCurrent()
+}
+async function enterPhotoRoom() {
+  photoMode.value = false
+  if (room.value === 'all') await setRoom(model.value.rooms.find(r => r.id === 'living')?.id ?? model.value.rooms.find(r => r.polygon)!.id)
+  await setView('interior')
+}
+function showPhoto(result: { url: string; title: string }) {
+  photo.value = result
+  photoMode.value = true
+}
 const currentRoom = computed(() => model.value.rooms.find((r) => r.id === room.value))
-const notice = computed(() => renderNotice(model.value, room.value))
+const wallFinishes = computed(() => {
+  const a = shownModel.value, rooms = currentRoom.value ? [currentRoom.value] : a.rooms
+  const ids = new Set(rooms.flatMap(r => a.objects
+    .filter(o => o.wall && o.visible !== false && (o.roomId === r.id || o.sharedWith?.includes(r.id)))
+    .map(o => wallMaterialForRoom(o, r))))
+  return a.materials.filter(material => ids.has(material.id))
+})
+const kitchenFacade = computed(() => {
+  const cabinet = shownModel.value.objects.find(o => o.roomId === 'kitchen' && o.kind === 'KitchenCabinet')
+  return shownModel.value.materials.find(material => material.id === cabinet?.material)
+})
+const notice = computed(() => renderNotice(shownModel.value, room.value))
 const completeGeometry = computed(() => model.value.rooms.every((r) => r.polygon))
 const roomTitle = computed(
   () =>
@@ -53,37 +131,51 @@ const stories: Record<string, [string, string]> = {
   ],
   bedroom: [
     'Место для тишины.',
-    'Кровать 160 × 200, большой светлый шкаф и ТВ. Рабочее место вынесено в гостиную.',
+    'Кровать 160 × 200, шкаф-купе до потолка с доборами у стен и ТВ. Рабочее место вынесено в гостиную.',
   ],
   living: [
     'Жить. Работать. Принимать.',
-    'Шалфейный диван, обеденный стол и отдельное рабочее место у окна. Дуб связывает мебель в единую композицию.',
+    'Шалфейный диван, обеденный стол и рабочее место у окна. Неглубокая ТВ-тумба сохраняет больше свободного места.',
   ],
   kitchen: [
     'Всё под рукой.',
-    'Открытая кухня-ниша: угловой ряд, дубовые фасады, светлый верх и каменная столешница. Соседство помещений сохранено по исходному плану.',
+    'Единый встроенный гарнитур с антресолью до потолка. Холодильник и посудомойка скрыты за общими фасадами, духовка и СВЧ собраны в колонне. Вытяжка встроена в верхний ряд.',
   ],
   hall: [
     'Дом начинается здесь.',
-    'Светлое хранение у входа, зеркало в полный рост и компактная банкетка.',
+    'Шкаф до потолка и открытая ниша с банкеткой и зеркалом собраны в одной линии у входа. Проход остаётся свободным.',
   ],
   loggia: [
     'Маленькая пауза.',
-    'Кресло, кофейный столик и низкий шкаф. Отдельная спокойная зона для отдыха.',
+    'Компактная скамья и кофейный столик. Отдельная спокойная зона для отдыха.',
   ],
 }
 const electricalPoints = computed(() =>
   roomElectricalPoints(model.value, room.value),
 )
-const story = computed(
-  () => stories[room.value] ?? [roomTitle.value, currentRoom.value?.note ?? ''],
-)
+const story = computed(() => activeConcept.value && room.value !== 'bathroom'
+  ? [activeConcept.value.label, activeConcept.value.description]
+  : stories[room.value] ?? [roomTitle.value, currentRoom.value?.note ?? ''])
 async function setRoom(id: string) {
   if (id !== 'all' && !model.value.rooms.some((r) => r.id === id && r.polygon))
     throw new Error('Unknown room')
   room.value = id
+  photoMode.value = false
   mode.value = roomSelectionView(mode.value, id)
   await nextTick()
+}
+async function walkStudy(id: string, roomId: string) {
+  selectStudy(id)
+  section.value = 'viewer'
+  photoMode.value = false
+  const start = model.value.rooms.find(candidate => candidate.id === roomId && candidate.polygon)
+    ?? model.value.rooms.find(candidate => candidate.id === 'living' && candidate.polygon)
+    ?? model.value.rooms.find(candidate => candidate.polygon)
+  if (!start) return
+  room.value = start.id
+  mode.value = 'interior'
+  await nextTick()
+  window.scrollTo(0, 0)
 }
 const views: [ViewMode, string][] = [
   ['dollhouse', 'Общий вид'],
@@ -98,6 +190,14 @@ const lights: [LightingPreset, string, string][] = [
   ['evening', 'Вечер', 'Мягкий локальный свет. В санузле — только зеркало.'],
 ]
 const viewport = ref<HTMLElement | null>(null)
+const entryStudy = walkingEntry && query.get('study')
+if (entryStudy) selectStudy(entryStudy)
+watch(photoMode, value => {
+  const canvas = viewport.value?.querySelector('canvas')
+  if (!canvas) return
+  canvas.inert = value
+  if (value) canvas.blur()
+})
 const fullscreen = ref(false)
 async function toggleFullscreen() {
   try {
@@ -112,8 +212,11 @@ const syncFullscreen = () => {
 }
 onMounted(() => document.addEventListener('fullscreenchange', syncFullscreen))
 onBeforeUnmount(() => document.removeEventListener('fullscreenchange', syncFullscreen))
-const lightNote = computed(() => lights.find((l) => l[0] === lighting.value)?.[2])
+const lightNote = computed(() => activeConcept.value && lighting.value === 'day' && room.value !== 'bathroom'
+  ? 'Обзорный свет вместе со светильниками концепции.'
+  : lights.find((l) => l[0] === lighting.value)?.[2])
 async function setView(view: ViewMode) {
+  photoMode.value = false
   mode.value = view
   await nextTick()
   bridge.value?.resetCamera()
@@ -129,6 +232,8 @@ onMounted(() => {
       return structuredClone(model.value)
     },
     setModel: async (a: Apartment) => {
+      studyModels.clear()
+      requestedStudy.value = 'current'
       model.value = parseApartment(a)
       room.value = 'all'
       ready.value = false
@@ -152,6 +257,7 @@ onMounted(() => {
     screenshot: () => bridge.value!.screenshot(),
     manifest: () => bridge.value!.manifest(),
     viewState: () => bridge.value!.viewState(),
+    setStudy: selectStudy,
   }
 })
 </script>
@@ -173,6 +279,7 @@ onMounted(() => {
           Смета и документы
         </button>
         <button :aria-pressed="section === 'tour'" @click="section = 'tour'">Видеотур</button>
+        <button :aria-pressed="section === 'design'" @click="section = 'design'">Варианты дизайна</button>
       </nav>
     </header>
     <nav v-if="section === 'viewer'" class="room-nav" aria-label="Помещения">
@@ -189,8 +296,8 @@ onMounted(() => {
         {{ r.name }}
       </button>
     </nav>
-    <main v-if="section === 'viewer'">
-      <section ref="viewport" class="viewport" :aria-label="`Трёхмерный вид: ${roomTitle}`">
+    <main v-if="section === 'viewer'" :class="{ 'is-walking': mode === 'interior' }">
+      <section ref="viewport" class="viewport" :class="{ 'is-photo': photoMode }" :aria-label="`Трёхмерный вид: ${roomTitle}`" @keydown="studyShortcut">
         <TresCanvas
           shadows
           :shadow-map-type="PCFSoftShadowMap"
@@ -203,18 +310,38 @@ onMounted(() => {
         >
           <SceneBridge
             ref="bridge"
-            :model="model"
+            :model="previewModel"
             :mode="mode"
             :room="room"
             :dimensions="dimensions"
             :cutaway="cutaway"
             :show-ceilings="showCeilings"
             :lighting="lighting"
-            @ready="ready = true"
+            @ready="sceneReady"
+            @busy="ready = false"
             @error="error = $event"
           />
         </TresCanvas>
-        <div class="scene-label">
+        <div class="render-mode segmented" aria-label="Режим визуализации">
+          <button :aria-pressed="!photoMode" @click="photoMode = false">Прогулка 3D</button>
+          <button :aria-pressed="photoMode" @click="photoMode = true">Фотореализм</button>
+        </div>
+        <LiveDesignPicker v-if="!photoMode && !exportMode" :choices="studyChoices" :featured="FEATURED_DESIGN_STUDIES" :selected="requestedStudy"
+          :active="activeStudy" :switching="studySwitching" :walking="mode === 'interior'"
+          @select="selectStudy" @cycle="cycleStudy" />
+        <div v-if="photoMode" class="photo-view">
+          <template v-if="photo">
+            <img :src="photo.url" :alt="`Рендер Cycles: ${photo.title}`" />
+            <p>{{ photo.title }} · сохранённый ракурс. Вернитесь в 3D, чтобы продолжить прогулку.</p>
+          </template>
+          <div v-else class="photo-empty">
+            <p class="eyebrow">ФОТОРЕАЛИЗМ / CYCLES</p>
+            <h2>Ваш ракурс. Свет и фактура.</h2>
+            <p>Войдите в комнату, выберите точку и запустите рендер в панели справа. Готовое изображение появится здесь.</p>
+            <button @click="enterPhotoRoom">Выбрать ракурс в 3D</button>
+          </div>
+        </div>
+        <div v-show="!photoMode && !activeConcept && mode !== 'interior'" class="scene-label">
           <span>{{ roomTitle.toUpperCase() }} / DESIGN STUDY</span><b>{{ story[0] }}</b>
           <small>{{
             room === 'bathroom'
@@ -222,11 +349,11 @@ onMounted(() => {
               : 'Авторская палитра · дуб / лён / шалфей'
           }}</small>
         </div>
-        <div v-if="notice.length" class="generation-notice" role="note">
+        <div v-if="notice.length && !photoMode" class="generation-notice" role="note">
           <b>{{ notice[0] }}</b
           ><span>{{ notice[1] }}</span>
         </div>
-        <div class="view-controls">
+        <div v-show="!photoMode" class="view-controls">
           <div class="segmented" aria-label="Ракурс">
             <button
               v-for="[id, label] in views"
@@ -255,9 +382,9 @@ onMounted(() => {
         >
           ⛶
         </button>
-        <div v-if="!ready && !error" class="loading">Подготавливаю материалы…</div>
+        <div v-if="!ready && !error && !studySwitching" class="loading" role="status">Подготавливаю материалы…</div>
         <div v-if="error" role="alert" class="error">{{ error }}</div>
-        <div class="view-caption">
+        <div v-show="!photoMode" class="view-caption">
           <span>{{
             mode === 'plan'
               ? 'Пропорции и расположение'
@@ -278,6 +405,10 @@ onMounted(() => {
         <p class="intro">
           {{ story[1] }}
         </p>
+        <p v-if="activeConcept?.reference && room !== 'bathroom'" class="light-note">
+          {{ activeConcept.reference.lesson }}
+          <a :href="activeConcept.reference.url" target="_blank" rel="noopener noreferrer">{{ activeConcept.reference.title }} · {{ activeConcept.reference.studio }} ↗</a>
+        </p>
         <div class="light-options" aria-label="Сценарий света">
           <button
             v-for="[id, label] in lights"
@@ -289,6 +420,8 @@ onMounted(() => {
           </button>
         </div>
         <p class="light-note">{{ lightNote }}</p>
+        <PhotorealPanel :ready="ready" :interior="mode === 'interior'" :room-title="activeConcept ? `${roomTitle} · ${activeConcept.label}` : roomTitle"
+          :export-scene="exportPhotoScene" @enter="enterPhotoRoom" @result="showPhoto" />
         <div v-if="mode === 'ceiling'" class="design-status">
           <b>Потолок · вид снизу</b>
           <p>
@@ -316,29 +449,30 @@ onMounted(() => {
         </div>
         <div class="divider"></div>
         <p class="eyebrow">02 / ОТДЕЛКА</p>
-        <div class="material-row">
-          <span class="swatch stone" :style="room === 'bathroom' ? { backgroundImage: 'url(/textures/laparet-noa/wall.jpg)', backgroundSize: 'cover' } : undefined"></span>
+        <div v-for="finish in wallFinishes" :key="finish.id" class="material-row">
+          <span class="swatch" :style="{ backgroundColor: finish.color, ...(finish.texture ? { backgroundImage: `url(${finish.texture})`, backgroundSize: 'cover' } : {}) }"></span>
           <div>
-            <b>{{ room === 'bathroom' ? 'Laparet Noa · кремовый' : 'Светлый камень' }}</b
+            <b>{{ finish.name }}</b
             ><small>{{
               room === 'bathroom'
-                ? 'M1 / T1 · стены 1200 × 600 · пол 600 × 600'
-                : 'Матовый камень · кухня и санузел'
+                ? 'Стены · M1 / T1 · 1200 × 600'
+                : room === 'all' ? 'Стены · внутренняя отделка помещений' : 'Стены · сторона выбранной комнаты'
             }}</small>
           </div>
         </div>
-        <div class="material-row">
-          <span class="swatch oak"></span>
+        <div v-if="!activeConcept || room === 'bathroom' || room === 'kitchen'" class="material-row">
+          <span :class="['swatch', room === 'kitchen' ? '' : 'oak']" :style="room === 'kitchen' && kitchenFacade ? { backgroundColor: kitchenFacade.color } : undefined"></span>
           <div>
-            <b>Натуральный дуб</b
+            <b>{{ room === 'kitchen' ? 'Единые фасады гарнитура' : 'Натуральный дуб' }}</b
             ><small>{{
               room === 'bathroom'
                 ? 'Д2 · тумба и хозяйственная колонна'
+                : room === 'kitchen' ? `${kitchenFacade?.name ?? 'Материал по модели'} · общий цоколь и верхняя линия`
                 : 'Тёплый оттенок · пол и мебель'
             }}</small>
           </div>
         </div>
-        <div class="material-row">
+        <div v-if="!activeConcept || room === 'bathroom'" class="material-row">
           <span :class="['swatch', room === 'bathroom' ? 'ceramic' : 'sage']"></span>
           <div>
             <b>{{ room === 'bathroom' ? 'Белая керамика' : 'Лён и шалфей' }}</b
@@ -383,9 +517,10 @@ onMounted(() => {
       </aside>
     </main>
     <DocumentWorkspace v-else-if="section === 'documents'" :model="model" />
-    <VideoTour v-else />
+    <VideoTour v-else-if="section === 'tour'" />
+    <DesignImages v-else :model="model" @preview="walkStudy" />
     <footer>
-      <span>Все помещения · единая палитра · санузел A3 / M1 / T1 / Д2</span
+      <span>{{ section === 'design' ? 'Концепции интерьера · предложения для сравнения' : activeConcept && section === 'viewer' ? `${activeConcept.label} · предложение` : 'Все помещения · текущий проект' }} · санузел A3 / M1 / T1 / Д2</span
       ><span>Эскиз · размеры условные</span>
     </footer>
   </div>

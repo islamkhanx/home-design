@@ -28,16 +28,32 @@ export const kinds = [
   'LEDStrip',
   'DimensionLine',
   'RoomLabel',
+  'WallPanel',
 ] as const
 export type Kind = (typeof kinds)[number]
+export const designStyles = ['loft', 'hitech', 'classic', 'japandi'] as const
+export type DesignStyle = (typeof designStyles)[number]
+const materialSurfaces = ['plain', 'oak', 'stone', 'brick', 'concrete', 'plaster', 'cork', 'terrazzo', 'herringbone', 'glazed-tile', 'brushed-metal'] as const
+const panelTreatments = ['flat', 'slats', 'moulding', 'arch', 'band'] as const
+const furnitureForms = ['low-slung', 'open-frame', 'sculptural', 'club'] as const
+const cabinetFaces = ['split', 'recessed'] as const
+const lightForms = ['cluster', 'lantern', 'opal', 'ribbed', 'disc'] as const
 export type Evidence = 'assumed' | 'measured' | 'manufacturer'
+export type WallFace = 'left' | 'right'
+export interface WallMaterials {
+  /** Following start → end in plan: left is local +Z, right is local −Z. */
+  left?: string
+  right?: string
+  /** Opening reveals, wall ends, top and bottom. Each missing finish uses Entity.material. */
+  edge?: string
+}
 export interface MaterialDef {
   id: string
   name: string
   color: string
   roughness: number
   metalness: number
-  surface?: 'plain' | 'oak' | 'stone'
+  surface?: (typeof materialSurfaces)[number]
   tileSize?: V2
   transmission?: number
   ior?: number
@@ -56,11 +72,16 @@ export interface Entity {
   rotation: V3
   size: V3
   material: string
+  /** Scoped aliases for component subparts (bedding, timber legs, upholstery).
+   * Used by presentation variants without recolouring another room. */
+  materialOverrides?: Record<string, string>
   evidence: Evidence
   generated?: boolean
   electrical?: {
     wallId: string
     offset: number
+    /** Extra outward distance from the wall face along side, in mm; defaults to 0. */
+    surfaceOffset?: number
     side: 1 | -1
     gangs: number
     purpose: string
@@ -70,16 +91,34 @@ export interface Entity {
   note?: string
   visible?: boolean
   cutaway?: boolean
-  wall?: { start: V2; end: V2; thickness: number; height: number; openings: Opening[] }
+  wall?: { start: V2; end: V2; thickness: number; height: number; openings: Opening[]; materials?: WallMaterials }
   surface?: { polygon: V2[]; holes?: V2[][]; thickness: number }
   attach?: { wallId: string; openingId: string }
   params?: {
-    fixture?: 'hygienicShower' | 'towelWarmer' | 'diningChair' | 'officeChair' | 'armchair' | 'mediaScreen' | 'monitor' | 'roundTable' | 'rug' | 'bench' | 'blindCorner' | 'sinkBase' | 'kitchenTap' | 'hob' | 'extractorHood' | 'dropInSink' | 'artwork'
+    /** Optional concept geometry; absent preserves the existing design. */
+    designStyle?: DesignStyle
+    /** WallPanel is bottom-centred; local +Z faces the room. */
+    treatment?: (typeof panelTreatments)[number]
+    furnitureForm?: (typeof furnitureForms)[number]
+    cabinetFace?: (typeof cabinetFaces)[number]
+    lightForm?: (typeof lightForms)[number]
+    fixture?: 'hygienicShower' | 'towelWarmer' | 'diningChair' | 'officeChair' | 'armchair' | 'mediaScreen' | 'monitor' | 'roundTable' | 'rug' | 'bench' | 'blindCorner' | 'sinkBase' | 'kitchenTap' | 'hob' | 'extractorHood' | 'dropInSink' | 'artwork' | 'joineryPanel'
     sinkCutout?: { center: [number, number]; size: [number, number] }
     doorAngle?: number
     shelves?: number
     cabinetDoors?: number
-    appliance?: 'washer' | 'fridge' | 'oven' | 'dishwasher'
+    cabinetTopScribe?: number
+    cabinetTopTier?: number
+    cabinetDoorStyle?: 'hinged' | 'sliding'
+    /** Millimetres from the entity base to its recessed plinth top. */
+    cabinetPlinth?: number
+    /** Clear vertical niches; sides remain. front defaults to true (remove the
+     * facade); false retains a furniture facade over the appliance cavity.
+     * keepBack defaults to false; true retains the niche backboard. */
+    cabinetVoids?: Array<{ bottom: number; height: number; front?: boolean; keepBack?: boolean }>
+    builtIn?: boolean
+    integrated?: boolean
+    appliance?: 'washer' | 'fridge' | 'oven' | 'dishwasher' | 'microwave'
     lumens?: number
     color?: string
     group?: 'general' | 'mirror' | 'accent' | 'night'
@@ -208,6 +247,8 @@ export function validateApartment(input: unknown): string[] {
       errors.push(r.id + ': invalid documented area.')
   }
   for (const m of a.materials) {
+    if (m.surface !== undefined && !materialSurfaces.includes(m.surface))
+      errors.push(m.id + ': invalid material surface.')
     if (
       !/^#[0-9a-f]{6}$/i.test(m.color) ||
       !finite(m.roughness) ||
@@ -247,6 +288,9 @@ export function validateApartment(input: unknown): string[] {
       )
         errors.push(o.id + ': invalid electrical point.')
     }
+    if (o.electrical?.surfaceOffset !== undefined &&
+        (!finite(o.electrical.surfaceOffset) || o.electrical.surfaceOffset < 0 || o.electrical.surfaceOffset > 500))
+      errors.push(o.id + ': invalid electrical surface offset.')
 
     if (o.sharedWith && (!Array.isArray(o.sharedWith) || o.sharedWith.some((id) => !rooms.has(id))))
       errors.push(o.id + ': unknown shared room.')
@@ -257,6 +301,10 @@ export function validateApartment(input: unknown): string[] {
       typeof o.name !== 'string'
     )
       errors.push(o.id + ': unknown kind, room or material.')
+    if (o.materialOverrides !== undefined && (
+      !o.materialOverrides || typeof o.materialOverrides !== 'object' || Array.isArray(o.materialOverrides) ||
+      Object.entries(o.materialOverrides).some(([from, to]) => !mats.has(from) || typeof to !== 'string' || !mats.has(to))
+    )) errors.push(o.id + ': invalid component material overrides.')
     if (
       !vector(o.position, 3) ||
       !vector(o.rotation, 3) ||
@@ -266,6 +314,16 @@ export function validateApartment(input: unknown): string[] {
       errors.push(o.id + ': invalid position / rotation / size.')
     if (!['assumed', 'measured', 'manufacturer'].includes(o.evidence))
       errors.push(o.id + ': missing dimensional provenance.')
+    if (o.params?.designStyle !== undefined && !designStyles.includes(o.params.designStyle))
+      errors.push(o.id + ': invalid design style.')
+    if (o.params?.treatment !== undefined && (o.kind !== 'WallPanel' || !panelTreatments.includes(o.params.treatment)))
+      errors.push(o.id + ': invalid wall panel treatment.')
+    if (o.params?.furnitureForm !== undefined && (!['Sofa', 'Bed', 'Table'].includes(o.kind) || !furnitureForms.includes(o.params.furnitureForm)))
+      errors.push(o.id + ': invalid furniture form.')
+    if (o.params?.cabinetFace !== undefined && (!['KitchenCabinet', 'Wardrobe'].includes(o.kind) || !cabinetFaces.includes(o.params.cabinetFace)))
+      errors.push(o.id + ': invalid cabinet face.')
+    if (o.params?.lightForm !== undefined && (o.kind !== 'Pendant' || !lightForms.includes(o.params.lightForm)))
+      errors.push(o.id + ': invalid pendant form.')
     if (o.kind === 'Wall') {
       const w = o.wall
       if (
@@ -283,6 +341,11 @@ export function validateApartment(input: unknown): string[] {
       }
       const length = Math.hypot(w.end[0] - w.start[0], w.end[1] - w.start[1])
       if (length < 1) errors.push(o.id + ': zero wall length.')
+      if (w.materials !== undefined && (
+        !w.materials || typeof w.materials !== 'object' || Array.isArray(w.materials) ||
+        Object.entries(w.materials).some(([face, material]) =>
+          !['left', 'right', 'edge'].includes(face) || typeof material !== 'string' || !mats.has(material))
+      )) errors.push(o.id + ': invalid wall side material.')
       const openings = new Set<string>()
       for (const q of w.openings) {
         if (!q) {
@@ -340,6 +403,53 @@ export function validateApartment(input: unknown): string[] {
         (!Number.isInteger(o.params[k]) || o.params[k]! < 1 || o.params[k]! > 20)
       )
         errors.push(o.id + ': ' + k + ' must be 1–20.')
+    const scribe = o.params?.cabinetTopScribe === undefined ? 0 : o.params.cabinetTopScribe
+    const tier = o.params?.cabinetTopTier === undefined ? 0 : o.params.cabinetTopTier
+    const plinth = o.params?.cabinetPlinth === undefined ? 0 : o.params.cabinetPlinth
+    const cabinet = o.kind === 'KitchenCabinet' || o.kind === 'Wardrobe'
+    if (o.params?.cabinetTopScribe !== undefined || o.params?.cabinetTopTier !== undefined ||
+        o.params?.cabinetPlinth !== undefined)
+      if (!finite(scribe) || !finite(tier) || !finite(plinth) || scribe < 0 || tier < 0 || plinth < 0 ||
+          !vector(o.size, 3) || plinth + scribe + tier >= o.size[1])
+        errors.push(o.id + ': invalid cabinet top scribe / tier.')
+    if (o.params?.cabinetPlinth !== undefined &&
+        (!cabinet && !(o.kind === 'Appliance' && o.params.integrated === true)))
+      errors.push(o.id + ': cabinet plinth requires a cabinet or integrated appliance.')
+    if (o.params?.cabinetDoorStyle !== undefined &&
+        (!cabinet || !['hinged', 'sliding'].includes(o.params.cabinetDoorStyle)))
+      errors.push(o.id + ': invalid cabinet door style.')
+    if (o.params?.cabinetVoids !== undefined) {
+      const voids = o.params.cabinetVoids
+      if (!cabinet || !Array.isArray(voids) || voids.length > 8 ||
+          !vector(o.size, 3) || !finite(scribe) || !finite(plinth) ||
+          voids.some((v) => !v || typeof v !== 'object' || Array.isArray(v) ||
+            !finite(v.bottom) || !finite(v.height) || v.bottom < 0 || v.height <= 0 ||
+            v.bottom + v.height > o.size[1] - scribe ||
+            (v.front !== undefined && typeof v.front !== 'boolean') ||
+            (v.keepBack !== undefined && typeof v.keepBack !== 'boolean') ||
+            (v.bottom !== 0 && v.bottom < plinth))) {
+        errors.push(o.id + ': invalid cabinet voids.')
+      } else {
+        const sorted = [...voids].sort((a, b) => a.bottom - b.bottom)
+        if (sorted.some((v, i) => i > 0 && v.bottom < sorted[i - 1].bottom + sorted[i - 1].height))
+          errors.push(o.id + ': overlapping cabinet voids.')
+      }
+    }
+    if (o.params?.appliance !== undefined &&
+        !['washer', 'fridge', 'oven', 'dishwasher', 'microwave'].includes(o.params.appliance))
+      errors.push(o.id + ': invalid appliance type.')
+    for (const key of ['builtIn', 'integrated'] as const)
+      if (o.params?.[key] !== undefined && typeof o.params[key] !== 'boolean')
+        errors.push(o.id + ': invalid ' + key + ' flag.')
+    if (o.params?.integrated === true &&
+        (o.kind !== 'Appliance' || !['fridge', 'dishwasher'].includes(o.params.appliance ?? '')))
+      errors.push(o.id + ': integrated fronts require a fridge or dishwasher appliance.')
+    if (o.params?.builtIn === true &&
+        (o.kind !== 'Appliance' || !['fridge', 'dishwasher', 'oven', 'microwave'].includes(o.params.appliance ?? '')))
+      errors.push(o.id + ': built-in installation requires a supported appliance.')
+    if ((o.params?.builtIn === true || o.params?.integrated === true) &&
+        (!vector(o.size, 3) || !finite(plinth) || o.size[0] <= 36 || o.size[2] <= 40 || o.size[1] <= plinth))
+      errors.push(o.id + ': built-in appliance is too small for its housing / plinth.')
     if (o.params?.color && !/^#[0-9a-f]{6}$/i.test(o.params.color))
       errors.push(o.id + ': invalid light color.')
     if (

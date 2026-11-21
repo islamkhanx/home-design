@@ -33,7 +33,9 @@
     "generate:apartment": "node --experimental-strip-types scripts/generate-apartment.mjs",
     "tour": "node --experimental-strip-types scripts/video-tour.mjs",
     "tour:pause": "node --experimental-strip-types scripts/video-tour.mjs --pause",
-    "textures:fetch": "node scripts/fetch-material-textures.mjs"
+    "textures:fetch": "node scripts/fetch-material-textures.mjs",
+    "design:images": "node --experimental-strip-types scripts/design-images.mjs",
+    "design:prepare": "node --experimental-strip-types scripts/design-images.mjs --prepare-only"
   },
   "dependencies": {
     "@tresjs/core": "5.10.1",

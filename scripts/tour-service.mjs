@@ -19,7 +19,19 @@ export function tourService() {
       throw e
     }
   }
-  return async function handle(req, res, pathname, send) {
+  async function isBusy() {
+    if (child || starting) return true
+    try {
+      const out = await directory()
+      const lock = JSON.parse(await fs.readFile(path.join(out, 'worker.lock'), 'utf8'))
+      process.kill(lock.pid, 0)
+      return true
+    } catch (e) {
+      if (['ENOENT', 'ESRCH'].includes(e.code)) return false
+      throw e
+    }
+  }
+  const handle = async function (req, res, pathname, send) {
     if (!pathname.startsWith('/__local/tour/')) return false
     const out = await directory(),
       action = pathname.slice('/__local/tour/'.length)
@@ -192,4 +204,7 @@ export function tourService() {
     send(res, 404, { error: 'Unknown tour action' })
     return true
   }
+  handle.isActive = () => !!child || starting
+  handle.isBusy = isBusy
+  return handle
 }

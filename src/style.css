@@ -85,6 +85,9 @@ main {
   overflow: hidden;
   min-height: 560px;
 }
+@media (min-width: 901px) {
+  .is-walking, .is-walking .viewport { min-height: 490px; }
+}
 .view-controls {
   position: absolute;
   bottom: 72px;
@@ -165,6 +168,7 @@ main {
   color: #a34b37;
   max-width: 80%;
 }
+.loading { pointer-events: none; }
 aside {
   padding: 36px 28px 24px;
   background: #f9f8f4;
@@ -363,11 +367,25 @@ footer {
 
 .scene-label {
   position: absolute;
-  top: 30px;
+  top: 86px;
   left: 32px;
   pointer-events: none;
   display: grid;
   gap: 10px;
+}
+.render-mode { position: absolute; top: 24px; left: 28px; z-index: 6; }
+.photo-view { position: absolute; inset: 0; z-index: 4; background: #e9e7df; display: grid; place-items: center; padding: 78px 16px 58px; }
+.photo-view > img { width: 100%; height: 100%; object-fit: contain; }
+.photo-view > p { position: absolute; bottom: 12px; left: 18px; right: 18px; width: fit-content; padding: 10px 14px; border-radius: 7px; background: #faf8f0ed; color: #606953; font-size: 11px; }
+.photo-empty { max-width: 480px; padding: 30px; }
+.photo-empty > p { line-height: 1.8; font-size: 13px; color: #7c806e; }
+.photo-empty button { background: #4d6443; color: white; border: 0; border-radius: 7px; padding: 13px 20px; font-size: 12px; }
+.is-photo canvas { pointer-events: none; }
+.fullscreen { z-index: 6; }
+@media (max-width: 1100px) {
+  .viewer > header { height: auto; min-height: 96px; flex-wrap: wrap; padding-top: 16px; padding-bottom: 16px; }
+  .viewer > header .project-nav { flex-basis: 100%; margin-left: 0; }
+  .viewer > header .project-nav button { flex: 1; }
 }
 .scene-label > span {
   font-size: 9px;
@@ -460,7 +478,7 @@ footer {
   }
   .scene-label {
     left: 20px;
-    top: 24px;
+    top: 86px;
   }
   .scene-label b {
     font-size: 25px;

@@ -38,6 +38,7 @@ try {
     ...files,
     output: path.join(out, 'render.png'),
     preset,
+    look: get('--look') ?? 'review',
     device: get('--device') ?? process.env.CYCLES_DEVICE ?? 'auto',
     onLog: (s) => process.stdout.write(s),
     onSpawn: (child) => {

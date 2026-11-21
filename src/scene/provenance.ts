@@ -3,9 +3,12 @@ import type { Apartment } from '../domain/schema.ts'
 export function renderNotice(a: Apartment, room: string): string[] {
   if (!a.generation) return []
   const generated = a.objects.some((o) => o.generated && !o.electrical && (room === 'all' || o.roomId === room))
+  const study = a.objects.some(o => o.params?.designStyle && (room === 'all' || o.roomId === room))
   const incomplete = a.rooms.some((r) => !r.polygon)
   return [
-    generated
+    study
+      ? a.generation.label
+      : generated
       ? 'Интерьер сгенерирован автоматически'
       : 'Автоматическая визуализация · выбранная композиция',
     incomplete

@@ -3,10 +3,13 @@ import argparse,json,math,sys
 from pathlib import Path
 import bpy
 from mathutils import Vector,Matrix
-PRESETS={'preview':(960,540,32,.08),'quality':(1920,1080,256,.02),'ultra':(3840,2160,1024,.008)}
+PRESETS={'draft':(480,270,16,.12),'preview':(960,540,32,.08),'quality':(1920,1080,256,.02),'ultra':(3840,2160,1024,.008)}
 REVIEW_WATTS_PER_SQUARE_METER=5.0
 # A photographic display calibration, not LED electrical watts or a lux model.
 FIXTURE_VISUAL_WATTS_PER_LUMEN=1/60
+PHOTO_WINDOW_WATTS_PER_SQUARE_METER=80.0
+def progress(phase,value):
+    print('RENDER_PROGRESS '+json.dumps({'phase':phase,'progress':value}),flush=True)
 def vec(v):
     # glTF/Three Y-up -> Blender Z-up: +90 degrees about X.
     return Vector((v[0],-v[2],v[1]))
@@ -110,7 +113,104 @@ def indoor_review_rig(rooms,source):
         y=max(.3,ceiling-.2)
         rig.append(([x,y,z],[x,0,z],area*REVIEW_WATTS_PER_SQUARE_METER,size))
     return rig
-def configure_lighting(meta):
+def photo_window_lights(source):
+    """Daylight apertures are derived only from external, canonical window openings."""
+    rooms={r['id']:r for r in source.get('rooms',[])};result=[]
+    for entity in source.get('objects',[]):
+        wall=entity.get('wall')
+        if entity.get('kind')!='Wall' or not wall or entity.get('sharedWith') or entity.get('visible') is False:continue
+        room=rooms.get(entity.get('roomId'),{});geometry=room_review_geometry(room)
+        if geometry is None:continue
+        _,center,_=geometry
+        ax,az=wall['start'];bx,bz=wall['end'];length=math.hypot(bx-ax,bz-az)
+        if length<1:continue
+        ux,uz=(bx-ax)/length,(bz-az)/length
+        for opening in wall.get('openings',[]):
+            if opening.get('kind')!='window':continue
+            width,height=opening['width']/1000,opening['height']/1000
+            if width<=0 or height<=0:continue
+            offset=opening['offset']+opening['width']/2
+            x,z=(ax+ux*offset)/1000,(az+uz*offset)/1000
+            nx,nz=-uz,ux
+            if (center[0]-x)*nx+(center[1]-z)*nz<0:nx,nz=-nx,-nz
+            inset=wall.get('thickness',100)/2000+.025
+            y=(opening.get('bottom',0)+opening['height']/2)/1000
+            position=[x+nx*inset,y,z+nz*inset]
+            result.append({'id':'Daylight '+opening['id'],'position':position,
+                'target':[position[0]+nx,y,position[2]+nz],
+                'width':width,'height':height,'power':width*height*PHOTO_WINDOW_WATTS_PER_SQUARE_METER})
+    return result
+def enhance_photographic_materials(meta,bevel_samples=4):
+    """Submillimetre shading detail only: no displacement or mesh modifiers."""
+    definitions={d['id']:d for d in meta.get('sourceApartment',{}).get('materials',[])}
+    fixture_ids={s.get('entityId',s['id']) for s in photo_fixture_specs(meta)}
+    emitter_materials={slot.material.as_pointer() for obj in bpy.context.scene.objects
+        if obj.type=='MESH' and obj.get('entityId') in fixture_ids for slot in obj.material_slots if slot.material}
+    enhanced=[]
+    for material in bpy.data.materials:
+        if not material.use_nodes:continue
+        definition=definitions.get(material.get('materialId',material.name),{})
+        nodes=material.node_tree.nodes;links=material.node_tree.links
+        shader=next((n for n in nodes if n.type=='BSDF_PRINCIPLED'),None)
+        if shader is None:continue
+        name=definition.get('id',material.name)
+        role=next((kind for kind in ('bathroom-light','ceiling-white','glass','mirror','light','linen','sage','rug','paint') if name==kind or name.endswith('-'+kind)),name)
+        if role in ('light','bathroom-light') and meta.get('lightingPreset')=='day' and material.as_pointer() in emitter_materials:
+            # FAST day mode switches fixture emitters off. The photographic day
+            # profile combines window light with the declared installed fixtures.
+            if 'Emission Color' in shader.inputs:shader.inputs['Emission Color'].default_value=(*linear(definition.get('emissive','#ffffff')),1)
+            if 'Emission Strength' in shader.inputs:shader.inputs['Emission Strength'].default_value=definition.get('emissiveIntensity',1)
+        if role in ('glass','mirror','light','bathroom-light'):continue
+        fabric=role in ('linen','sage','rug')
+        painted=role in ('paint','ceiling-white')
+        # A metric world-space microstructure does not stretch with object dimensions.
+        if fabric or painted:
+            geometry=nodes.new('ShaderNodeNewGeometry');noise=nodes.new('ShaderNodeTexNoise')
+            noise.inputs['Scale'].default_value=1200 if painted else 850
+            noise.inputs['Detail'].default_value=2
+            links.new(geometry.outputs['Position'],noise.inputs['Vector'])
+            bump=nodes.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.16 if painted else .32
+            bump.inputs['Distance'].default_value=.00012 if painted else .00045
+            links.new(noise.outputs['Fac'],bump.inputs['Height'])
+            if shader.inputs['Normal'].is_linked:links.new(shader.inputs['Normal'].links[0].from_socket,bump.inputs['Normal'])
+            links.new(bump.outputs['Normal'],shader.inputs['Normal'])
+            if fabric and 'Sheen Weight' in shader.inputs:shader.inputs['Sheen Weight'].default_value=.22
+            if not shader.inputs['Roughness'].is_linked:
+                rough=nodes.new('ShaderNodeMapRange');rough.inputs['From Min'].default_value=0;rough.inputs['From Max'].default_value=1
+                rough.inputs['To Min'].default_value=max(.65,definition.get('roughness',.9)-.12)
+                rough.inputs['To Max'].default_value=min(1,definition.get('roughness',.9)+.03)
+                links.new(noise.outputs['Fac'],rough.inputs['Value']);links.new(rough.outputs['Result'],shader.inputs['Roughness'])
+        # Shader bevel gives manufactured edges a light catch, while canonical
+        # positions, mesh counts and silhouette remain exactly as exported.
+        if not fabric:
+            bevel=nodes.new('ShaderNodeBevel');bevel.samples=bevel_samples
+            bevel.inputs['Radius'].default_value=.0006 if painted else .001
+            if shader.inputs['Normal'].is_linked:links.new(shader.inputs['Normal'].links[0].from_socket,bevel.inputs['Normal'])
+            links.new(bevel.outputs['Normal'],shader.inputs['Normal'])
+        enhanced.append(name)
+    return enhanced
+def photo_fixture_specs(meta):
+    if meta.get('lightingPreset')!='day':return meta.get('lights',[])
+    objects=meta.get('sourceApartment',{}).get('objects',[])
+    window_rooms={e.get('roomId') for e in objects if e.get('kind')=='Window' and e.get('visible') is not False}
+    concept=meta.get('conceptLighting',{})
+    concept_rooms=set(concept.get('roomIds',[]))
+    if concept.get('roomId'):concept_rooms.add(concept['roomId'])
+    day_fixtures={e['id'] for e in objects if e.get('roomId') not in window_rooms or e.get('roomId') in concept_rooms}
+    # Rooms lit by windows retain directional daylight; windowless service
+    # rooms use the declared fixtures rather than an invisible ceiling softbox.
+    return [s for s in meta.get('photorealLights',meta.get('lights',[])) if s.get('entityId',s['id']) in day_fixtures]
+def photographic_day_exposure(meta):
+    source=meta.get('sourceApartment',{});position=meta.get('camera',{}).get('position',[])
+    camera_room=None
+    if len(position)==3:
+        for room in source.get('rooms',[]):
+            polygon=[(p[0]/1000,p[1]/1000) for p in room.get('polygon',[])]
+            if len(polygon)>2 and polygon_contains((position[0],position[2]),polygon):
+                camera_room=room['id'];break
+    window_rooms={e.get('roomId') for e in source.get('objects',[]) if e.get('kind')=='Window' and e.get('visible') is not False}
+    return {'cameraRoom':camera_room,'exposureStops':.3 if camera_room and camera_room not in window_rooms else -.7}
+def configure_lighting(meta,look='review'):
     scene=bpy.context.scene
     for obj in list(scene.objects):
         if obj.type=='LIGHT':bpy.data.objects.remove(obj,do_unlink=True)
@@ -122,11 +222,28 @@ def configure_lighting(meta):
     environment=nodes.new('ShaderNodeBackground');background=nodes.new('ShaderNodeBackground')
     environment.inputs['Color'].default_value=(.78,.83,.9,1)
     environment.inputs['Strength'].default_value={'evening':.035,'day':.3,'clean':.12}.get(meta['lightingPreset'],.3)
-    background.inputs['Color'].default_value=(*linear('#e7e5de'),1)
+    photo=look=='photoreal' and meta['camera']['type']=='perspective'
+    if photo and meta['lightingPreset']=='day':
+        sky=nodes.new('ShaderNodeTexSky')
+        # Blender 5 replaced the Nishita identifier with scattering models.
+        sky_types={item.identifier for item in sky.bl_rna.properties['sky_type'].enum_items}
+        sky.sky_type=next(kind for kind in ('MULTIPLE_SCATTERING','NISHITA','SINGLE_SCATTERING','HOSEK_WILKIE','PREETHAM') if kind in sky_types)
+        if hasattr(sky,'sun_disc'):sky.sun_disc=False
+        if hasattr(sky,'sun_elevation'):sky.sun_elevation=math.radians(35)
+        if hasattr(sky,'sun_rotation'):sky.sun_rotation=math.radians(135)
+        links.new(sky.outputs['Color'],environment.inputs['Color'])
+        environment.inputs['Strength'].default_value=.05
+    background.inputs['Color'].default_value=(*linear('#dde6ec' if photo else '#e7e5de'),1)
     background.inputs['Strength'].default_value=.8
     links.new(path.outputs['Is Camera Ray'],mix.inputs[0]);links.new(environment.outputs[0],mix.inputs[1]);links.new(background.outputs[0],mix.inputs[2]);links.new(mix.outputs[0],output.inputs[0])
     # Review softboxes are photographic lights, never added as architectural geometry.
-    if meta['lightingPreset']=='day':
+    if meta['lightingPreset']=='day' and photo:
+        for spec in photo_window_lights(meta.get('sourceApartment',{})):
+            data=bpy.data.lights.new(spec['id'],'AREA');data.energy=spec['power'];data.shape='RECTANGLE'
+            data.size=spec['width'];data.size_y=spec['height'];data.color=(.88,.94,1)
+            obj=bpy.data.objects.new(data.name,data);bpy.context.collection.objects.link(obj);obj.location=vec(spec['position'])
+            obj.rotation_euler=(vec(spec['target'])-obj.location).to_track_quat('-Z','Y').to_euler()
+    elif meta['lightingPreset']=='day':
         parts=[p for p in meta['geometry'] if p['entityId'] in meta['visibleEntityIds']]
         lo=[min(p['min'][i] for p in parts) for i in range(3)]
         hi=[max(p['max'][i] for p in parts) for i in range(3)]
@@ -154,7 +271,8 @@ def configure_lighting(meta):
             data=bpy.data.lights.new('Review softbox '+str(i),'AREA');data.energy=power;data.shape='DISK';data.size=size
             obj=bpy.data.objects.new(data.name,data);bpy.context.collection.objects.link(obj);obj.location=vec(position)
             obj.rotation_euler=(vec(target)-obj.location).to_track_quat('-Z','Y').to_euler()
-    for spec in meta['lights']:
+    fixture_specs=photo_fixture_specs(meta) if photo else meta['lights']
+    for spec in fixture_specs:
         data=bpy.data.lights.new(spec['id'],type='AREA' if spec['type']=='area' else 'SPOT' if spec['type']=='spot' else 'POINT')
         # Preserve declared fixture flux and color in metadata; this display gain
         # is calibrated for readable interior images, not electrical load or lux.
@@ -167,13 +285,16 @@ def configure_lighting(meta):
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--scene',required=True);parser.add_argument('--metadata',required=True);parser.add_argument('--output',required=True)
     parser.add_argument('--preset',choices=PRESETS,default='quality');parser.add_argument('--device',choices=['auto','cpu','gpu'],default='auto');parser.add_argument('--validate-only',action='store_true')
+    parser.add_argument('--look',choices=['photoreal','review'],default='photoreal')
     args=parser.parse_args(sys.argv[sys.argv.index('--')+1:])
     meta=json.loads(Path(args.metadata).read_text());output=Path(args.output);output.parent.mkdir(parents=True,exist_ok=True)
     if meta.get('schemaVersion')!=1 or meta.get('units')!='m':raise RuntimeError('Invalid metadata units/schema')
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.context.scene.unit_settings.system='METRIC';bpy.context.scene.unit_settings.scale_length=1.0
+    progress('importing',.02)
     bpy.ops.import_scene.gltf(filepath=str(Path(args.scene).resolve()))
     result=verify_geometry(meta)
+    progress('materials',.06)
     (output.parent/'geometry-validation.json').write_text(json.dumps(result,indent=2))
     visible=set(meta['visibleEntityIds'])
     for obj in bpy.context.scene.objects:
@@ -187,18 +308,24 @@ def main():
     if args.validate_only:
         print('GEOMETRY_VALIDATION '+json.dumps(result));return
     scene=bpy.context.scene;scene.render.engine='CYCLES'
+    bevel_samples=1 if args.preset=='draft' else 2 if args.preset=='preview' else 4
+    enhanced=enhance_photographic_materials(meta,bevel_samples) if args.look=='photoreal' else []
     width,height,samples,threshold=PRESETS[args.preset]
     scene.render.resolution_x=width;scene.render.resolution_y=height;scene.render.resolution_percentage=100
     scene.cycles.samples=samples;scene.cycles.use_adaptive_sampling=True;scene.cycles.adaptive_threshold=threshold;scene.cycles.use_denoising=True
     scene.cycles.max_bounces=12;scene.cycles.diffuse_bounces=6;scene.cycles.glossy_bounces=6;scene.cycles.transmission_bounces=8;scene.cycles.transparent_max_bounces=8
-    scene.cycles.adaptive_min_samples=16;scene.cycles.sample_clamp_indirect=5;scene.cycles.seed=17
+    scene.cycles.adaptive_min_samples=4 if args.preset=='draft' else 8 if args.preset=='preview' else 16;scene.cycles.sample_clamp_indirect=5;scene.cycles.seed=17
     scene.render.film_transparent=False
     scene.view_settings.exposure={'day':.3,'clean':1.5,'evening':.7}.get(meta['lightingPreset'],.3)
-    scene.render.image_settings.file_format='PNG';scene.render.image_settings.color_mode='RGBA';scene.render.image_settings.color_depth='8' if args.preset=='preview' else '16'
+    scene.render.image_settings.file_format='PNG';scene.render.image_settings.color_mode='RGBA';scene.render.image_settings.color_depth='8' if args.preset in ('draft','preview') else '16'
     scene.render.film_transparent=False;scene.render.filepath=str(output)
     try:scene.view_settings.view_transform='AgX'
     except TypeError:scene.view_settings.view_transform='Standard'
-    camera_from_metadata(meta['camera'],width,height);configure_lighting(meta)
+    if args.look=='photoreal':
+        if meta['lightingPreset']=='day':scene.view_settings.exposure=photographic_day_exposure(meta)['exposureStops']
+        try:scene.view_settings.look='AgX - Medium High Contrast'
+        except TypeError:pass
+    camera_from_metadata(meta['camera'],width,height);configure_lighting(meta,args.look)
     notice=meta.get('renderNotice',[])
     if notice:
         # Native render stamp is burned into PNGs, independent of the web interface.
@@ -212,12 +339,21 @@ def main():
         scene.render.stamp_foreground=(.18,.23,.16,1)
         scene.render.stamp_background=(.96,.95,.91,.94)
     device=configure_device(args.device);print('CYCLES_DEVICE '+device,flush=True)
+    progress('rendering',.12)
     try:bpy.ops.render.render(write_still=True)
     except RuntimeError:
         if args.device!='auto' or device=='CPU':raise
-        scene.cycles.device='CPU';device='CPU (GPU render failed; automatic fallback)';bpy.ops.render.render(write_still=True)
+        scene.cycles.device='CPU';device='CPU (GPU render failed; automatic fallback)'
+        print('CYCLES_DEVICE '+device,flush=True);progress('rendering',.12);bpy.ops.render.render(write_still=True)
     (output.parent/'render-report.json').write_text(json.dumps({'renderNotice':notice,'preset':args.preset,'device':device,'resolution':[width,height],'samplesLimit':samples,'sourceHash':meta['sourceHash'],'sourceRevision':meta['sourceRevision'],'geometry':result,'textures':[i.name for i in bpy.data.images],'lightingPreset':meta['lightingPreset'],'colorManagement':scene.view_settings.view_transform,'bitDepth':scene.render.image_settings.color_depth,'lightCount':sum(o.type=='LIGHT' for o in scene.objects),'lightingCalibration':{'method':'Photographic approximation; not a lux calculation','reviewWattsPerSquareMeter':REVIEW_WATTS_PER_SQUARE_METER,'fixtureVisualWattsPerLumen':FIXTURE_VISUAL_WATTS_PER_LUMEN,'exposureStops':scene.view_settings.exposure}},indent=2))
-    print('RENDER_COMPLETE '+str(output),flush=True)
+    report_path=output.parent/'render-report.json';report=json.loads(report_path.read_text())
+    report.update({'look':args.look,'displayLook':scene.view_settings.look,'adaptiveMinimumSamples':scene.cycles.adaptive_min_samples,'shaderBevelSamples':bevel_samples if enhanced else 0,'enhancedMaterials':sorted(set(enhanced)),'windowDaylight':photo_window_lights(meta.get('sourceApartment',{})) if args.look=='photoreal' and meta['lightingPreset']=='day' and meta['camera']['type']=='perspective' else [],'geometryModified':False})
+    if args.look=='photoreal':
+        report['lightingCalibration'].update({'windowWattsPerSquareMeter':PHOTO_WINDOW_WATTS_PER_SQUARE_METER,'daytimeFixturePolicy':'Declared fixtures in rooms without window entities; concept room additionally uses its proposed fixtures' if meta.get('conceptLighting') else 'Declared fixtures in rooms without window entities; daylight in windowed rooms','fixtureIds':[s['id'] for s in photo_fixture_specs(meta)]})
+        if meta.get('conceptLighting'):report['conceptLighting']=meta['conceptLighting']
+        if meta['lightingPreset']=='day':report['lightingCalibration'].update(photographic_day_exposure(meta))
+    report_path.write_text(json.dumps(report,indent=2))
+    progress('done',1);print('RENDER_COMPLETE '+str(output),flush=True)
 if __name__=='__main__':
     try:main()
     except Exception:
