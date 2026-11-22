@@ -29,7 +29,7 @@ test('kitchen inventory includes integrated appliances, microwave and joinery wi
   assert.match(row('Духовка')[3], /в нише колонны/)
   assert.match(row('Микроволновка')[3], /в нише колонны/)
   assert.match(row('Вытяжка')[3], /Скрытый вкладыш/)
-  assert.match(row('Антресоль над вытяжкой')[3], /не считать полезным хранением/)
+  assert.match(row('Корпус скрытой вытяжки')[3], /не считать полезным хранением/)
   for (const panel of kitchen.filter(o => o.params?.fixture === 'joineryPanel')) assert.ok(rows.some(r => r[0] === panel.id), panel.id)
   assert.equal(new Set(rows.map(r => r[0])).size, rows.length)
 })

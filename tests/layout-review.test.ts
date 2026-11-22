@@ -134,8 +134,14 @@ test('bathroom socket faces clear the mirror, vanity, WC frame and laundry panel
     'wall-south',
     'washer isolation must not return behind its side panel',
   )
-  assert.ok(entity('toilet').position[2] / 1000 - bounds('vanity').max.z >= 0.38)
-  assert.ok(bounds('laundry-tower').min.z - bounds('toilet').max.z >= 0.03)
+  assert.equal(entity('toilet').rotation[1], 180)
+  assert.ok(bounds('laundry-tower').min.x - entity('toilet').position[0] / 1000 >= 0.38)
+  // A 600 × 600 mm approach in front of the rotated WC must remain clear.
+  const wc = bounds('toilet'), x = entity('toilet').position[0] / 1000
+  const approach = new T.Box3(new T.Vector3(x - .3, 0, wc.min.z - .6),
+    new T.Vector3(x + .3, 1, wc.min.z))
+  for (const id of ['vanity', 'bathtub', 'laundry-tower', 'washer', 'towel-warmer'])
+    assert.ok(!hasVolumeOverlap(approach, bounds(id)), `WC approach blocked by ${id}`)
 })
 
 test('washer fits the actual cabinet cavity without intersecting any structural panel', () => {
@@ -143,9 +149,10 @@ test('washer fits the actual cabinet cavity without intersecting any structural 
   const washer = bounds('washer'),
     tower = bounds('laundry-tower'),
     panel = 0.018
-  assert.ok(washer.min.x - (tower.min.x + panel) > 0.006)
-  assert.ok(tower.max.x - panel - washer.max.x > 0.006)
-  assert.ok(washer.min.z - (tower.min.z + panel) > 0.02)
+  assert.ok(washer.min.x - (tower.min.x + panel) >= 0.02 - 1e-6)
+  assert.ok(tower.max.x - panel - washer.max.x >= 0.02 - 1e-6)
+  assert.ok(entity('laundry-tower').params?.cabinetVoids?.some(v => v.bottom === 0 && v.height >= 900 && v.front !== false && v.keepBack !== true))
+  assert.ok(tower.min.z - washer.min.z <= 0.041, 'open niche permits only the planned 40 mm hatch protrusion')
   assert.ok(tower.max.z - panel - washer.max.z > 0.048)
   assert.ok(Math.abs(washer.min.y) < 0.00001, 'machine must stand on the floor')
   const door = entity('wall-east').wall!.openings.find((o) => o.id === 'door')!
@@ -304,9 +311,21 @@ test('kitchen cutout is open, supports the sink rim and does not intersect the s
 
 test('dining group keeps an eastern route clear with both chairs pulled out', () => {
   const eastWall = 3.212
+  const dining = entity('auto-living-Обеденный стол')
   const table = bounds('auto-living-Обеденный стол')
-  assert.ok(eastWall - table.max.x >= 0.9, 'table must leave a direct eastern route')
+  assert.deepEqual(dining.size, [700, 750, 1250])
+  assert.ok(eastWall - table.max.x >= 1.0, 'table must leave a direct eastern route')
   assert.ok(table.min.x - bounds('auto-kitchen-Столешница B').max.x >= 0.84)
+  const [x, , z] = dining.position.map(value => value / 1000)
+  const tabletopAt = (dx: number, dz: number) => new T.Raycaster(
+    new T.Vector3(x + dx, 0.8, z + dz), new T.Vector3(0, -1, 0), 0, 0.08,
+  ).intersectObject(group(dining.id), true)[0]
+  for (const dx of [-0.25, 0.25]) {
+    for (const dz of [-0.48, 0.48]) {
+      assert.ok(tabletopAt(dx, dz), 'both settings retain width near the ends')
+    }
+  }
+  assert.equal(tabletopAt(0.345, 0.62), undefined, 'outer corner is rounded')
   for (const id of ['auto-living-Стул 1', 'auto-living-Стул 2']) {
     const e = entity(id),
       direction = forward(e)
@@ -316,12 +335,11 @@ test('dining group keeps an eastern route clear with both chairs pulled out', ()
       moved.position[2] -= direction.z * pullout
       const model = createEntity(moved, a, materials)
       const box = new T.Box3().setFromObject(model, true)
-      assert.ok(eastWall - box.max.x >= 0.75, `${id}: eastern route at ${pullout} mm`)
+      assert.ok(eastWall - box.max.x >= 0.8, `${id}: eastern route at ${pullout} mm`)
       for (const part of parts(model)) part.geometry.dispose()
     }
   }
-  const pendant = entity('auto-living-Подвес над столом'),
-    dining = entity('auto-living-Обеденный стол')
+  const pendant = entity('auto-living-Подвес над столом')
   assert.equal(pendant.position[0], dining.position[0])
   assert.equal(pendant.position[2], dining.position[2])
 })

@@ -5,6 +5,7 @@ import type { DocumentSheet, DocumentTable } from './dossier.ts'
 import { planSvg, planEntities } from './drawings.ts'
 import { roomElectricalPoints } from './electrical.ts'
 import { wallMaterialForRoom } from './wall-finishes.ts'
+import { isKitchenLiving } from './kitchen-living-wall-colors.ts'
 import { apartmentPlanSvg, roomCornersSvg, roomElevationSvg, roomSwitchingSvg, roomTileFloorSvg } from './studio-drawings.ts'
 
 /** The reference supplies the document categories, not the apartment's design or engineering. */
@@ -242,7 +243,8 @@ export function buildStudioDocuments(a: Apartment, spec: DesignSpec, existing: D
   const doors = pages('ST-doors', 'Двери · ведомость проёмов и комплектов', ['ID', 'Помещение / стена', 'Ш × В проёма, мм', 'От начала стены / низ, мм', 'Открывание / комплектация'], openingRows('door'), ['Направление петель, полотно, коробка, доборы, наличники, пороги и фурнитура согласуются по сторонам проёма. Поворот двери в 3D — поза визуализации, а не утверждённая схема заказа.'])
   category('T26', 'Двери', [openingPlan, ...doors], ['Обмер, стороны/направления открывания и дверные комплекты'], openings.some(v => v.opening.kind === 'door') ? 'model' : 'requires-input')
   const skirting = pages('ST-skirting', 'Плинтусы · база для раскладки', ['Помещение', 'Периметр контура, м', 'Материал / высота', 'Необходимые вычеты'], a.rooms.map(r => [
-    r.name, number(perimeter(r.polygon), 3), r.id === 'bathroom' ? 'Примыкание плитки; отдельный плинтус не выбран' : 'Не выбраны', 'Проёмы, встроенная мебель, кухня и скрытые участки',
+    r.name, number(perimeter(r.polygon), 3), isKitchenLiving(r.id) ? 'Decomaster A038, 50 × 15 мм, в цвет стен'
+      : r.id === 'bathroom' ? 'Примыкание плитки; отдельный плинтус не выбран' : 'Не выбраны', 'Проёмы, встроенная мебель, кухня и скрытые участки',
   ]), ['Периметр всего контура — справочная геометрия, НЕ длина плинтуса к закупке. Отсутствует согласованная карта участков установки. Вычеты, торцы, углы и запас не назначены.'], INPUT)
   category('T27', 'Плинтусы', [...skirting, ...refs('A', '03')], ['Карта участков, тип примыканий и чистый метраж'], 'requires-input')
   const furniturePlan = add('ST-furniture', 'Мебель · общая расстановка', MODEL, ['Размещение взято из текущей модели. Заказные и серийные позиции, реальные габариты и зоны открывания необходимо согласовать; готовность компоновки не означает готовности мебели к заказу.'], undefined, apartmentPlanSvg(a, 'furniture'))

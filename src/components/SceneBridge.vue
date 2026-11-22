@@ -27,6 +27,7 @@ import { exportScene } from '../scene/export.ts'
 import { createPresentation, makeMirrors, disposeMirrors } from '../scene/presentation.ts'
 const props = defineProps<{
   model: Apartment
+  layoutModel: Apartment
   mode: ViewMode
   room: string
   dimensions: boolean
@@ -41,6 +42,7 @@ const ctx = useTresContext(),
   cameraKey = ref(0)
 type SceneSnapshot = {
   source: Apartment
+  layout: Apartment
   model: Apartment
   root: T.Group
   space: ReturnType<typeof walkingSpace> | null
@@ -180,8 +182,8 @@ function sameScene(scene: SceneSnapshot, source: Apartment, inside: boolean) {
   return scene.source === source && Boolean(scene.space) === inside
 }
 watch(
-  [() => props.model, () => props.mode === 'interior'],
-  async ([source, inside]) => {
+  [() => props.model, () => props.layoutModel, () => props.mode === 'interior'],
+  async ([source, layout, inside]) => {
     const token = ++generation
     if (active && sameScene(active, source, inside)) {
       building = false
@@ -197,13 +199,14 @@ watch(
         const model = inside ? prepareWalkthroughApartment(source) : source
         built = await buildCanonical(model)
         if (token !== generation || !alive) return
-        next = { source, model, root: built, space: inside ? walkingSpace(model, built) : null }
+        next = { source, layout, model, root: built, space: inside ? walkingSpace(model, built) : null }
       }
       visibility(next)
       const walkingCamera = active?.space && next.space && currentCamera instanceof T.PerspectiveCamera
         ? currentCamera : null
       let eye: number[] | undefined
-      const pose = walkingCamera ? null : roomCamera(next)
+      const sameLayout = currentCamera && active?.layout === next.layout && Boolean(active.space) === inside
+      const pose = walkingCamera || sameLayout ? null : roomCamera(next)
       if (walkingCamera && next.space) {
         const { x, z } = walkingCamera.position
         // Keep a person in their actual room, which may differ from their chosen starting room.
@@ -226,6 +229,7 @@ watch(
       }
       presentation()
       if (pose) setRoomCamera(pose)
+      if (sameLayout) renderFrame(true)
       building = false
       emit('ready', next.source)
     } catch (e) {

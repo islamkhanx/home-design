@@ -9,6 +9,32 @@ import { verifyGlb } from '../src/scene/export.ts'
 import { parseApartment, validateApartment } from '../src/domain/schema.ts'
 import type { Apartment, Room } from '../src/domain/schema.ts'
 import { wallFaceForRoom, wallMaterialForRoom } from '../src/domain/wall-finishes.ts'
+import { applyKitchenLivingWallColor, kitchenLivingDefaultWallMaterialId, kitchenLivingWallColors } from '../src/domain/kitchen-living-wall-colors.ts'
+import seed from '../src/data/apartment.json' with { type: 'json' }
+
+test('shortlisted wall colors cover both open rooms and keep the opposite side of the bathroom wall', () => {
+  const source = parseApartment(seed)
+  const living = source.rooms.find(room => room.id === 'living')!
+  const kitchen = source.rooms.find(room => room.id === 'kitchen')!
+  const bathroom = source.rooms.find(room => room.id === 'bathroom')!
+  const windowWall = source.objects.find(wall => wall.id === 'source-living-glazing')!
+  const sharedWall = source.objects.find(wall => wall.id === 'wall-south')!
+  for (const choice of kitchenLivingWallColors) {
+    const proposal = applyKitchenLivingWallColor(source, choice)
+    const finish = proposal.materials.find(material => material.color === choice.color && material.name.includes(choice.code))!
+    const changedWindowWall = proposal.objects.find(wall => wall.id === windowWall.id)!
+    const changedSharedWall = proposal.objects.find(wall => wall.id === sharedWall.id)!
+    assert.deepEqual(validateApartment(proposal), [])
+    assert.equal(wallMaterialForRoom(changedWindowWall, living), finish.id)
+    assert.equal(changedWindowWall.wall?.materials?.edge, finish.id)
+    assert.equal(wallMaterialForRoom(changedSharedWall, kitchen), finish.id)
+    assert.equal(wallMaterialForRoom(changedSharedWall, bathroom), 'bathroom-stone')
+    assert.equal(changedSharedWall.wall?.materials?.edge, sharedWall.wall?.materials?.edge)
+    assert.equal(wallMaterialForRoom(windowWall, living), kitchenLivingDefaultWallMaterialId)
+    assert.equal(wallMaterialForRoom(sharedWall, kitchen), kitchenLivingDefaultWallMaterialId)
+    assert.ok(proposal.objects.every((object, index) => object.wall || object === source.objects[index]))
+  }
+})
 
 function fixture(): Apartment {
   return parseApartment({

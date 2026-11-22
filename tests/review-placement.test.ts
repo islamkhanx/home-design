@@ -8,6 +8,7 @@ import { createEntity } from '../src/scene/components.ts'
 import { disposeTree } from '../src/scene/canonical.ts'
 import { auditPlacement } from '../src/review/placement.ts'
 import type { PlacementConstraint } from '../src/review/placement.ts'
+import { homeReviewProfile } from '../src/review/home-profile.ts'
 
 const source = parseApartment(
   JSON.parse(readFileSync(new URL('../src/data/apartment.json', import.meta.url), 'utf8')),
@@ -20,6 +21,29 @@ function scene(a: Apartment) {
   root.updateMatrixWorld(true)
   return root
 }
+
+test('bathroom relations detect narrowed gaps and deliberate fixture overlaps', () => {
+  for (const id of ['bath-vanity-joint', 'wc-laundry', 'wc-vanity',
+    'washer-cabinet', 'washer-socket-wc-storage', 'washer-socket-laundry']) {
+    const relation = homeReviewProfile.placement.find(r => r.id === id)!
+    const a = structuredClone(source)
+    const left = a.objects.find(o => o.id === relation.left)!
+    const right = a.objects.find(o => o.id === relation.right)!
+    if (relation.kind === 'gap') {
+      const axis = { x: 0, y: 1, z: 2 }[relation.axis]
+      right.position[axis] = left.position[axis]
+    } else if (id === 'washer-cabinet') {
+      left.position[0] += 60 // Machine crosses an actual cabinet side panel.
+    } else {
+      left.position = [...right.position]
+    }
+    const root = scene(a)
+    try {
+      assert.ok(auditPlacement(a, root, [relation]).some(f =>
+        f.details?.constraintId === id), `Regression must be detected: ${id}`)
+    } finally { disposeTree(root) }
+  }
+})
 
 test('all declared top scribes meet the actual ceiling, without a hardcoded height', () => {
   for (const ceilingY of [2850, 3100]) {

@@ -374,6 +374,46 @@ footer {
   gap: 10px;
 }
 .render-mode { position: absolute; top: 24px; left: 28px; z-index: 6; }
+.wall-color-picker {
+  position: absolute;
+  top: 78px;
+  right: 80px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  max-width: min(290px, calc(100% - 56px));
+  padding: 4px 9px;
+  border: 1px solid #d5d7cb;
+  border-radius: 9px;
+  background: #fcfbf4f5;
+  box-shadow: 0 2px 12px #22291819;
+  color: #354031;
+  font-size: 12px;
+  font-weight: 650;
+}
+.wall-color-swatch {
+  flex: 0 0 13px;
+  height: 13px;
+  border: 1px solid #0003;
+  border-radius: 50%;
+  background: #ece8df;
+}
+.wall-color-picker select {
+  min-width: 0;
+  width: 100%;
+  min-height: 28px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-overflow: ellipsis;
+}
+@media (max-width: 650px) {
+  .wall-color-picker { top: 131px; right: 18px; max-width: min(270px, calc(100% - 138px)); }
+}
 .photo-view { position: absolute; inset: 0; z-index: 4; background: #e9e7df; display: grid; place-items: center; padding: 78px 16px 58px; }
 .photo-view > img { width: 100%; height: 100%; object-fit: contain; }
 .photo-view > p { position: absolute; bottom: 12px; left: 18px; right: 18px; width: fit-content; padding: 10px 14px; border-radius: 7px; background: #faf8f0ed; color: #606953; font-size: 11px; }

@@ -90,7 +90,7 @@ test('built-in appliances fit their actual cabinet meshes without positive-volum
   }
 })
 
-test('integrated appliances carry painted furniture fronts aligned with the adjacent cabinet plane', () => {
+test('integrated appliances carry graphite furniture fronts aligned with the adjacent cabinet plane', () => {
   for (const [device, housing] of [
     [appliance('fridge'), get('Колонна холодильника')],
     [appliance('dishwasher'), get('Нижний ряд 3')],
@@ -101,7 +101,8 @@ test('integrated appliances carry painted furniture fronts aligned with the adja
         p.box.max.x - p.box.min.x > (device.size[0] / 1000) * 0.9,
     )
     assert.equal(localFronts.length, device.params?.appliance === 'fridge' ? 2 : 1)
-    for (const p of localFronts) assert.equal((p.mesh.material as T.Material).name, 'paint')
+    assert.equal(housing.material, 'kitchen-graphite')
+    for (const p of localFronts) assert.equal((p.mesh.material as T.Material).name, housing.material)
     const forward = new T.Vector3(0, 0, 1).applyAxisAngle(
       new T.Vector3(0, 1, 0),
       (device.rotation[1] * Math.PI) / 180,

@@ -5,6 +5,12 @@ export const homeReviewProfile: ReviewProfile = {
   id: 'arena-home-placement-v1',
   apartmentId: 'home-design',
   placement: [
+    { id: 'bath-vanity-joint', kind: 'gap', left: 'bathtub', right: 'vanity', axis: 'z', minMm: 20 },
+    { id: 'wc-laundry', kind: 'gap', left: 'toilet', right: 'laundry-tower', axis: 'x', minMm: 200 },
+    { id: 'wc-vanity', kind: 'separate', left: 'toilet', right: 'vanity' },
+    { id: 'washer-cabinet', kind: 'separate', left: 'washer', right: 'laundry-tower' },
+    { id: 'washer-socket-wc-storage', kind: 'gap', left: 'wc-storage', right: 'E02', axis: 'x', minMm: 20 },
+    { id: 'washer-socket-laundry', kind: 'gap', left: 'E02', right: 'laundry-tower', axis: 'x', minMm: 20 },
     {
       id: 'console-desk',
       kind: 'separate',
@@ -75,6 +81,8 @@ export const homeReviewProfile: ReviewProfile = {
     ],
   },
   motions: [
+    { entityId: 'wc-storage', kind: 'cabinet', hinges: ['min', 'max', 'min', 'max'] },
+    { entityId: 'laundry-tower', kind: 'cabinet', hinges: ['min', 'max', 'min', 'max', 'min', 'max'] },
     ...(
       [
         ['Нижний ряд 3', ['min']],
@@ -83,11 +91,8 @@ export const homeReviewProfile: ReviewProfile = {
         ['Верхний шкаф', ['min', 'max']],
         ['Корпус скрытой вытяжки', ['min', 'max']],
         ['Верхний шкаф после вытяжки', ['max']],
-        ['Антресоль северная', ['min', 'max']],
-        ['Антресоль над вытяжкой', ['min', 'max']],
-        ['Антресоль рабочей секции', ['max']],
-        ['Колонна духовки и СВЧ', ['max', 'max', 'max', 'max']],
-        ['Колонна холодильника', ['min', 'min']],
+        ['Колонна духовки и СВЧ', ['max', 'max', 'max']],
+        ['Колонна холодильника', ['min']],
       ] as const
     ).map(([name, hinges]) => ({
       entityId: `auto-kitchen-${name}`,
@@ -102,8 +107,8 @@ export const homeReviewProfile: ReviewProfile = {
     { entityId: 'auto-living-Стул 2', kind: 'pullout', distanceMm: 300 },
   ],
   manualReview: [
-    'Washer installation: the current 614 mm niche around a 600 mm body leaves 7 mm per side; verify the chosen product, hoses, ventilation and extraction route.',
-    'Laundry fronts and the bathroom door: simultaneous opening needs a chosen hinge system and a separate coordinated motion check.',
+    'Washer installation: verify clear width against the product manual (LG candidate: at least 640 mm for a 600 mm body), rear hose space, ventilation and extraction route.',
+    'Laundry opening and the bathroom door: coordinate washer hatch motion, upper fronts and extraction; an open lower niche does not certify these paths.',
     'Appliance hinge paths, hood coverage, plug/cable space and service access require product data.',
     'Source geometry is traced, not measured. The model review does not certify construction dimensions or installation compliance.',
   ],

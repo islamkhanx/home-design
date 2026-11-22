@@ -50,7 +50,7 @@ function assertSeparate(left: string, right: string) {
       assert.ok(!overlap(p, q), `${left}: actual panel intersects ${right}`)
 }
 
-test('tall storage and kitchen mezzanines meet the ceiling above continuous lower assemblies', () => {
+test('tall storage and full-height kitchen uppers meet the ceiling', () => {
   const ids = [
     'auto-bedroom-Шкаф',
     'auto-hall-Шкаф у входа',
@@ -58,10 +58,11 @@ test('tall storage and kitchen mezzanines meet the ceiling above continuous lowe
     'wc-storage',
     'laundry-tower',
     ...[
-      'Антресоль угловая',
-      'Антресоль северная',
-      'Антресоль над вытяжкой',
-      'Антресоль рабочей секции',
+      'Глухой верхний угол',
+      'Возврат верхнего угла',
+      'Верхний шкаф',
+      'Корпус скрытой вытяжки',
+      'Верхний шкаф после вытяжки',
       'Колонна духовки и СВЧ',
       'Колонна холодильника',
     ].map((id) => `auto-kitchen-${id}`),
@@ -89,28 +90,15 @@ test('tall storage and kitchen mezzanines meet the ceiling above continuous lowe
     )
     assert.ok(localBounds.min.y >= -1e-6 && localBounds.max.y <= e.size[1] / 1000 + 1e-6)
   }
-  // Shallow work-zone units end at the mezzanine joint; deeper units above
-  // complete the same assembly to the ceiling. They are not floating cupboards.
-  const lowerUppers = a.objects.filter(
+  const uppers = a.objects.filter(
     (e) => e.roomId === 'kitchen' && e.kind === 'Wardrobe' && e.position[1] === 1550,
   )
-  assert.ok(lowerUppers.length >= 4)
-  for (const lower of lowerUppers) {
-    const b = bounds(lower.id)
-    assert.ok(Math.abs(b.min.y - 1.55) < 1e-6 && Math.abs(b.max.y - 2.3) < 1e-6)
-    assert.ok(
-      ids.some((id) => {
-        const upper = bounds(id)
-        return (
-          Math.abs(upper.min.y - b.max.y) < 1e-6 &&
-          upper.min.x <= b.min.x + 1e-6 &&
-          upper.max.x >= b.max.x - 1e-6 &&
-          upper.min.z <= b.min.z + 1e-6 &&
-          upper.max.z >= b.max.z - 1e-6
-        )
-      }),
-      `${lower.name}: missing contiguous upper assembly`,
-    )
+  assert.equal(uppers.length, 5)
+  for (const upper of uppers) {
+    const b = bounds(upper.id)
+    assert.ok(Math.abs(b.min.y - 1.55) < 1e-6 && Math.abs(b.max.y - 2.85) < 1e-6)
+    assert.equal(upper.size[2], 350)
+    assert.equal(upper.params?.cabinetTopTier, undefined)
   }
   assert.equal(cabinet('auto-living-ТВ-тумба').size[1], 360, 'low media unit keeps its purpose')
   assert.equal(cabinet('auto-kitchen-Нижний ряд 1').size[1], 870, 'worktop height stays unchanged')
@@ -153,11 +141,14 @@ test('ceiling extension preserves the washer cavity, bathroom choices and regene
         'washer intersects a cabinet panel',
       )
   assert.ok(Math.abs(bounds('washer').min.y) < 1e-6)
-  assert.deepEqual(cabinet('laundry-tower').size, [650, 2850, 560])
+  assert.deepEqual(cabinet('laundry-tower').size, [680, 2850, 560])
   for (const id of ['laundry-tower', 'washer'])
     assert.deepEqual(cabinet(id).position, seed.objects.find((e) => e.id === id)!.position)
+  assert.ok((cabinet('laundry-tower').size[0] - 36 - cabinet('washer').size[0]) / 2 >= 20)
+  assert.equal(cabinet('washer').size[2], 500)
+  assert.ok(cabinet('laundry-tower').params?.cabinetVoids?.some(v => v.bottom === 0 && v.height >= 900 && v.front !== false && v.keepBack !== true))
   assert.equal(cabinet('laundry-tower').material, 'oak')
-  assert.equal(cabinet('wc-storage').material, 'paint')
+  assert.equal(cabinet('wc-storage').material, 'oak')
   assert.deepEqual(a.rooms, source.rooms)
   assert.deepEqual(applyBathroomPlan(generateElectrical(generateSourceInteriors(a))), a)
 })

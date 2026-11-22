@@ -101,7 +101,8 @@ test('ceiling view shows undersides and lights; electrical view exposes points; 
   assert.ok(visible().some((o) => o.userData.kind === 'TrackLight'))
   assert.ok(
     visible().every((o) =>
-      ['Ceiling', 'Spotlight', 'TrackLight', 'Pendant'].includes(o.userData.kind),
+      ['Ceiling', 'Spotlight', 'TrackLight', 'Pendant'].includes(o.userData.kind) ||
+        a.objects.find(e => e.id === o.userData.entityId)?.params?.fixture === 'curtainTrack',
     ),
   )
   const camera = presets(root).ceiling

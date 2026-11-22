@@ -1,3 +1,4 @@
+import { applyBathCurtain } from './bath-curtain.ts'
 import type { Apartment, Entity, MaterialDef } from './schema.ts'
 import budget from '../data/bathroom-budget.json' with { type: 'json' }
 import spec from '../../docs/bathroom-spec.json' with { type: 'json' }
@@ -72,22 +73,22 @@ export function applyBathroomPlan(input: Apartment): Apartment {
       name: 'Гигиенический душ · обязательный',
       kind: 'Shower',
       roomId: 'bathroom',
-      position: [230, 480, 2020],
+      position: [500, 480, 2162],
       size: [180, 450, 100],
-      rotation: [0, 90, 0],
+      rotation: [0, 180, 0],
       material: 'metal',
       evidence: 'assumed',
       params: { fixture: 'hygienicShower' },
-      note: 'Наличие подтверждено 15.11.2026. Показано предварительное размещение у WC; модель, трасса, высота и сервисный доступ требуют проверки.',
+      note: 'Lemark Plus Grace LM1519C: рабочий выбор; смеситель и держатель на лицевой стороне короба WC, сервис со съёмной панели. Не штробить несущую стену; внутренние арматура/трассы по монтажному чертежу.',
     },
     {
       id: 'towel-warmer',
       name: 'Полотенцесушитель · кандидат 500×800',
       kind: 'Shelf',
       roomId: 'bathroom',
-      position: [800, 850, 2372],
+      position: [40, 1100, 1800],
       size: [500, 800, 80],
-      rotation: [0, 180, 0],
+      rotation: [0, 90, 0],
       material: 'white',
       evidence: 'assumed',
       params: { fixture: 'towelWarmer' },
@@ -104,5 +105,8 @@ export function applyBathroomPlan(input: Apartment): Apartment {
   const note =
     'Смета Алматы 15.11.2026: гигиенический душ и работы обязательны; Laparet Noa показан фотографиями товара. Модели, монтажные привязки и количества требуют проверки; изображения не заменяют физический образец.'
   if (!a.notes.includes(note)) a.notes.push(note)
-  return a
+  const finalDesignNote =
+    '22.11.2026: санузел завершён как рабочий дизайн: COMO 60, WC на южной стене, единый дуб D2. Канализация и монтажные размеры требуют обмера; docs/BATHROOM_FINAL_2026-11-22.md.'
+  if (!a.notes.includes(finalDesignNote)) a.notes.push(finalDesignNote)
+  return applyBathCurtain(a)
 }

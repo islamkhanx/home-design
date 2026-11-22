@@ -102,7 +102,7 @@ export interface Entity {
     furnitureForm?: (typeof furnitureForms)[number]
     cabinetFace?: (typeof cabinetFaces)[number]
     lightForm?: (typeof lightForms)[number]
-    fixture?: 'hygienicShower' | 'towelWarmer' | 'diningChair' | 'officeChair' | 'armchair' | 'mediaScreen' | 'monitor' | 'roundTable' | 'rug' | 'bench' | 'blindCorner' | 'sinkBase' | 'kitchenTap' | 'hob' | 'extractorHood' | 'dropInSink' | 'artwork' | 'joineryPanel'
+    fixture?: 'curtainTrack' | 'bathCurtain' | 'bathShower250' | 'hygienicShower' | 'towelWarmer' | 'diningChair' | 'officeChair' | 'armchair' | 'mediaScreen' | 'monitor' | 'roundTable' | 'roundedTable' | 'rug' | 'bench' | 'blindCorner' | 'sinkBase' | 'kitchenTap' | 'hob' | 'extractorHood' | 'dropInSink' | 'artwork' | 'joineryPanel'
     sinkCutout?: { center: [number, number]; size: [number, number] }
     doorAngle?: number
     shelves?: number

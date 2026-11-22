@@ -88,13 +88,13 @@ async function start() {
   job.value = null
   captureTitle.value = props.roomTitle
   try {
+    const bundle = await props.exportScene()
     // A server restart changes its request token even when the previous job was completed.
     const statusResponse = await fetch('/__local/status')
     if (!statusResponse.ok) throw new Error('Локальный сервер недоступен')
     const status = await statusResponse.json()
     token.value = status.token
     if (!status.available) throw new Error('Blender не найден')
-    const bundle = await props.exportScene()
     const response = await fetch('/__local/render', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-render-token': token.value },

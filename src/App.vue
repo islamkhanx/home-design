@@ -23,6 +23,7 @@ import { roomElectricalPoints } from './domain/electrical.ts'
 import { planEntities } from './domain/drawings.ts'
 import { wallMaterialForRoom } from './domain/wall-finishes.ts'
 import { applyDesignStudy, DESIGN_VARIANTS, FEATURED_DESIGN_STUDIES } from './domain/design-variants.ts'
+import { applyKitchenLivingWallColor, isKitchenLiving, kitchenLivingWallColors } from './domain/kitchen-living-wall-colors.ts'
 const query = new URLSearchParams(location.search)
 const exportMode = query.has('export')
 const section = ref(query.has('design') ? 'design' : query.has('tour') ? 'tour' : query.has('documents') ? 'documents' : 'viewer')
@@ -37,16 +38,36 @@ const studyChoices = [
 ]
 const requestedStudy = ref('current')
 const activeStudy = ref('current')
-const previewModel = computed(() => studyModels.get(requestedStudy.value) ?? model.value)
+const studyModel = computed(() => studyModels.get(requestedStudy.value) ?? model.value)
+const requestedWallColor = ref('current')
+const activeWallColor = ref('current')
+const wallColorModels = new Map<string, { source: Apartment; studyId: string; colorId: string }>()
+const previewModel = computed(() => {
+  const base = studyModel.value
+  const choice = kitchenLivingWallColors.find(color => color.id === requestedWallColor.value)
+  if (!choice) return base
+  const studyId = requestedStudy.value
+  const key = `${studyId}:${choice.id}`
+  let preview = wallColorModels.get(key)
+  if (!preview) {
+    preview = { source: applyKitchenLivingWallColor(base, choice), studyId, colorId: choice.id }
+    wallColorModels.set(key, preview)
+  }
+  return preview.source
+})
 const shownModel = shallowRef(model.value)
 const activeConcept = computed(() => activeStudy.value === 'current' ? undefined : studyChoices.find(variant => variant.id === activeStudy.value))
 const studySwitching = computed(() => requestedStudy.value !== activeStudy.value)
+const wallColorSwitching = computed(() => requestedWallColor.value !== activeWallColor.value)
+const activeWallColorName = computed(() => kitchenLivingWallColors.find(color => color.id === activeWallColor.value)?.name)
+const wallColorSwatch = computed(() => kitchenLivingWallColors.find(color => color.id === requestedWallColor.value)?.color)
 const walkingEntry = !exportMode && query.has('walk')
   ? model.value.rooms.find(candidate => candidate.id === 'living' && candidate.polygon)?.id
   : undefined
 const room = ref(walkingEntry ?? 'all'),
   mode = ref<ViewMode>(walkingEntry ? 'interior' : 'dollhouse'),
   lighting = ref<LightingPreset>(walkingEntry && query.get('light') === 'evening' ? 'evening' : 'day')
+const selectedFinishes = computed(() => isKitchenLiving(room.value) && !activeConcept.value)
 const lightingControls = shallowRef<LightingControls>({ windows: lighting.value === 'day', sources: {} })
 function resetLighting() {
   lightingControls.value = { windows: lighting.value === 'day', sources: {} }
@@ -89,6 +110,11 @@ function cycleStudy(step: number) {
   const index = studyChoices.findIndex(variant => variant.id === requestedStudy.value)
   selectStudy(studyChoices[(index + step + studyChoices.length) % studyChoices.length].id)
 }
+function selectWallColor(id: string) {
+  if (id !== 'current' && !kitchenLivingWallColors.some(color => color.id === id)) return
+  error.value = ''
+  requestedWallColor.value = id
+}
 function studyShortcut(event: KeyboardEvent) {
   if (exportMode || photoMode.value || mode.value !== 'interior' || event.repeat || event.metaKey || event.ctrlKey || event.altKey ||
       !(event.target instanceof HTMLCanvasElement)) return
@@ -98,9 +124,11 @@ function studyShortcut(event: KeyboardEvent) {
 }
 function sceneReady(source: Apartment) {
   shownModel.value = source
-  const match = [...studyModels].find(([, candidate]) => candidate === source)
-  activeStudy.value = match?.[0] ?? 'current'
+  const painted = [...wallColorModels.values()].find(candidate => candidate.source === source)
+  activeStudy.value = painted?.studyId ?? [...studyModels].find(([, candidate]) => candidate === source)?.[0] ?? 'current'
   requestedStudy.value = activeStudy.value
+  activeWallColor.value = painted?.colorId ?? 'current'
+  requestedWallColor.value = activeWallColor.value
   ready.value = true
 }
 async function exportPhotoScene() {
@@ -153,11 +181,11 @@ const stories: Record<string, [string, string]> = {
   ],
   living: [
     'Жить. Работать. Принимать.',
-    'Шалфейный диван, обеденный стол и рабочее место у окна. Неглубокая ТВ-тумба сохраняет больше свободного места.',
+    'Английская ёлочка Classen «Тур», два продольных трека и отдельная вечерняя подсветка окна и ТВ-зоны.',
   ],
   kitchen: [
     'Всё под рукой.',
-    'Единый встроенный гарнитур с антресолью до потолка. Холодильник и посудомойка скрыты за общими фасадами, духовка и СВЧ собраны в колонне. Вытяжка встроена в верхний ряд.',
+    'Матовые графитовые фасады, фартук под графитовый сланец и светлая столешница. Верхние фасады идут одним рядом до потолка. Вытяжка, холодильник и посудомойка встроены.',
   ],
   hall: [
     'Дом начинается здесь.',
@@ -254,7 +282,9 @@ onMounted(() => {
     },
     setModel: async (a: Apartment) => {
       studyModels.clear()
+      wallColorModels.clear()
       requestedStudy.value = 'current'
+      requestedWallColor.value = 'current'
       model.value = parseApartment(a)
       resetLighting()
       room.value = 'all'
@@ -280,6 +310,7 @@ onMounted(() => {
     manifest: () => bridge.value!.manifest(),
     viewState: () => bridge.value!.viewState(),
     setStudy: selectStudy,
+    setWallColor: selectWallColor,
   }
 })
 </script>
@@ -333,6 +364,7 @@ onMounted(() => {
           <SceneBridge
             ref="bridge"
             :model="previewModel"
+            :layout-model="studyModel"
             :mode="mode"
             :room="room"
             :dimensions="dimensions"
@@ -352,6 +384,15 @@ onMounted(() => {
         <LiveDesignPicker v-if="!photoMode && !exportMode" :choices="studyChoices" :featured="FEATURED_DESIGN_STUDIES" :selected="requestedStudy"
           :active="activeStudy" :switching="studySwitching" :walking="mode === 'interior'"
           @select="selectStudy" @cycle="cycleStudy" />
+        <label v-if="!photoMode && !exportMode && (mode === 'interior' || ['all', 'kitchen', 'living'].includes(room))" class="wall-color-picker">
+          <span class="wall-color-swatch" :style="{ backgroundColor: wallColorSwatch }" aria-hidden="true"></span>
+          <span aria-hidden="true">Стены</span>
+          <select aria-label="Цвет стен кухни и гостиной" :value="requestedWallColor"
+            @change="selectWallColor(($event.target as HTMLSelectElement).value)">
+            <option value="current">По проекту</option>
+            <option v-for="color in kitchenLivingWallColors" :key="color.id" :value="color.id">{{ color.name }}</option>
+          </select>
+        </label>
         <LightingPanel v-if="mode === 'interior' && !photoMode && !exportMode"
           :model="shownModel" :room="room" :preset="lighting" :controls="lightingControls"
           @windows="toggleWindowLight" @source="toggleLightSource" @reset="resetLighting" @close="focusScene" />
@@ -408,7 +449,7 @@ onMounted(() => {
         >
           ⛶
         </button>
-        <div v-if="!ready && !error && !studySwitching" class="loading" role="status">Подготавливаю материалы…</div>
+        <div v-if="!ready && !error && !studySwitching" class="loading" role="status">{{ wallColorSwitching ? 'Меняю цвет стен…' : 'Подготавливаю материалы…' }}</div>
         <div v-if="error" role="alert" class="error">{{ error }}</div>
         <div v-show="!photoMode" class="view-caption">
           <span>{{
@@ -446,7 +487,7 @@ onMounted(() => {
           </button>
         </div>
         <p class="light-note">{{ lightNote }}</p>
-        <PhotorealPanel :ready="ready" :interior="mode === 'interior'" :room-title="activeConcept ? `${roomTitle} · ${activeConcept.label}` : roomTitle"
+        <PhotorealPanel :ready="ready" :interior="mode === 'interior'" :room-title="[roomTitle, activeConcept?.label, activeWallColorName].filter(Boolean).join(' · ')"
           :export-scene="exportPhotoScene" @enter="enterPhotoRoom" @result="showPhoto" />
         <div v-if="mode === 'ceiling'" class="design-status">
           <b>Потолок · вид снизу</b>
@@ -486,7 +527,11 @@ onMounted(() => {
             }}</small>
           </div>
         </div>
-        <div v-if="!activeConcept || room === 'bathroom' || room === 'kitchen'" class="material-row">
+        <div v-if="selectedFinishes" class="material-row">
+          <span class="swatch oak"></span>
+          <div><b>Classen Manor «Тур» 62710</b><small>Влагостойкий ламинат · английская ёлочка</small></div>
+        </div>
+        <div v-if="(!activeConcept && !selectedFinishes) || room === 'bathroom' || room === 'kitchen'" class="material-row">
           <span :class="['swatch', room === 'kitchen' ? '' : 'oak']" :style="room === 'kitchen' && kitchenFacade ? { backgroundColor: kitchenFacade.color } : undefined"></span>
           <div>
             <b>{{ room === 'kitchen' ? 'Единые фасады гарнитура' : 'Натуральный дуб' }}</b
@@ -510,15 +555,16 @@ onMounted(() => {
           </div>
         </div>
         <p class="sample-note">
-          {{ room === 'bathroom' ? 'Плитка показана фотографиями выбранных для сметы артикулов; тон и партию проверить по образцу. Фасады HPL на влагостойкой МДФ; дубовый декор пока условный. Свет санузла: 4000 K, CRI ≥90.' : 'Оттенки и фактуры условные. Автоматически предложенные мебель и отделка ещё не утверждены; артикулы не выбраны.' }}
+          {{ room === 'bathroom' ? 'Плитка показана фотографиями выбранных для сметы артикулов; тон и партию проверить по образцу. Фасады HPL на влагостойкой МДФ; дубовый декор пока условный. Свет санузла: 4000 K, CRI ≥90.' : selectedFinishes ? 'Оттенки и фактуры в 3D переданы приближённо. Комплект отделки зафиксирован в спецификации.' : 'Оттенки и фактуры условные. Мебель и отделка в этом виде показаны эскизно.' }}
         </p>
         <div class="design-status">
-          <span>{{ room === 'bathroom' ? 'В ПРОРАБОТКЕ' : 'АВТОМАТИЧЕСКИЙ ВАРИАНТ' }}</span>
+          <span>{{ room === 'bathroom' ? 'В ПРОРАБОТКЕ' : selectedFinishes ? 'ОТДЕЛКА ВЫБРАНА' : 'АВТОМАТИЧЕСКИЙ ВАРИАНТ' }}</span>
           <p>
             {{
               room === 'bathroom'
                 ? 'Обмеры, паспорта изделий, монтажные привязки электрики и деталировка У1. Свет 4000 K и состав оборудования уже определены.'
-                : 'Контур оцифрован по исходному PDF. Мебель и декор предложены автоматически; размеры по масштабу окна, не обмер.'
+                : selectedFinishes ? 'Количество материалов и монтажные размеры определяются по обмеру. Мебель показана эскизно.'
+                : 'Контур оцифрован по исходному PDF. Показанные размеры получены по масштабу окна.'
             }}
           </p>
         </div>

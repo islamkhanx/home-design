@@ -2,6 +2,12 @@ import type { Apartment, Entity, Kind } from './schema.ts'
 import type { V2, Opening } from './math.ts'
 import { parseApartment } from './schema.ts'
 import { stitchSlabJunctions } from './slab-junctions.ts'
+import {
+  applyKitchenLivingWallColor,
+  isKitchenLiving,
+  kitchenLivingDefaultWallColor,
+  kitchenLivingFloorMaterialId,
+} from './kitchen-living-wall-colors.ts'
 
 // Manual trace of page 2 rendered at 3200 × 2261 px. The 2400 mm label spans
 // the WINDOW opening (1673…1877), not the apartment. Areas never calibrate scale.
@@ -63,6 +69,7 @@ export function restoreSourcePlan(input: Apartment, bathroom: Entity[]): Apartme
   const a = structuredClone(input)
   for (const m of [
     { id: 'floor-oak', name: 'Пол · светлый дуб · предложение', color: '#c3a780', roughness: 0.74, metalness: 0, surface: 'oak' as const },
+    { id: kitchenLivingFloorMaterialId, name: 'Classen Manor «Тур» 62710 · английская ёлочка', color: '#80674f', roughness: 0.83, metalness: 0, surface: 'herringbone' as const },
     { id: 'ceiling-white', name: 'Потолок · матовый белый', color: '#f5f3ee', roughness: 0.95, metalness: 0 },
   ]) {
     const i = a.materials.findIndex(existing => existing.id === m.id)
@@ -126,7 +133,8 @@ export function restoreSourcePlan(input: Apartment, bathroom: Entity[]): Apartme
       name: `Пол · ${r.name}`,
       size: [w, 70, d],
       surface: { polygon: r.polygon, thickness: 70 },
-      material: ['bathroom', 'loggia'].includes(r.id) ? 'stone' : 'floor-oak',
+      material: isKitchenLiving(r.id) ? kitchenLivingFloorMaterialId :
+        ['bathroom', 'loggia'].includes(r.id) ? 'stone' : 'floor-oak',
     })
     entity(r.id === 'bathroom' ? 'ceiling' : `source-${r.id}-ceiling`, r.id, 'Ceiling', {
       name: `Потолок · ${r.name}`,
@@ -313,11 +321,18 @@ export function restoreSourcePlan(input: Apartment, bathroom: Entity[]): Apartme
       o.position[2] = old.position[2]
     }
     if (['laundry-tower', 'washer'].includes(o.id)) {
-      o.position[0] = bw - 335
-      o.position[2] = o.id === 'washer' ? bd - o.size[2] / 2 - 67 : bd - o.size[2] / 2
+      // Preserve the selected right/rear clearances from the source room.
+      o.position[0] = bw - (1800 - old.position[0])
+      o.position[2] = bd - (2470 - old.position[2])
     }
+    if (['toilet', 'wc-frame', 'wc-storage', 'flush', 'hygienic-shower'].includes(o.id))
+      o.position[2] = bd - (2470 - old.position[2])
     if (o.kind === 'Spotlight') o.position[1] = 2780
-    o.note =
+    const current = input.objects.find(e => e.id === o.id && e.roomId === o.roomId)
+    const samePlacement = current && current.position.every((value, i) => value === o.position[i]) &&
+      current.size.every((value, i) => value === o.size[i]) &&
+      current.rotation.every((value, i) => value === o.rotation[i])
+    o.note = (samePlacement ? current.note : undefined) ??
       'Выбранная композиция A3/M1/T1/Д2. Привязки адаптированы к оцифрованному контуру, требуют обмера.'
     delete o.sharedWith
     delete o.generated
@@ -327,7 +342,7 @@ export function restoreSourcePlan(input: Apartment, bathroom: Entity[]): Apartme
     string,
     { position: [number, number, number]; target: [number, number, number] }
   > = {
-    bathroom: { position: [1050, 1600, 1650], target: [500, 1150, 600] },
+    bathroom: { position: [1150, 1600, 1450], target: [500, 1150, 600] },
     bedroom: { position: [2750, 1600, -1000], target: [900, 1150, -2600] },
     // Stay west of the open balcony door; look down enough to include both seats and floor.
     loggia: { position: [1950, 1600, -4700], target: [300, 800, -4750] },
@@ -337,5 +352,5 @@ export function restoreSourcePlan(input: Apartment, bathroom: Entity[]): Apartme
     living: { position: [1600, 1600, 9250], target: [2100, 1200, 6900] },
   }
   for (const r of a.rooms) r.interiorCamera = cameras[r.id]
-  return parseApartment(stitchSlabJunctions(a))
+  return parseApartment(applyKitchenLivingWallColor(stitchSlabJunctions(a), kitchenLivingDefaultWallColor))
 }

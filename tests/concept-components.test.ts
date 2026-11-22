@@ -38,7 +38,7 @@ function checkGeometry(entity: Entity) {
 test('concept furnishings stay within original source envelopes, including ceiling cabinet scribes', () => {
   for (const source of apartment.objects.filter(e=>styledKinds.includes(e.kind))) {
     // Legacy media and sanitary fixtures are intentionally kept in their existing factories.
-    if (source.params?.fixture && !['diningChair','officeChair','armchair','roundTable','bench','blindCorner','sinkBase'].includes(source.params.fixture)) continue
+    if (source.params?.fixture && !['diningChair','officeChair','armchair','roundTable','roundedTable','bench','blindCorner','sinkBase'].includes(source.params.fixture)) continue
     for (const designStyle of designStyles) checkGeometry({ ...source, id:source.id+'-'+designStyle, position:[0,0,0],rotation:[0,0,0], params:{...source.params,designStyle} })
   }
 })
@@ -54,12 +54,14 @@ test('concept furniture changes canonical shape, and wall treatments are actual 
 })
 
 test('fixture lenses are exposed at their light origins, with one lens for each visible head', () => {
-  const track = apartment.objects.find(e => e.kind === 'TrackLight' && e.roomId === 'living')!
+  const track = apartment.objects.find(e => e.kind === 'TrackLight' && e.roomId === 'kitchen')!
+  const livingTracks = apartment.objects.filter(e => e.kind === 'TrackLight' && e.roomId === 'living')
   const pendant = apartment.objects.find(e => e.kind === 'Pendant' && e.roomId === 'living')!
   const spot = apartment.objects.find(e => e.kind === 'Spotlight')!
   const strip = apartment.objects.find(e => e.kind === 'LEDStrip')!
   const cases: Array<[Entity, number]> = [
     [track, 3],
+    ...livingTracks.map((entity): [Entity, number] => [entity, 1]),
     [{ ...track, rotation: [0, 45, 0], params: { ...track.params, designStyle: 'hitech' } }, 1],
     [pendant, 1],
     [{ ...pendant, params: { ...pendant.params, lightForm: 'cluster' } }, 3],
@@ -84,7 +86,7 @@ test('fixture lenses are exposed at their light origins, with one lens for each 
 })
 
 test('fixture body stays dark while light control activates each track lens', () => {
-  const original = apartment.objects.find(e => e.kind === 'TrackLight' && e.roomId === 'living')!
+  const original = apartment.objects.find(e => e.kind === 'TrackLight' && e.roomId === 'kitchen')!
   const entity = { ...original, params: { ...original.params, color: '#ffc38b' } }
   const model = { ...apartment, objects: [entity] }
   const fixture = createEntity(entity, model, materials)

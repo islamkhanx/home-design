@@ -57,7 +57,7 @@ export function applyVisibility(
       relatedPoints.has(e.id) ||
       (e.sharedWith?.includes(room) ?? false) ||
       hostWalls.has(e.id)
-    const ceilingPart = ['Ceiling', 'Spotlight', 'TrackLight', 'Pendant'].includes(e.kind)
+    const ceilingPart = ['Ceiling', 'Spotlight', 'TrackLight', 'Pendant'].includes(e.kind) || e.params?.fixture === 'curtainTrack'
     let shown = true
     if (mode === 'ceiling') shown = ceilingPart
     else if (mode === 'electrical')

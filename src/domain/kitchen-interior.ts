@@ -1,5 +1,13 @@
-import type { Apartment, Entity, Kind } from './schema.ts'
+import type { Apartment, Entity, Kind, MaterialDef } from './schema.ts'
 import type { V3 } from './math.ts'
+
+export const kitchenFacadeId = 'kitchen-graphite'
+const backsplashId = 'kitchen-slate'
+export const kitchenFinishes: MaterialDef[] = [
+  { id: kitchenFacadeId, name: 'Матовый графит', color: '#444441', roughness: 0.84, metalness: 0 },
+  { id: backsplashId, name: 'Графитовый сланец', color: '#4e4e4a', roughness: 0.86, metalness: 0,
+    surface: 'stone', tileSize: [0.6, 1.2] },
+]
 
 /** One fitted L-shaped kitchen, including the appliance housings and finish panels.
  * Dimensions are a coordinated proposal inside the traced shell, not a shop drawing.
@@ -7,23 +15,24 @@ import type { V3 } from './math.ts'
 export function kitchenInteriors(a: Apartment): Entity[] {
   const ceiling = a.objects.find((o) => o.roomId === 'kitchen' && o.kind === 'Ceiling')
   if (!ceiling) throw new Error('Для встроенной кухни нужна отметка чистового потолка.')
-  const ceilingY = ceiling.position[1], mezzanineY = 2300, scribe = 50
-  if (ceilingY <= mezzanineY + scribe) throw new Error('Недостаточная высота верхнего яруса кухни.')
+  const ceilingY = ceiling.position[1], upperBottom = 1550, scribe = 50
+  const upperHeight = ceilingY - upperBottom
+  if (upperHeight <= scribe) throw new Error('Недостаточная высота для навесных шкафов кухни.')
   const result: Entity[] = []
   const object = (id: string, kind: Kind, position: V3, size: V3, extra: Partial<Entity> = {}) => {
     result.push({
       id: `auto-kitchen-${id}`, name: id, kind, roomId: 'kitchen', position, size,
-      rotation: [0, 0, 0], material: 'paint', evidence: 'assumed',
+      rotation: [0, 0, 0], material: kitchenFacadeId, evidence: 'assumed',
       note: 'Единый встроенный гарнитур: согласованные фасады, цоколь и верхняя линия. Размеры предварительные; ниши, вентиляцию, крепления и открывания согласовать по обмеру и паспортам техники.',
       ...extra,
     })
   }
   const west = { rotation: [0, 90, 0] as V3 }
-  const panel = (id: string, position: V3, size: V3, material = 'paint') =>
+  const panel = (id: string, position: V3, size: V3, material = kitchenFacadeId) =>
     object(id, 'Countertop', position, size, { material, params: { fixture: 'joineryPanel' } })
   const base = { cabinetPlinth: 100 }
-  const tall = { cabinetPlinth: 100, cabinetTopScribe: scribe, cabinetTopTier: ceilingY - scribe - mezzanineY }
-  const upperHeight = ceilingY - mezzanineY
+  const upper = { cabinetTopScribe: scribe }
+  const tall = { ...base, ...upper }
 
   // The corner is a fixed return. It does not pretend to offer a door behind
   // another run. The accessible north bays are a dishwasher and a sink base.
@@ -65,45 +74,29 @@ export function kitchenInteriors(a: Apartment): Entity[] {
     material: 'metal', params: { fixture: 'kitchenTap' },
   })
 
-  // Low-height work-zone cupboards remain shallow. The deeper mezzanine starts
-  // above head height and joins the tall units in one continuous front plane.
-  object('Глухой верхний угол', 'Wardrobe', [350, 1550, 3025], [600, 750, 350], {
-    name: 'Фиксированный верхний угол', params: { fixture: 'blindCorner' },
+  // A constant 350 mm depth allows continuous doors while retaining clearance
+  // over the worktop. The 600 mm appliance columns project beyond this plane.
+  object('Глухой верхний угол', 'Wardrobe', [350, upperBottom, 3025], [600, upperHeight, 350], {
+    name: 'Фиксированный верхний угол', params: { ...upper, fixture: 'blindCorner' },
   })
-  object('Возврат верхнего угла', 'Wardrobe', [225, 1550, 3325], [250, 750, 350], {
-    ...west, params: { fixture: 'blindCorner' },
+  object('Возврат верхнего угла', 'Wardrobe', [225, upperBottom, 3325], [250, upperHeight, 350], {
+    ...west, params: { ...upper, fixture: 'blindCorner' },
   })
-  object('Верхний шкаф', 'Wardrobe', [1250, 1550, 3025], [1200, 750, 350], {
-    params: { cabinetDoors: 2 },
+  object('Верхний шкаф', 'Wardrobe', [1250, upperBottom, 3025], [1200, upperHeight, 350], {
+    params: { ...upper, cabinetDoors: 2 },
+    note: 'Две цельные створки на наружных петлях. Вес длинных фасадов, число петель и ограничители проверить при проектировании мебели.',
   })
-  object('Корпус скрытой вытяжки', 'Wardrobe', [225, 1550, 3850], [800, 750, 350], {
-    ...west, params: { cabinetDoors: 2, cabinetVoids: [{ bottom: 0, height: 750, front: false }] },
+  object('Корпус скрытой вытяжки', 'Wardrobe', [225, upperBottom, 3850], [800, upperHeight, 350], {
+    ...west, params: { ...upper, cabinetDoors: 2,
+      cabinetVoids: [{ bottom: 0, height: upperHeight - scribe, front: false }] },
     note: 'Скрытая вытяжка и сервисный объём за общим фасадом. Эта секция не считается свободным хранением; канал и доступ уточняются после обмера.',
   })
   object('Вытяжка', 'Appliance', [220, 1553, 3850], [560, 120, 280], {
     ...west, material: 'metal', params: { fixture: 'extractorHood' },
     note: 'Компактный вкладыш скрыт за мебельным фасадом. Над ним зарезервирован сервисный объём до потолка; диаметр, трасса и режим вытяжки не выдуманы.',
   })
-  object('Верхний шкаф после вытяжки', 'Wardrobe', [225, 1550, 4450], [400, 750, 350], {
-    ...west, params: { cabinetDoors: 1 },
-  })
-  object('Антресоль угловая', 'Wardrobe', [350, mezzanineY, 3150], [600, upperHeight, 600], {
-    params: { fixture: 'blindCorner', cabinetTopScribe: scribe },
-  })
-  object('Антресоль северная', 'Wardrobe', [1250, mezzanineY, 3150], [1200, upperHeight, 600], {
-    params: { cabinetDoors: 2, cabinetTopScribe: scribe },
-    note: 'Предложение открывания: обе створки на наружных петлях, ось левой X651,5 мм; навеска левой створки к середине конфликтует с трековым светом. Проверены условные повороты до 90°, окончательная фурнитура и ограничители уточняются.',
-  })
-  object('Антресоль над вытяжкой', 'Wardrobe', [350, mezzanineY, 3850], [800, upperHeight, 600], {
-    ...west, params: { cabinetDoors: 2, cabinetTopScribe: scribe,
-      cabinetVoids: [{ bottom: 0, height: upperHeight - scribe, front: false }] },
-    note: 'Продолжение общего верхнего фасада. Объём за ним зарезервирован под коммуникации вытяжки, не заявлен как полезное хранение.',
-  })
-  // Close only the exposed overhang between the shallow lower facade (X400)
-  // and upper carcass front (X631); the rear 350 mm stays open for the duct.
-  panel('Подшивка над вытяжкой', [515.5, mezzanineY, 3850], [231, 18, 764])
-  object('Антресоль рабочей секции', 'Wardrobe', [350, mezzanineY, 4450], [400, upperHeight, 600], {
-    ...west, params: { cabinetDoors: 1, cabinetTopScribe: scribe },
+  object('Верхний шкаф после вытяжки', 'Wardrobe', [225, upperBottom, 4450], [400, upperHeight, 350], {
+    ...west, params: { ...upper, cabinetDoors: 1 },
   })
 
   object('Колонна духовки и СВЧ', 'Wardrobe', [350, 0, 5550], [600, ceilingY, 600], {
@@ -129,10 +122,9 @@ export function kitchenInteriors(a: Apartment): Entity[] {
   panel('Общий цоколь северный', [950, 0, 3401], [1800, 100, 18])
   panel('Общий цоколь западный', [601, 0, 4630], [18, 100, 2440])
   panel('Торец нижнего ряда', [1859, 0, 3150], [18, 900, 600])
-  panel('Торец навесного ряда', [1859, 1550, 3025], [18, 750, 350])
-  panel('Торец антресоли', [1859, mezzanineY, 3150], [18, upperHeight, 600])
+  panel('Торец навесного ряда', [1859, upperBottom, 3025], [18, upperHeight, 350])
   panel('Торец колонн', [325, 0, 5859], [650, ceilingY, 18])
-  panel('Фартук северный', [950, 900, 2854], [1800, 650, 8], 'stone')
-  panel('Фартук западный', [54, 900, 3754], [8, 650, 1792], 'stone')
+  panel('Фартук северный', [950, 900, 2854], [1800, 650, 8], backsplashId)
+  panel('Фартук западный', [54, 900, 3754], [8, 650, 1792], backsplashId)
   return result
 }

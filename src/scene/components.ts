@@ -560,6 +560,22 @@ export function createEntity(
       cushion(seatWidth - .01, h * .4, d * .18, x, h * .67, -d * .29, material, radius)
     }
   }
+  function roundedTabletop(thickness: number) {
+    const x = w / 2, z = d / 2, radius = Math.min(.14, x, z)
+    const shape = new T.Shape()
+    shape.moveTo(-x + radius, -z)
+    shape.lineTo(x - radius, -z)
+    shape.quadraticCurveTo(x, -z, x, -z + radius)
+    shape.lineTo(x, z - radius)
+    shape.quadraticCurveTo(x, z, x - radius, z)
+    shape.lineTo(-x + radius, z)
+    shape.quadraticCurveTo(-x, z, -x, z - radius)
+    shape.lineTo(-x, -z + radius)
+    shape.quadraticCurveTo(-x, -z, -x + radius, -z)
+    const slab = new T.ExtrudeGeometry(shape, { depth: thickness, bevelEnabled: false })
+    slab.rotateX(-Math.PI / 2)
+    mesh(slab, material, 0, h - thickness)
+  }
   function styledTable() {
     const top = Math.min(.055, h * .12), legHeight = h - top
     if (fixture === 'bench') {
@@ -568,7 +584,8 @@ export function createEntity(
         style === 'classic' ? turnedLeg(x, z, h * .8, Math.min(w, d) * .04) : taperedLeg(x, z, h * .8, Math.min(w, d) * .035, style === 'loft' || style === 'hitech' ? dark : timber)
       return
     }
-    if (fixture === 'roundTable' || style === 'japandi' || furnitureForm === 'sculptural') {
+    if (fixture === 'roundedTable') roundedTabletop(top)
+    else if (fixture === 'roundTable' || style === 'japandi' || furnitureForm === 'sculptural') {
       const slab = mesh(new T.CylinderGeometry(.5, .5, top, 64), material, 0, h - top / 2, 0)
       slab.scale.set(w, 1, d)
     } else cushion(w, top, d, 0, h - top / 2, 0, material, style === 'classic' ? .025 : .008)
@@ -913,6 +930,37 @@ export function createEntity(
     box(w * 0.42, h * 0.9, d * 0.62, 0, h * 0.55, -d * 0.19)
     const filter=panel(filterW,Math.min(.003,h*.05),filterD,0,Math.min(.003,h*.05)/2,filterZ,metal)
     filter.userData.fixturePart='filter'
+  } else if (fixture === 'bathShower250') {
+    // Product-size shower head/arm; installation height and body profile remain
+    // a design envelope, not a manufacturer's mounting template.
+    const rear = -d / 2 + .07, headZ = rear + .39, mixerY = .25
+    const pipe = new T.CatmullRomCurve3([
+      new T.Vector3(0, mixerY, rear), new T.Vector3(0, h - .09, rear),
+      new T.Vector3(0, h - .045, rear + .06),
+      new T.Vector3(0, h - .045, headZ - .04),
+      new T.Vector3(0, h - .12, headZ),
+    ], false, 'centripetal')
+    mesh(new T.TubeGeometry(pipe, 64, .011, 12, false), metal)
+    const head = cylinder(.125, .015, 0, h - .125, headZ, metal)
+    head.userData.fixturePart = 'overhead-250'
+    const mixer = cylinder(.03, w, 0, mixerY, rear, metal)
+    mixer.rotation.z = Math.PI / 2
+    for (const x of [-.075, .075]) {
+      const mount = cylinder(.025, .07, x, mixerY, rear - .035, metal)
+      mount.rotation.x = Math.PI / 2
+    }
+    box(.045, .025, .18, 0, mixerY, rear + .09, metal)
+    const hand = cylinder(.055, .016, .08, .95, rear + .045, metal)
+    hand.rotation.x = Math.PI / 2
+    cylinder(.012, .18, .08, .81, rear + .045, metal)
+    box(.1, .02, .04, .04, .75, rear + .025, metal)
+    const hose = new T.CatmullRomCurve3([
+      new T.Vector3(0, mixerY - .03, rear + .02),
+      new T.Vector3(-.04, .04, rear + .08),
+      new T.Vector3(.08, .04, rear + .1),
+      new T.Vector3(.08, .72, rear + .045),
+    ])
+    mesh(new T.TubeGeometry(hose, 36, .007, 8, false), metal)
   } else if (e.kind === 'Shower') {
     const r = Math.min(w * 0.3, d * 0.24)
     cylinder(Math.min(0.012, d * 0.06), h * 0.895, 0, h * 0.5025, -d * 0.35)
@@ -977,6 +1025,23 @@ export function createEntity(
       d * 0.25,
     )
     box(w * 0.4, h * 0.008, reliefDepth, -w * 0.1, h * 0.17, d * 0.32, neutral)
+  } else if (fixture === 'curtainTrack') {
+    box(w, h * 0.8, d, 0, h * 0.6, 0, white)
+    box(w - 0.008, h * 0.2, d * 0.28, 0, h * 0.1, 0, metal)
+  } else if (fixture === 'bathCurtain') {
+    // Folded textile, not a glass box. The lower hem slopes into the bath.
+    const cloth = material.clone()
+    cloth.side = T.DoubleSide
+    const geometry = new T.PlaneGeometry(w, h - 0.03, 60, 16)
+    const positions = geometry.getAttribute('position')
+    for (let i = 0; i < positions.count; i++) {
+      const x = positions.getX(i), y = positions.getY(i) + (h - 0.03) / 2
+      const tuck = Math.max(0, 1-y/0.25) * 0.04
+      positions.setXYZ(i, x, y, Math.sin((x/w+0.5)*Math.PI*20)*0.018-tuck)
+    }
+    geometry.computeVertexNormals()
+    mesh(geometry, cloth)
+    for (let i = 0; i < 11; i++) box(0.006, 0.03, 0.006, -w/2+i*w/10, h-0.015, 0, white)
   } else if (fixture === 'mediaScreen' || fixture === 'monitor') mediaScreen(fixture === 'monitor')
   else if (fixture === 'rug') {
     // A fine bound edge remains within the declared textile footprint.
@@ -1041,6 +1106,11 @@ export function createEntity(
       cushion(w, h * 0.2, d, 0, h * 0.9, 0)
       for (const x of [-w * 0.38, w * 0.38])
         for (const z of [-d * 0.32, d * 0.32]) taperedLeg(x, z, h * 0.8, Math.min(w, d) * 0.045)
+    } else if (fixture === 'roundedTable') {
+      roundedTabletop(topThickness)
+      const foot = Math.min(.025, h * .08), columnHeight = h - topThickness - foot
+      box(w * .62, foot, d * .48, 0, foot / 2, 0, dark)
+      box(w * .16, columnHeight, d * .16, 0, foot + columnHeight / 2, 0, dark)
     } else if (fixture === 'roundTable') {
       const top = mesh(
         new T.CylinderGeometry(0.5, 0.5, topThickness, 64),

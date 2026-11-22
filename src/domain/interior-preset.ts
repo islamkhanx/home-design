@@ -1,7 +1,7 @@
 import type { Apartment, Entity, Kind } from './schema.ts'
 import type { V3 } from './math.ts'
 import { applyGeneratedInteriors } from './auto-design.ts'
-import { kitchenInteriors } from './kitchen-interior.ts'
+import { kitchenFinishes, kitchenInteriors } from './kitchen-interior.ts'
 
 /** A furnishing proposal inside the separately traced source architecture. */
 export function generateSourceInteriors(input: Apartment): Apartment {
@@ -73,19 +73,22 @@ export function generateSourceInteriors(input: Apartment): Apartment {
     params: { fixture: 'bench' },
     note: 'Банкетка встроена в общую нишу и не занимает сектор открывания входной двери.',
   })
+  for (const finish of kitchenFinishes)
+    if (!a.materials.some(material => material.id === finish.id)) a.materials.push(structuredClone(finish))
   proposal.push(...kitchenInteriors(a))
-  object('living', 'Обеденный стол', 'Table', [1900, 0, 4550], [800, 750, 800], 'oak', {
-    params: { fixture: 'roundTable' },
+  const diningX = 1860, diningZ = 4640
+  object('living', 'Обеденный стол', 'Table', [diningX, 0, diningZ], [700, 750, 1250], 'oak', {
+    params: { fixture: 'roundedTable' },
+    note: 'Столешница 1250 × 700 мм со скруглёнными углами, длинная сторона вдоль прохода. Центральная опора оставляет торцы свободными для ног. Два места на торцах; устойчивость основания и точные зазоры проверить при подборе изделия.',
   })
-  object('living', 'Стул 1', 'Sofa', [2101, 0, 3932], [460, 820, 460], 'linen', {
-    rotation: [0, -18, 0],
-    params: { fixture: 'diningChair' },
-  })
-  object('living', 'Стул 2', 'Sofa', [2070, 0, 5186], [460, 820, 460], 'linen', {
-    rotation: [0, 195, 0],
-    params: { fixture: 'diningChair' },
-    note: 'Стул развёрнут к прежнему центру стола и смещён к востоку, освобождая место перед открытой духовкой. Восточный маршрут сохраняется при отодвигании на 300 мм.',
-  })
+  for (const [id, x, z] of [['Стул 1', 2060, 3925], ['Стул 2', 2050, 5260]] as const) {
+    const yaw = Math.atan2(diningX - x, diningZ - z) * 180 / Math.PI
+    object('living', id, 'Sofa', [x, 0, z], [460, 820, 460], 'linen', {
+      rotation: [0, yaw, 0],
+      params: { fixture: 'diningChair' },
+      note: 'Торцевое место. Смещение стула от оси освобождает пространство перед кухней; ход отодвигания проверен на 300 мм.',
+    })
+  }
   object('living', 'Диван', 'Sofa', [2710, 0, 7700], [2300, 820, 900], 'sage', {
     rotation: [0, -90, 0],
   })
@@ -129,7 +132,6 @@ export function generateSourceInteriors(input: Apartment): Apartment {
     ['bedroom', 1600, -2590],
     ['hall', 3300, 1700],
     ['kitchen', 1200, 4200],
-    ['living', 1600, 7700],
     ['loggia', 1500, -4750],
   ] as const) {
     object(r, 'Основной свет', 'TrackLight', [x, 2730, z], [1000, 120, 80], 'ink', {
@@ -137,8 +139,29 @@ export function generateSourceInteriors(input: Apartment): Apartment {
       params: { lumens: 1400, group: 'general', color: '#fff0da' },
     })
   }
-  object('living', 'Подвес над столом', 'Pendant', [1900, 1600, 4550], [350, 1250, 350], 'paint', {
-    params: { lumens: 700, group: 'accent' },
+  for (const [id, x] of [['Основной свет', 2380], ['Трек у ТВ', 830]] as const) {
+    object('living', id, 'TrackLight', [x, 2800, 7780], [2000, 50, 23], 'ink', {
+      name: id === 'Основной свет' ? 'Трек у дивана' : id,
+      rotation: [0, 90, 0],
+      params: { lumens: 2160, group: 'general', color: '#ffdfbd', designStyle: 'hitech' },
+      note: 'Встроенная шина 2 м, две световые вставки 3000 К. Геометрия модулей условная, ось по обмеру.',
+    })
+  }
+  object('kitchen', 'Подсветка столешницы', 'LEDStrip', [1250, 1540, 3120], [1170, 10, 18], 'light', {
+    params: { lumens: 840, group: 'general', color: '#ffdfbd' },
+    note: 'Рабочая подсветка 3000 К. Положение и длины профилей по проекту верхних шкафов и вытяжки.',
+  })
+  object('living', 'Подсветка штор', 'LEDStrip', [1606, 2832, 9510], [2900, 18, 18], 'light', {
+    params: { lumens: 1000, group: 'accent', color: '#ffd5a5' },
+    note: 'Лента 2700 К в оконной нише. Полотно, профиль карниза и отступ от окна уточнить по обмеру.',
+  })
+  object('living', 'Подсветка ореховой панели', 'LEDStrip', [75, 2330, 7700], [1500, 15, 18], 'light', {
+    rotation: [0, -90, 0],
+    params: { lumens: 570, group: 'accent', color: '#ffd5a5', designStyle: 'loft' },
+    note: 'Подсветка ТВ-зоны 2700 К. Окончательная ось зависит от развёртки панели и тумбы.',
+  })
+  object('living', 'Подвес над столом', 'Pendant', [diningX, 1600, diningZ], [350, 1250, 350], 'paint', {
+    params: { lumens: 700, group: 'accent', color: '#ffdfbd' },
   })
   object('bedroom', 'Подвес', 'Pendant', [270, 2000, -1590], [200, 850, 200], 'paint', {
     params: { lumens: 450, group: 'accent' },
@@ -150,6 +173,6 @@ export function generateSourceInteriors(input: Apartment): Apartment {
   const result = applyGeneratedInteriors(a, proposal, {
     living: ['living', 'kitchen'], bedroom: ['bedroom'], hall: ['hall'], kitchen: ['kitchen'],
   })
-  result.revision = Math.max(result.revision, 14)
+  result.revision = Math.max(result.revision, 19)
   return result
 }

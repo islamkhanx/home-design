@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ontario — электрика, свет и потолки"
+  short_description: "Согласование розеток, света, щита и потолков"
+  default_prompt: "Используй $ontario-electrical-lighting, чтобы проверить полноту розеток, освещения и потолков по текущей планировке."

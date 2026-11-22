@@ -14,6 +14,8 @@ import type {
   StudyRoom,
 } from './design-composition.ts'
 import { DESIGN_STUDIES } from './design-studies.ts'
+import { kitchenFacadeId } from './kitchen-interior.ts'
+import { kitchenLivingDefaultWallMaterialId, kitchenLivingFloorMaterialId } from './kitchen-living-wall-colors.ts'
 import { wallFaceForRoom } from './wall-finishes.ts'
 
 const finish = (
@@ -321,7 +323,11 @@ function styleFurniture(object: Entity, variant: DesignVariant, materials: Map<s
   )
     return
   object.materialOverrides = { ...object.materialOverrides, ...Object.fromEntries(materials) }
-  object.material = materials.get(object.material) ?? object.material
+  let legacyFinishId: string | undefined
+  if (variant.category === 'concept' && object.material === kitchenFacadeId) legacyFinishId = 'paint'
+  if (object.material === kitchenLivingFloorMaterialId) legacyFinishId = 'floor-oak'
+  object.material = materials.get(object.material) ??
+    (legacyFinishId ? materials.get(legacyFinishId) : undefined) ?? object.material
 }
 
 /** Prepare an independent preview and its design report. The same model feeds Three and Cycles. */
@@ -411,7 +417,11 @@ export function createDesignStudy(source: Apartment, variantId: string, roomId =
           .map((entry) => entry.room)
         if (!adjacent.length) continue
         const original = object.wall.materials?.[face] ?? object.material
-        const replacements = adjacent.map((room) => materialsByRoom.get(room.id)?.get(original))
+        const replacements = adjacent.map((room) => {
+          const finishes = materialsByRoom.get(room.id)
+          return finishes?.get(original) ??
+            (original === kitchenLivingDefaultWallMaterialId ? finishes?.get('paint') : undefined)
+        })
         const proposed = replacements.find((id) => !!id)
         if (!proposed) continue
         if (replacements.every((id) => id === proposed)) {

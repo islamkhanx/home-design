@@ -56,7 +56,16 @@ test('office-chair tyres reach the floor and stems connect every caster to its s
 })
 
 test('bathroom shower riser, arm and rain head form connected solid joints', () => {
-  const { meshes } = local('shower')
+  const { e, meshes } = local('shower')
+  if (e.params?.fixture === 'bathShower250') {
+    const head = meshes.find(m => m.userData.fixturePart === 'overhead-250')!
+    const pipe = meshes.find(m => m.geometry.type === 'TubeGeometry')!
+    const path = (pipe.geometry as T.TubeGeometry).parameters.path
+    assert.ok(bounds(head).containsPoint(path.getPoint(1)), 'continuous riser/arm ends inside the head')
+    const mixer = meshes.find(m => m.geometry.type === 'CylinderGeometry' && bounds(m).getSize(new T.Vector3()).x > .29)!
+    assert.ok(bounds(mixer).containsPoint(path.getPoint(0)), 'riser begins inside the thermostat')
+    return
+  }
   const cylinders = meshes.filter((m) => m.geometry.type === 'CylinderGeometry')
   const riser = cylinders.find((m) => bounds(m).getSize(new T.Vector3()).y > 0.5)!
   const head = cylinders.find((m) => bounds(m).getSize(new T.Vector3()).y < 0.03)!

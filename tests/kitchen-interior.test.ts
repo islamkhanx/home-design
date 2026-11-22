@@ -7,6 +7,7 @@ import { restoreSourcePlan } from '../src/domain/source-plan.ts'
 import { applyGeneratedInteriors } from '../src/domain/auto-design.ts'
 import { parseApartment } from '../src/domain/schema.ts'
 import type { Entity } from '../src/domain/schema.ts'
+import { frontPartsAtDepth } from '../src/review/motion.ts'
 import { createEntity } from '../src/scene/components.ts'
 
 const read = (file: string) => JSON.parse(readFileSync(new URL(file, import.meta.url), 'utf8'))
@@ -69,22 +70,37 @@ test('real appliance meshes fit their open housings and clear the common plinth'
   near(bounds('Посудомойка').max.z, 3.45)
 })
 
-test('the deep upper band joins the tall columns while work-zone cupboards stay recessed', () => {
+test('the graphite upper doors run in one piece from the backsplash to the ceiling filler', () => {
   const ceiling = source.objects.find(e => e.kind === 'Ceiling' && e.roomId === 'kitchen')!.position[1] / 1000
-  for (const name of ['Антресоль над вытяжкой', 'Антресоль рабочей секции', 'Колонна духовки и СВЧ', 'Колонна холодильника']) {
+  for (const [name, leaves] of [['Верхний шкаф', 2], ['Корпус скрытой вытяжки', 2], ['Верхний шкаф после вытяжки', 1]] as const) {
+    const entity = byId(name)
+    const local = createEntity({ ...entity, position: [0, 0, 0], rotation: [0, 0, 0] }, a, materials)
+    local.updateMatrixWorld(true)
+    const fronts = frontPartsAtDepth(local, entity.size[2])
+    assert.equal(fronts.length, leaves)
+    for (const { box } of fronts) {
+      near(box.min.y, .0015)
+      near(box.max.y, ceiling - 1.55 - .05 - .0015)
+    }
+    near(bounds(name).max.y, ceiling)
+  }
+  for (const name of ['Колонна духовки и СВЧ', 'Колонна холодильника']) {
     near(bounds(name).max.x, .65)
     near(bounds(name).max.y, ceiling)
   }
-  near(bounds('Антресоль северная').max.z, 3.45)
   near(bounds('Верхний шкаф').max.z, 3.2)
   near(bounds('Корпус скрытой вытяжки').max.x, .4)
-  near(bounds('Верхний шкаф').max.y, bounds('Антресоль северная').min.y)
-  near(bounds('Антресоль над вытяжкой').max.z, bounds('Антресоль рабочей секции').min.z)
-  near(bounds('Антресоль рабочей секции').max.z, bounds('Колонна холодильника').min.z)
+  near(bounds('Корпус скрытой вытяжки').max.z, bounds('Верхний шкаф после вытяжки').min.z)
+  near(bounds('Верхний шкаф после вытяжки').max.z, bounds('Колонна холодильника').min.z)
   near(bounds('Колонна холодильника').max.z, bounds('Колонна духовки и СВЧ').min.z)
   near(bounds('Торец колонн').min.x, 0)
   near(bounds('Торец колонн').max.x, bounds('Колонна духовки и СВЧ').max.x)
   separate('Общий цоколь северный', 'Общий цоколь западный')
+  for (const entity of proposal.filter(e => e.kind === 'Wardrobe' || e.kind === 'KitchenCabinet' ||
+      e.params?.integrated || e.params?.fixture === 'joineryPanel' && !e.name.startsWith('Фартук'))) {
+    assert.equal(entity.material, 'kitchen-graphite')
+    assert.equal(entity.params?.cabinetTopTier, undefined)
+  }
 })
 
 test('worktops stop before the appliance columns and provide a usable hob landing', () => {
@@ -93,11 +109,15 @@ test('worktops stop before the appliance columns and provide a usable hob landin
   const hob = bounds('Варочная панель'), tower = bounds('Колонна холодильника')
   assert.ok(tower.min.z - hob.max.z >= .52499, 'at least525mm modeled landing before tall side')
   near(bounds('Столешница B').max.z, tower.min.z)
+  assert.equal(byId('Столешница A').material, 'stone')
+  assert.equal(byId('Столешница B').material, 'stone')
   assert.ok(bounds('Вытяжка').max.x < bounds('Корпус скрытой вытяжки').max.x - .03)
   assert.equal(byId('Корпус скрытой вытяжки').params?.cabinetVoids?.[0].front, false)
 })
 
 test('the perpendicular backsplash panels meet without overlapping stone volume', () => {
+  assert.equal(byId('Фартук северный').material, 'kitchen-slate')
+  assert.equal(byId('Фартук западный').material, 'kitchen-slate')
   separate('Фартук северный', 'Фартук западный')
   near(bounds('Фартук западный').min.z, bounds('Фартук северный').max.z)
   near(bounds('Фартук западный').max.z, bounds('Колонна холодильника').min.z)
@@ -116,29 +136,19 @@ test('the prep section keeps its facade and an unobstructed rear service apertur
   }
 })
 
-test('the hood mezzanine has a closed visible underside and an open rear duct path', () => {
-  const underside = bounds('Подшивка над вытяжкой')
-  near(underside.min.x, bounds('Корпус скрытой вытяжки').max.x)
-  near(underside.max.x, .631)
-  near(underside.min.y, 2.3)
-  near(underside.max.y, 2.318)
-  near(underside.min.z, 3.468)
-  near(underside.max.z, 4.232)
-  for (const neighbor of ['Корпус скрытой вытяжки', 'Антресоль над вытяжкой', 'Вытяжка'])
-    separate('Подшивка над вытяжкой', neighbor)
+test('the hood remains accessible from below and has a clear duct path behind the doors', () => {
+  const housing = byId('Корпус скрытой вытяжки')
+  const group = groups.get(housing.id)!
+  const hood = groups.get(byId('Вытяжка').id)!
+  group.updateMatrixWorld(true)
+  hood.updateMatrixWorld(true)
+  const fromBelow = new T.Raycaster(new T.Vector3(.22, 1.5, 3.85), new T.Vector3(0, 1, 0), 0, .2)
+  assert.equal(fromBelow.intersectObject(group, true).length, 0)
+  assert.ok(fromBelow.intersectObject(hood, true).length > 0)
 
-  const parts = ['Подшивка над вытяжкой', 'Антресоль над вытяжкой', 'Корпус скрытой вытяжки']
-    .map(name => groups.get(byId(name).id)!)
-  for (const part of parts) part.updateMatrixWorld(true)
-  const fromBelow = new T.Raycaster(new T.Vector3(.5, 2.2, 3.85), new T.Vector3(0, 1, 0), 0, .6)
-  const visibleUnderside = fromBelow.intersectObjects(parts, true)
-  assert.ok(visibleUnderside.length > 0, 'the overhang cannot expose a dark open cavity from below')
-  near(visibleUnderside[0].point.y, 2.3)
-
-  const rearPath = new T.Box3(new T.Vector3(.1, 2.2, 3.7), new T.Vector3(.3, 2.75, 4))
-  for (const name of ['Подшивка над вытяжкой', 'Антресоль над вытяжкой', 'Корпус скрытой вытяжки'])
-    for (const part of meshBounds(byId(name)))
-      assert.ok(!positiveOverlap(rearPath, part.box), `${part.name} blocks the reserved duct path`)
+  const rearPath = new T.Box3(new T.Vector3(.1, 1.7, 3.7), new T.Vector3(.3, 2.8, 4))
+  for (const part of meshBounds(housing))
+    assert.ok(!positiveOverlap(rearPath, part.box), `${part.name} blocks the reserved duct path`)
 })
 
 test('kitchen composition reads the ceiling datum without changing the source model', () => {
@@ -148,6 +158,6 @@ test('kitchen composition reads the ceiling datum without changing the source mo
   const raised = structuredClone(source)
   raised.objects.find(e => e.kind === 'Ceiling' && e.roomId === 'kitchen')!.position[1] = 2900
   const next = kitchenInteriors(raised)
-  for (const e of next.filter(e => e.id.includes('Антресоль') || e.id.includes('Колонна') || e.id.includes('Торец колонн')))
+  for (const e of next.filter(e => e.params?.cabinetTopScribe || ['Торец колонн', 'Торец навесного ряда'].includes(e.name)))
     assert.equal(e.position[1] + e.size[1], 2900, e.id)
 })

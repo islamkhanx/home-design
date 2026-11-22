@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ontario — кухня и материалы"
+  short_description: "Практичная кухня, хранение и выбор отделки"
+  default_prompt: "Используй $ontario-kitchen-materials для сравнения вариантов кухни и отделки по удобству, долговечности и полной стоимости."

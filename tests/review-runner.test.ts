@@ -38,8 +38,8 @@ test('integrated home review exposes full declared coverage and unresolved warni
   assert.equal(report.coverage.walls, 18)
   assert.equal(report.coverage.declaredPlacementRelations, homeReviewProfile.placement.length)
   assert.equal(report.coverage.motions.plans, homeReviewProfile.motions!.length)
-  assert.equal(report.coverage.motions.movingParts, 40)
-  assert.equal(report.coverage.motions.sampledPoses, 1312)
+  assert.equal(report.coverage.motions.movingParts, 43)
+  assert.equal(report.coverage.motions.sampledPoses, 1450)
   assert.equal(report.coverage.navigation!.roomTargets, 6)
   assert.equal(report.coverage.navigation!.activityTargets, 17)
   assert.equal(report.navigation!.length, 23)
@@ -48,7 +48,7 @@ test('integrated home review exposes full declared coverage and unresolved warni
       (target) => target.status === 'reachable' && target.routeMm!.length >= 2,
     ),
   )
-  assert.ok(report.manualReview.some((note) => note.includes('7 mm')))
+  assert.ok(report.manualReview.some((note) => note.includes('Washer installation:') && note.includes('640 mm')))
   assert.deepEqual(apartment, before)
   assert.deepEqual(profile, homeReviewProfile)
 })

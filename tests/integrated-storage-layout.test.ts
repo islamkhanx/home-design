@@ -181,14 +181,14 @@ test('hall storage uses sliding tracks and keeps the niche upper front above the
 test('WC upper cabinet is flush with its frame and meets the ceiling without fixture collisions', () => {
   const cabinet = bounds('wc-storage'),
     frame = bounds('wc-frame')
-  near(cabinet.min.x, 0, 'WC cabinet rear')
-  near(cabinet.max.x, 0.2, 'WC cabinet front')
-  near(cabinet.max.x, frame.max.x, 'continuous WC front plane')
+  near(cabinet.max.z, 2.412, 'WC cabinet rear at south wall')
+  near(cabinet.min.z, 2.212, 'WC cabinet front')
+  near(cabinet.min.z, frame.min.z, 'continuous WC front plane')
   near(cabinet.min.y, frame.max.y, 'cabinet supported above frame')
   near(cabinet.min.y, 1.2, 'WC cabinet bottom')
   near(cabinet.max.y, 2.85, 'WC cabinet ceiling line')
-  near(cabinet.min.z, frame.min.z, 'first side alignment')
-  near(cabinet.max.z, frame.max.z, 'second side alignment')
+  near(cabinet.min.x, frame.min.x, 'first side alignment')
+  near(cabinet.max.x, frame.max.x, 'second side alignment')
   for (const id of [
     'wc-frame',
     'toilet',

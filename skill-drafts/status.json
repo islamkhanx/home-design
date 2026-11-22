@@ -1,0 +1,39 @@
+{
+  "status": "drafts_only_not_installed",
+  "checked_on": "2026-11-15",
+  "skills": [
+    "ontario-bathroom-review",
+    "ontario-electrical-lighting",
+    "ontario-kitchen-materials",
+    "ontario-renovation-plan"
+  ],
+  "entry_file": "SKILL.draft.md",
+  "source_coverage": {
+    "video_descriptions_and_chapter_lists": 12,
+    "telegram_page": 1,
+    "full_transcripts": 0,
+    "full_channel_inventory": false
+  },
+  "validation": "Draft frontmatter, names, descriptions, referenced files and generated UI metadata checked. Personal skill initialization/install validation pending.",
+  "installation_blockers": [
+    "Personal skills location could not be created in this session.",
+    "Personal skill service could not be reached from the executor."
+  ],
+  "completion_requirements": [
+    "Initialize each skill in the personal-skills checkout using the skill-creator workflow.",
+    "Copy draft content into SKILL.md and copy its references and UI metadata.",
+    "Run the bundled validator in that checkout, save each skill separately, and verify installation."
+  ],
+  "scope": "Independent adaptation. Author advice is distinguished from assistant workflow and current Home design decisions.",
+  "behavior_check": {
+    "cases": 4,
+    "result": "passed",
+    "checked": [
+      "Reject unsupported exact estimate and guaranteed schedule from floor area alone",
+      "Preserve confirmed bathroom choices and excluded night lighting",
+      "Do not invent electrical protection ratings or universal master-switch wiring",
+      "Do not attribute a specific product recommendation to unread video content"
+    ],
+    "scope": "Read-only forward test on draft content; not a substitute for transcript review or personal install validation."
+  }
+}
