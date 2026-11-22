@@ -4,6 +4,7 @@ import { number, takeoff } from './estimate.ts'
 import type { DocumentSheet, DocumentTable } from './dossier.ts'
 import { planSvg, planEntities } from './drawings.ts'
 import { roomElectricalPoints } from './electrical.ts'
+import { wallMaterialForRoom } from './wall-finishes.ts'
 import { apartmentPlanSvg, roomCornersSvg, roomElevationSvg, roomSwitchingSvg, roomTileFloorSvg } from './studio-drawings.ts'
 
 /** The reference supplies the document categories, not the apartment's design or engineering. */
@@ -125,10 +126,14 @@ export function buildStudioDocuments(a: Apartment, spec: DesignSpec, existing: D
     r.name, a.objects.filter(o => o.roomId === r.id && o.kind === 'Floor').map(material).join('; ') || unknown, number(takeoff(a, r.id).floor, 3), 'Не определены', r.id === 'bathroom' ? `${spec.confirmed.floor_finish}; T1. Тёплый пол ${spec.confirmed.underfloor_heating ? 'требует проекта' : 'исключён'}` : 'Отделка и стыки требуют согласования',
   ]), ['Площади не включают закупочный запас. Покрытия под встроенной мебелью, пороги, стыки, направление и старт укладки проверяются отдельно.'])
   category('T10', 'Полы и покрытия', [floorPlan, ...floorTable], ['Обмер отметок, слои основания, гидроизоляция и стыки'])
-  const finishes = pages('ST-wall-finishes', 'Отделка стен · поверхности модели', ['Помещение', 'Стены модели, шт.', 'Нетто одной стороны, м²', 'Отделка', 'Дополнительно'], a.rooms.map(r => {
-    const q = takeoff(a, r.id)
-    return [r.name, String(q.walls.length), number(q.wallNet, 3), r.id === 'bathroom' ? `${spec.confirmed.wall_finish}; M1 / T1` : 'Материал и зоны уточнить по образцам', 'Откосы, короба, скрытые зоны — отдельно']
-  }), ['Учитывается одна сторона объектов Wall, которым назначен roomId, с вычетом объединения проёмов. Смежные стороны не дублируются; это не полная ведомость чистовой отделки по всем внутренним граням. Для закупки нужна карта зон и развёртки.'])
+  const finishes = pages('ST-wall-finishes', 'Отделка стен · стороны помещений', ['Помещение', 'Стены модели', 'Материал стороны комнаты', 'Решение', 'Уточнить'], a.rooms.flatMap(r => {
+    const groups = new Map<string, string[]>()
+    for (const wall of walls.filter(w => w.visible !== false && (w.roomId === r.id || w.sharedWith?.includes(r.id)))) {
+      const id = wallMaterialForRoom(wall, r)
+      groups.set(id, [...(groups.get(id) ?? []), wall.id])
+    }
+    return [...groups].map(([id, ids]) => [r.name, ids.join('; '), a.materials.find(m => m.id === id)?.name ?? id, r.id === 'bathroom' ? `${spec.confirmed.wall_finish}; M1 / T1` : 'Предложение по модели', 'Образцы, зоны, откосы и короба'])
+  }), ['Для каждой комнаты показан материал обращённой к ней грани, включая смежные перегородки. Одна перегородка может иметь разные покрытия с двух сторон. Это ведомость назначения материалов; площади для закупки требуют обмера и карты зон.'])
   category('T11', 'Отделка стен', [...finishes, ...refs('08', '09')], ['Карта отделочных зон, основания, образцы и добавочные поверхности'])
 
   const openingPlan = add('ST-openings', 'Остекление и двери · расположение проёмов', MODEL, ['Габариты проёмов взяты из Wall.openings. Размер проёма не равен заказному размеру рамы или полотна.'], undefined, apartmentPlanSvg(a, 'openings'))
@@ -218,9 +223,19 @@ export function buildStudioDocuments(a: Apartment, spec: DesignSpec, existing: D
   ], undefined, roomTileFloorSvg(a, 'bathroom', spec.confirmed.floor_tile_mm as [number, number]))
   category('T24', 'Раскладка керамогранита', [tileId, ...refs('07', '09')], ['Монтажная раскладка, старт, швы, подрезки и раскрой'])
 
-  const kitchenItems = a.objects.filter(o => o.roomId === 'kitchen' && (['KitchenCabinet', 'Wardrobe', 'Sink', 'Shower', 'Appliance'].includes(o.kind) || o.kind === 'Countertop' && (o.params?.sinkCutout || o.params?.fixture === 'hob' || /Столешница/.test(o.name))))
+  const kitchenItems = a.objects.filter(o => o.roomId === 'kitchen' && (['KitchenCabinet', 'Wardrobe', 'Sink', 'Shower', 'Appliance'].includes(o.kind) || o.kind === 'Countertop' && (o.params?.sinkCutout || ['hob', 'joineryPanel'].includes(o.params?.fixture ?? '') || /Столешница/.test(o.name))))
+  const kitchenDetail = (o: Entity) => {
+    if (o.params?.fixture === 'blindCorner') return 'Глухой угол; полезный доступ не заявлен'
+    if (o.params?.sinkCutout) return `Вырез модели ${o.params.sinkCutout.size.join(' × ')} мм; уточнить по шаблону мойки`
+    if (o.params?.integrated) return 'Встроенный прибор за общим мебельным фасадом; вентиляция, петли, извлечение и подключения по паспорту'
+    if (o.params?.builtIn) return 'Встроенный прибор в нише колонны; монтажные зазоры, вентиляция и подключение по паспорту'
+    if (o.params?.fixture === 'extractorHood') return 'Скрытый вкладыш вытяжки; канал, режим и сервисный доступ уточнить'
+    if (o.params?.cabinetVoids?.some(v => v.front === false) && /вытяж/i.test(o.name)) return 'Сервисный объём вытяжки за общим фасадом; не считать полезным хранением'
+    if (o.params?.fixture === 'joineryPanel') return `Добор / отделочная панель: ${material(o)}; подрезка и примыкания по обмеру`
+    return 'Паспорт, стыки, открывание, сервисные зазоры и комплектация'
+  }
   const kitchenModules = pages('ST-kitchen', 'Кухонный гарнитур · модули и техника', ['ID', 'Модуль / прибор', 'Ш × В × Г, мм', 'Особенность / проверить'], kitchenItems.map(o => [
-    o.id, o.name, size(o), o.params?.fixture === 'blindCorner' ? 'Глухой угол; полезный доступ не заявлен' : o.params?.sinkCutout ? `Вырез модели ${o.params.sinkCutout.size.join(' × ')} мм; уточнить по шаблону мойки` : 'Паспорт, стыки, открывание, сервисные зазоры и комплектация',
+    o.id, o.name, size(o), kitchenDetail(o),
   ]), ['Модульные габариты взяты из модели. Изготовительные размеры, фасады, фурнитура, вырезы, пристенные планки и состав заказа ещё не согласованы.'])
   const kitchenPlan = add('ST-kitchen-plan', 'Кухонный гарнитур · компоновка', MODEL, ['Номера соответствуют текущей экспликации кухни A-kitchen-items. Угловой модуль, техника, мойка и столешницы требуют контрольного обмера и паспортной проверки.'], undefined, planSvg(a, 'kitchen'))
   category('T25', 'Кухонный гарнитур', [kitchenPlan, ...kitchenModules, ...refs('A-kitchen-items')], ['Изготовительные чертежи, паспорта техники и комплектация'], kitchenItems.length ? 'model' : 'requires-input')

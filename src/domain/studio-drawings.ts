@@ -3,6 +3,7 @@ import type { Apartment, Entity, Room } from './schema.ts'
 import type { V2, V3 } from './math.ts'
 import { deg, pointInPolygon, polygonArea } from './math.ts'
 import { escapeHtml, planEntities } from './drawings.ts'
+import { wallFaceForRoom, wallMaterialForRoom } from './wall-finishes.ts'
 
 // Keep these diagrams compatible with the native PDF renderer: no SVG paths,
 // groups, transforms, clipping paths or external resources. Coordinates are mm
@@ -231,11 +232,17 @@ export function roomElevationSvg(a: Apartment, roomId: string, edgeIndex: number
   const scale = Math.min(650 / edge.length, 335 / height), left = (820 - edge.length * scale) / 2, base = 455
   const at = (p: V2): V2 => [left + p[0] * scale, base - (p[1] - floor) * scale]
   let body = text(28, 65, `${from} → ${to}`, 12)
+  const finishNames = [...new Set(edge.walls.map(o => {
+    const id = wallMaterialForRoom(o, room)
+    return a.materials.find(m => m.id === id)?.name ?? id
+  }))]
+  body += text(28, 82, `Отделка стороны комнаты: ${short(finishNames.join('; '), 105)}`, 10)
   // Draw each actual wall span, not a filled rectangle across open boundaries.
   for (const o of edge.walls) {
     const w = o.wall!, length = Math.hypot(w.end[0] - w.start[0], w.end[1] - w.start[1])
     const face = [wallPoint(o, 0), wallPoint(o, length), wallPoint(o, length, 0, w.height), wallPoint(o, 0, 0, w.height)].map(p => [edge.along(xz(p)), p[1]] as V2)
-    body += polygon(clipRectangle(face, 0, edge.length, floor, top).map(at), '#efede5', '#727d68', { 'data-wall-id': o.id })
+    const finishId = wallMaterialForRoom(o, room), side = wallFaceForRoom(o, room)
+    body += polygon(clipRectangle(face, 0, edge.length, floor, top).map(at), a.materials.find(m => m.id === finishId)?.color ?? '#efede5', '#727d68', { 'data-wall-id': o.id, 'data-material-id': finishId, 'data-wall-side': side ?? 'legacy' })
     for (const q of w.openings) {
       const corners = [wallPoint(o, q.offset, 0, q.bottom), wallPoint(o, q.offset + q.width, 0, q.bottom), wallPoint(o, q.offset + q.width, 0, q.bottom + q.height), wallPoint(o, q.offset, 0, q.bottom + q.height)].map(p => [edge.along(xz(p)), p[1]] as V2)
       const clipped = clipRectangle(corners, 0, edge.length, floor, top)

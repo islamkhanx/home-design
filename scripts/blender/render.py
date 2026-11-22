@@ -140,6 +140,14 @@ def photo_window_lights(source):
                 'target':[position[0]+nx,y,position[2]+nz],
                 'width':width,'height':height,'power':width*height*PHOTO_WINDOW_WATTS_PER_SQUARE_METER})
     return result
+def active_window_lights(meta,photo):
+    """Explicit browser schedules carry the effective aperture lights in lumen-equivalent units."""
+    if 'lightingSchedule' in meta:
+        return [{**spec,'power':spec['power']*FIXTURE_VISUAL_WATTS_PER_LUMEN}
+                for spec in meta['lightingSchedule']['windows']]
+    if photo and meta.get('lightingPreset')=='day':
+        return photo_window_lights(meta.get('sourceApartment',{}))
+    return []
 def enhance_photographic_materials(meta,bevel_samples=4):
     """Submillimetre shading detail only: no displacement or mesh modifiers."""
     definitions={d['id']:d for d in meta.get('sourceApartment',{}).get('materials',[])}
@@ -155,7 +163,7 @@ def enhance_photographic_materials(meta,bevel_samples=4):
         if shader is None:continue
         name=definition.get('id',material.name)
         role=next((kind for kind in ('bathroom-light','ceiling-white','glass','mirror','light','linen','sage','rug','paint') if name==kind or name.endswith('-'+kind)),name)
-        if role in ('light','bathroom-light') and meta.get('lightingPreset')=='day' and material.as_pointer() in emitter_materials:
+        if role in ('light','bathroom-light') and 'lightingSchedule' not in meta and meta.get('lightingPreset')=='day' and material.as_pointer() in emitter_materials:
             # FAST day mode switches fixture emitters off. The photographic day
             # profile combines window light with the declared installed fixtures.
             if 'Emission Color' in shader.inputs:shader.inputs['Emission Color'].default_value=(*linear(definition.get('emissive','#ffffff')),1)
@@ -190,6 +198,7 @@ def enhance_photographic_materials(meta,bevel_samples=4):
         enhanced.append(name)
     return enhanced
 def photo_fixture_specs(meta):
+    if 'lightingSchedule' in meta:return meta['lightingSchedule']['fixtures']
     if meta.get('lightingPreset')!='day':return meta.get('lights',[])
     objects=meta.get('sourceApartment',{}).get('objects',[])
     window_rooms={e.get('roomId') for e in objects if e.get('kind')=='Window' and e.get('visible') is not False}
@@ -210,6 +219,44 @@ def photographic_day_exposure(meta):
                 camera_room=room['id'];break
     window_rooms={e.get('roomId') for e in source.get('objects',[]) if e.get('kind')=='Window' and e.get('visible') is not False}
     return {'cameraRoom':camera_room,'exposureStops':.3 if camera_room and camera_room not in window_rooms else -.7}
+def show_window_sky(windows):
+    """Camera-visible sky belongs to each pane; the aperture lamps supply the daylight."""
+    enabled={spec['id'] for spec in windows}
+    panes=set()
+    for obj in bpy.context.scene.objects:
+        if obj.type!='MESH' or not obj.get('windowPane') or obj.get('entityId') not in enabled:
+            continue
+        for slot in obj.material_slots:
+            if not slot.material or not slot.material.use_nodes:continue
+            material=slot.material.copy();slot.material=material
+            nodes=material.node_tree.nodes;links=material.node_tree.links
+            output=next(n for n in nodes if n.type=='OUTPUT_MATERIAL' and n.is_active_output)
+            surface=output.inputs['Surface'];glass=surface.links[0].from_socket
+            path=nodes.new('ShaderNodeLightPath')
+            through_glass=nodes.new('ShaderNodeMath');through_glass.operation='COMPARE'
+            links.new(path.outputs['Ray Depth'],through_glass.inputs[0])
+            links.new(path.outputs['Transmission Depth'],through_glass.inputs[1])
+            through_glass.inputs[2].default_value=.1
+            transmitted=nodes.new('ShaderNodeMath');transmitted.operation='MULTIPLY'
+            links.new(path.outputs['Is Transmission Ray'],transmitted.inputs[0]);links.new(through_glass.outputs[0],transmitted.inputs[1])
+            visible=nodes.new('ShaderNodeMath');visible.operation='MAXIMUM'
+            links.new(path.outputs['Is Camera Ray'],visible.inputs[0]);links.new(transmitted.outputs[0],visible.inputs[1])
+            sky=nodes.new('ShaderNodeEmission');sky.inputs['Color'].default_value=(*linear('#dce8f5'),1)
+            sky.inputs['Strength'].default_value=.56
+            mix=nodes.new('ShaderNodeMixShader')
+            links.new(visible.outputs[0],mix.inputs[0]);links.new(glass,mix.inputs[1]);links.new(sky.outputs[0],mix.inputs[2])
+            links.new(mix.outputs[0],surface)
+            panes.add(obj.get('entityId'))
+    return sorted(panes)
+def orient_light(obj,spec):
+    direction=vec(spec['target'])-obj.location
+    if obj.data.type=='AREA' and 'tangent' in spec and direction.length_squared:
+        normal=-direction.normalized();width=vec(spec['tangent'])
+        width=(width-normal*width.dot(normal)).normalized()
+        if width.length_squared:
+            obj.rotation_euler=Matrix((width,normal.cross(width),normal)).transposed().to_euler()
+            return
+    obj.rotation_euler=direction.to_track_quat('-Z','Y').to_euler()
 def configure_lighting(meta,look='review'):
     scene=bpy.context.scene
     for obj in list(scene.objects):
@@ -223,7 +270,11 @@ def configure_lighting(meta,look='review'):
     environment.inputs['Color'].default_value=(.78,.83,.9,1)
     environment.inputs['Strength'].default_value={'evening':.035,'day':.3,'clean':.12}.get(meta['lightingPreset'],.3)
     photo=look=='photoreal' and meta['camera']['type']=='perspective'
-    if photo and meta['lightingPreset']=='day':
+    controlled='lightingSchedule' in meta
+    windows=active_window_lights(meta,photo)
+    if controlled:
+        environment.inputs['Strength'].default_value=0
+    elif photo and meta['lightingPreset']=='day':
         sky=nodes.new('ShaderNodeTexSky')
         # Blender 5 replaced the Nishita identifier with scattering models.
         sky_types={item.identifier for item in sky.bl_rna.properties['sky_type'].enum_items}
@@ -233,17 +284,17 @@ def configure_lighting(meta,look='review'):
         if hasattr(sky,'sun_rotation'):sky.sun_rotation=math.radians(135)
         links.new(sky.outputs['Color'],environment.inputs['Color'])
         environment.inputs['Strength'].default_value=.05
-    background.inputs['Color'].default_value=(*linear('#dde6ec' if photo else '#e7e5de'),1)
-    background.inputs['Strength'].default_value=.8
+    background.inputs['Color'].default_value=(*linear('#111722' if controlled else '#dde6ec' if photo else '#e7e5de'),1)
+    background.inputs['Strength'].default_value=1 if controlled else .8
     links.new(path.outputs['Is Camera Ray'],mix.inputs[0]);links.new(environment.outputs[0],mix.inputs[1]);links.new(background.outputs[0],mix.inputs[2]);links.new(mix.outputs[0],output.inputs[0])
     # Review softboxes are photographic lights, never added as architectural geometry.
-    if meta['lightingPreset']=='day' and photo:
-        for spec in photo_window_lights(meta.get('sourceApartment',{})):
+    if windows:
+        for spec in windows:
             data=bpy.data.lights.new(spec['id'],'AREA');data.energy=spec['power'];data.shape='RECTANGLE'
-            data.size=spec['width'];data.size_y=spec['height'];data.color=(.88,.94,1)
+            data.size=spec['width'];data.size_y=spec['height'];data.color=linear(spec['color']) if 'color' in spec else (.88,.94,1)
             obj=bpy.data.objects.new(data.name,data);bpy.context.collection.objects.link(obj);obj.location=vec(spec['position'])
-            obj.rotation_euler=(vec(spec['target'])-obj.location).to_track_quat('-Z','Y').to_euler()
-    elif meta['lightingPreset']=='day':
+            orient_light(obj,spec)
+    elif not controlled and meta['lightingPreset']=='day' and not photo:
         parts=[p for p in meta['geometry'] if p['entityId'] in meta['visibleEntityIds']]
         lo=[min(p['min'][i] for p in parts) for i in range(3)]
         hi=[max(p['max'][i] for p in parts) for i in range(3)]
@@ -271,17 +322,20 @@ def configure_lighting(meta,look='review'):
             data=bpy.data.lights.new('Review softbox '+str(i),'AREA');data.energy=power;data.shape='DISK';data.size=size
             obj=bpy.data.objects.new(data.name,data);bpy.context.collection.objects.link(obj);obj.location=vec(position)
             obj.rotation_euler=(vec(target)-obj.location).to_track_quat('-Z','Y').to_euler()
-    fixture_specs=photo_fixture_specs(meta) if photo else meta['lights']
+    fixture_specs=photo_fixture_specs(meta) if controlled or photo else meta['lights']
     for spec in fixture_specs:
         data=bpy.data.lights.new(spec['id'],type='AREA' if spec['type']=='area' else 'SPOT' if spec['type']=='spot' else 'POINT')
         # Preserve declared fixture flux and color in metadata; this display gain
         # is calibrated for readable interior images, not electrical load or lux.
         data.energy=spec['power']*FIXTURE_VISUAL_WATTS_PER_LUMEN;data.color=linear(spec['color'])
-        if data.type=='AREA':data.shape='RECTANGLE';data.size=max(.02,spec.get('width',.04));data.size_y=max(.02,spec.get('height',.5))
+        if data.type=='AREA':
+            minimum=.055 if controlled else .02
+            data.shape='RECTANGLE';data.size=max(minimum,spec.get('width',.04));data.size_y=max(minimum,spec.get('height',.5))
         else:data.shadow_soft_size=spec.get('size',.06)
-        if data.type=='SPOT':data.spot_size=math.pi/1.4;data.spot_blend=.7
+        if data.type=='SPOT':data.spot_size=math.pi/1.4;data.spot_blend=.9 if controlled else .7
         obj=bpy.data.objects.new(spec['id']+' light',data);bpy.context.collection.objects.link(obj);obj.location=vec(spec['position'])
-        direction=vec(spec['target'])-obj.location;obj.rotation_euler=direction.to_track_quat('-Z','Y').to_euler()
+        orient_light(obj,spec)
+    return show_window_sky(windows) if controlled else []
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--scene',required=True);parser.add_argument('--metadata',required=True);parser.add_argument('--output',required=True)
     parser.add_argument('--preset',choices=PRESETS,default='quality');parser.add_argument('--device',choices=['auto','cpu','gpu'],default='auto');parser.add_argument('--validate-only',action='store_true')
@@ -321,11 +375,12 @@ def main():
     scene.render.film_transparent=False;scene.render.filepath=str(output)
     try:scene.view_settings.view_transform='AgX'
     except TypeError:scene.view_settings.view_transform='Standard'
+    controlled='lightingSchedule' in meta
     if args.look=='photoreal':
-        if meta['lightingPreset']=='day':scene.view_settings.exposure=photographic_day_exposure(meta)['exposureStops']
-        try:scene.view_settings.look='AgX - Medium High Contrast'
+        if meta['lightingPreset']=='day' and not controlled:scene.view_settings.exposure=photographic_day_exposure(meta)['exposureStops']
+        try:scene.view_settings.look='AgX - Medium Low Contrast' if controlled else 'AgX - Medium High Contrast'
         except TypeError:pass
-    camera_from_metadata(meta['camera'],width,height);configure_lighting(meta,args.look)
+    camera_from_metadata(meta['camera'],width,height);sky_panes=configure_lighting(meta,args.look)
     notice=meta.get('renderNotice',[])
     if notice:
         # Native render stamp is burned into PNGs, independent of the web interface.
@@ -347,11 +402,15 @@ def main():
         print('CYCLES_DEVICE '+device,flush=True);progress('rendering',.12);bpy.ops.render.render(write_still=True)
     (output.parent/'render-report.json').write_text(json.dumps({'renderNotice':notice,'preset':args.preset,'device':device,'resolution':[width,height],'samplesLimit':samples,'sourceHash':meta['sourceHash'],'sourceRevision':meta['sourceRevision'],'geometry':result,'textures':[i.name for i in bpy.data.images],'lightingPreset':meta['lightingPreset'],'colorManagement':scene.view_settings.view_transform,'bitDepth':scene.render.image_settings.color_depth,'lightCount':sum(o.type=='LIGHT' for o in scene.objects),'lightingCalibration':{'method':'Photographic approximation; not a lux calculation','reviewWattsPerSquareMeter':REVIEW_WATTS_PER_SQUARE_METER,'fixtureVisualWattsPerLumen':FIXTURE_VISUAL_WATTS_PER_LUMEN,'exposureStops':scene.view_settings.exposure}},indent=2))
     report_path=output.parent/'render-report.json';report=json.loads(report_path.read_text())
-    report.update({'look':args.look,'displayLook':scene.view_settings.look,'adaptiveMinimumSamples':scene.cycles.adaptive_min_samples,'shaderBevelSamples':bevel_samples if enhanced else 0,'enhancedMaterials':sorted(set(enhanced)),'windowDaylight':photo_window_lights(meta.get('sourceApartment',{})) if args.look=='photoreal' and meta['lightingPreset']=='day' and meta['camera']['type']=='perspective' else [],'geometryModified':False})
+    report.update({'look':args.look,'displayLook':scene.view_settings.look,'adaptiveMinimumSamples':scene.cycles.adaptive_min_samples,'shaderBevelSamples':bevel_samples if enhanced else 0,'enhancedMaterials':sorted(set(enhanced)),'windowDaylight':active_window_lights(meta,args.look=='photoreal' and meta['camera']['type']=='perspective'),'geometryModified':False})
     if args.look=='photoreal':
         report['lightingCalibration'].update({'windowWattsPerSquareMeter':PHOTO_WINDOW_WATTS_PER_SQUARE_METER,'daytimeFixturePolicy':'Declared fixtures in rooms without window entities; concept room additionally uses its proposed fixtures' if meta.get('conceptLighting') else 'Declared fixtures in rooms without window entities; daylight in windowed rooms','fixtureIds':[s['id'] for s in photo_fixture_specs(meta)]})
         if meta.get('conceptLighting'):report['conceptLighting']=meta['conceptLighting']
-        if meta['lightingPreset']=='day':report['lightingCalibration'].update(photographic_day_exposure(meta))
+        if meta['lightingPreset']=='day' and not controlled:report['lightingCalibration'].update(photographic_day_exposure(meta))
+    if controlled:
+        report['lightingCalibration']['daytimeFixturePolicy']='Explicit viewer sources and physically bounced light'
+        report['lightingCalibration']['fixtureIds']=[s['id'] for s in meta['lightingSchedule']['fixtures']]
+        report['visibleSkyPaneIds']=sky_panes
     report_path.write_text(json.dumps(report,indent=2))
     progress('done',1);print('RENDER_COMPLETE '+str(output),flush=True)
 if __name__=='__main__':

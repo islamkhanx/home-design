@@ -2,6 +2,7 @@ import * as T from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { basinGeometry, dropInSinkGeometry } from './basin.ts'
 import { wallCellGeometry } from './wall-geometry.ts'
+import { fixtureColor, fixtureOptics } from './fixture-optics.ts'
 import type { Object3D } from 'three/src/core/Object3D.js'
 import { mm, deg, wallCells } from '../domain/math.ts'
 import type { Entity, Apartment } from '../domain/schema.ts'
@@ -88,8 +89,8 @@ export function createEntity(
     style = e.params?.designStyle,
     furnitureForm = e.params?.furnitureForm,
     cabinetFace = e.params?.cabinetFace,
-    lightForm = e.params?.lightForm,
-    emitter = materials.get(e.roomId === 'bathroom' ? 'bathroom-light' : 'light') ?? materials.get('light') ?? white
+    lightForm = e.params?.lightForm
+  const optics = fixtureOptics(e)
   /** Upholstery radii belong to the canonical mesh, including the Blender export. */
   function cushion(
     W: number,
@@ -664,11 +665,10 @@ export function createEntity(
       const chandelierTop = h - canopy
       const railHeight = Math.min(canopy, .018)
       box(w * .82, railHeight, d * .18, 0, chandelierTop - railHeight / 2, 0, metal)
-      for (let i = 0; i < 3; i++) {
-        const x = (i - 1) * w * .28, y = globe + i * shadeHeight * .22, top = y + globe
+      for (const { center: [x, y] } of optics) {
+        const top = y + globe
         cylinder(cord, chandelierTop - top, x, (chandelierTop + top) / 2, 0, metal)
         cylinder(globe * .43, globe * .35, x, top, 0, timber)
-        ellipsoid(globe, globe, globe, x, y, 0, emitter)
       }
       return
     }
@@ -683,19 +683,15 @@ export function createEntity(
         }
       }
       for (const X of [-x, x]) for (const Z of [-z, z]) box(ring, shadeHeight, ring, X, shadeHeight / 2, Z, metal)
-      ellipsoid(radius * .52, shadeHeight * .39, radius * .52, 0, shadeHeight / 2, 0, emitter)
     } else if (lightForm === 'disc') {
       const rim = shadeHeight * .18
       const disc = cylinder(w * .49, rim, 0, rim * .67, 0, material)
       disc.scale.z = d / w
-      const diffuse = cylinder(w * .44, rim * .17, 0, rim * .20, 0, emitter)
-      diffuse.scale.z = d / w
       const upper = mesh(new T.CylinderGeometry(w * .22, w * .49, shadeHeight * .44, 32), timber, 0, rim * 1.17 + shadeHeight * .22, 0)
       upper.scale.z = d / w
       stem(rim * 1.17 + shadeHeight * .44)
     } else if (lightForm === 'ribbed') {
       stem(shadeHeight)
-      ellipsoid(w * .35, shadeHeight * .46, d * .35, 0, shadeHeight / 2, 0, emitter)
       for (let index = 0; index < 24; index++) {
         const angle = index * Math.PI / 12
         const x = Math.cos(angle), z = Math.sin(angle)
@@ -708,7 +704,6 @@ export function createEntity(
       }
     } else {
       stem(shadeHeight)
-      ellipsoid(w * .48, shadeHeight / 2, d * .48, 0, shadeHeight / 2, 0, emitter)
       cylinder(radius * .21, Math.min(.03, shadeHeight * .15), 0, shadeHeight, 0, metal)
     }
   }
@@ -718,22 +713,19 @@ export function createEntity(
     cylinder(Math.min(radius * .22, .045), Math.min(.02, h * .08), 0, h - Math.min(.01, h * .04), 0, dark)
     if (style === 'hitech') {
       const barHeight = Math.min(h * .12, .045), barDepth = Math.min(d * .65, .07)
-      box(w, barHeight, barDepth, 0, barHeight / 2, 0, dark)
-      box(w * .94, Math.min(.004, barHeight * .12), barDepth * .75, 0, Math.min(.002, barHeight * .06), 0, emitter)
+      const thickness = optics[0].size[1]
+      box(w, barHeight - thickness, barDepth, 0, (barHeight + thickness) / 2, 0, dark)
       for (const x of [-w * .3, w * .3]) cylinder(cord, h - barHeight, x, (h + barHeight) / 2, 0, metal)
     } else if (style === 'classic') {
       const globe = Math.min(radius * .21, h * .09), centerY = Math.max(globe * 1.6, h * .2)
       cylinder(cord * 2, h - centerY, 0, (h + centerY) / 2, 0, metal)
-      for (let i = 0; i < 5; i++) {
-        const angle = Math.PI * 2 * i / 5, x = Math.cos(angle) * w * .3, z = Math.sin(angle) * d * .3
+      for (const { center: [x, , z] } of optics) {
         rail(new T.Vector3(0, centerY, 0), new T.Vector3(x, centerY, z), Math.min(.008, radius * .045), metal)
         cylinder(globe * .3, globe * 1.2, x, centerY + globe * .6, z, metal)
-        ellipsoid(globe, globe * 1.1, globe, x, centerY + globe * 1.8, z, emitter)
       }
     } else if (style === 'japandi') {
       const ry = Math.min(h * .32, radius * .72), bottom = ry
       cylinder(cord, h - ry * 2, 0, (h + ry * 2) / 2, 0, dark)
-      ellipsoid(w * .49, ry, d * .49, 0, bottom, 0, material)
       for (let i = 1; i < 6; i++) {
         const y = -ry + ry * 2 * i / 6, scale = Math.sqrt(1 - (y / ry) ** 2)
         const rib = mesh(new T.TorusGeometry(1, .007, 4, 48), timber, 0, bottom + y, 0)
@@ -743,8 +735,6 @@ export function createEntity(
       cylinder(cord, h - shadeHeight, 0, (h + shadeHeight) / 2, 0, dark)
       const cone = mesh(new T.CylinderGeometry(radius * .22, radius, shadeHeight, 32, 1, true), dark, 0, shadeHeight / 2, 0)
       cone.scale.z = d / w
-      const lamp = cylinder(radius * .68, Math.min(.006, h * .02), 0, .004, 0, emitter)
-      lamp.scale.z = d / w
     }
   }
   if (e.kind === 'WallPanel') wallPanel()
@@ -833,7 +823,7 @@ export function createEntity(
       box(0.1, 0.015, 0.06, W - 2 * t - 0.12, H * 0.46, 0.04, metal, hinge)
     } else {
       box(W, t, mm(v.thickness), left + W / 2, bottom + t / 2, 0, material, aligned)
-      box(
+      const pane = box(
         W - 2 * t,
         H - 2 * t,
         0.008,
@@ -843,6 +833,9 @@ export function createEntity(
         materials.get('glass') ?? material,
         aligned,
       )
+      pane.userData.windowPane = true
+      // Realtime shadow maps cannot transmit light through a dielectric.
+      pane.castShadow = false
     }
   } else if (e.kind === 'Bathtub') {
     mesh(basinGeometry(w, h, d, Math.min(0.065, w * 0.08, d * 0.1)), white)
@@ -1119,46 +1112,35 @@ export function createEntity(
   } else if (e.kind === 'TrackLight') {
     if (style === 'hitech') {
       box(w, h * .35, d, 0, h * .825, 0, dark)
-      box(w * .94, h * .08, d * .7, 0, h * .61, 0, emitter)
     } else if (style === 'classic' || style === 'japandi') {
       box(w, h * .12, d * .3, 0, h * .94, 0, style === 'classic' ? metal : timber)
-      for (let i = 0; i < 3; i++) {
-        const x = -w * .33 + i * w * .33, radius = Math.min(d * .45, w * .1, h * .28)
-        cylinder(radius * .15, h * .5, x, h * .65, 0, metal)
-        ellipsoid(radius, Math.min(radius * 1.3, h * .25), radius, x, h * .3, 0, style === 'classic' ? emitter : material)
+      for (const { center: [x], size: [diameter] } of optics) {
+        cylinder(diameter * .075, h * .5, x, h * .65, 0, metal)
       }
     } else {
-    box(w, style ? Math.min(.035, h * .2) : .035, style ? Math.min(.04, d) : .04, 0, style ? h - Math.min(.035, h * .2) / 2 : h - .018, 0, style ? dark : metal)
-    for (let i = 0; i < 3; i++)
-      cylinder(style ? Math.min(.035, w * .12, d * .45) : .035, h * 0.7, -w * 0.33 + i * w * 0.33, h * 0.45, 0, style ? dark : metal)
+      const railHeight = Math.min(.035, h * .2)
+      box(w, railHeight, Math.min(.04, d), 0, h - railHeight / 2, 0, style ? dark : metal)
+      for (const { center: [x], size: [diameter, thickness] } of optics) {
+        cylinder(diameter / 1.68, h * .7 - thickness, x, h * .45 + thickness / 2, 0, style ? dark : metal)
+      }
     }
   } else if (e.kind === 'Spotlight') {
     if (style === 'hitech') {
-      box(w, h, d, 0, h / 2, 0, dark)
-      box(w * .72, Math.min(h * .1, .003), d * .72, 0, Math.min(h * .05, .0015), 0, emitter)
+      const thickness = optics[0].size[1]
+      box(w, h - thickness, d, 0, (h + thickness) / 2, 0, dark)
     } else {
-    const radius=Math.min(w,d)/2, diffuserRadius=Math.min(w,d)*.42,
-      recess=Math.min(.004,h*.2), diffuserThickness=Math.min(.003,recess*.75)
-    // Closed annular housing: its central opening exposes and seats the diffuser.
-    mesh(new T.LatheGeometry([
-      new T.Vector2(0,recess), new T.Vector2(diffuserRadius,recess),
-      new T.Vector2(diffuserRadius,0), new T.Vector2(radius,0),
-      new T.Vector2(radius,h), new T.Vector2(0,h),
-    ],48),metal)
-    cylinder(
-      diffuserRadius,
-      diffuserThickness,
-      0,
-      diffuserThickness/2,
-      0,
-      materials.get(e.roomId === 'bathroom' ? 'bathroom-light' : 'light') ??
-        materials.get('light') ??
-        white,
-    )
-    if (style === 'classic') {
-      const ring = mesh(new T.TorusGeometry(Math.min(w, d) * .455, Math.min(w, d, h) * .025, 8, 32), metal, 0, h * .06, 0)
-      ring.rotation.x = Math.PI / 2
-    }
+      const radius = Math.min(w, d) / 2, diffuserRadius = optics[0].size[0] / 2
+      const recess = Math.min(.004, h * .2)
+      // Closed annular housing: its central opening exposes and seats the diffuser.
+      mesh(new T.LatheGeometry([
+        new T.Vector2(0, recess), new T.Vector2(diffuserRadius, recess),
+        new T.Vector2(diffuserRadius, 0), new T.Vector2(radius, 0),
+        new T.Vector2(radius, h), new T.Vector2(0, h),
+      ], 48), metal)
+      if (style === 'classic') {
+        const ring = mesh(new T.TorusGeometry(Math.min(w, d) * .455, Math.min(w, d, h) * .025, 8, 32), metal, 0, h * .06, 0)
+        ring.rotation.x = Math.PI / 2
+      }
     }
   } else if (e.kind === 'Pendant') {
     if (style || lightForm) styledPendant()
@@ -1182,7 +1164,21 @@ export function createEntity(
     )
     dome.scale.set(1, shadeHeight / (w / 2), d / w)
     }
-  } else if (e.kind === 'LEDStrip') box(w, h, d)
+  }
+  if (optics.length) {
+    const diffuser = (materials.get(e.roomId === 'bathroom' ? 'bathroom-light' : 'light') ?? white).clone()
+    diffuser.color.set('#aaa8a3')
+    diffuser.emissive.set(fixtureColor(e))
+    diffuser.emissiveIntensity = Math.max(1.5, diffuser.emissiveIntensity)
+    for (const { shape, center: [x, y, z], size: [width, height, depth] } of optics) {
+      const lightSurface = shape === 'globe'
+        ? ellipsoid(width / 2, height / 2, depth / 2, x, y, z, diffuser)
+        : shape === 'disc' ? cylinder(width / 2, height, x, y, z, diffuser)
+          : box(width, height, depth, x, y, z, diffuser)
+      if (shape === 'disc') lightSurface.scale.z = depth / width
+      lightSurface.userData.fixtureDiffuser = true
+    }
+  }
   // DimensionLine / RoomLabel are presentation annotations, built separately.
   g.updateMatrixWorld(true)
   return g

@@ -69,6 +69,13 @@ The application is a read-only design presentation. Keep only room views, orbit/
 
 Geometry remains parametric in source JSON/TypeScript. CLI GLB/Blender tooling remains available for development; automation model injection exists only on the explicit `?export=1` page. FAST should be useful for comparing finishes without requiring Blender: restrained metric texture mapping, controlled exposure, soft shadows, readable composition. Every visual change should be checked in the actual viewport when the environment permits it; do not claim visual verification from a successful build alone.
 
+Later user decisions (21 November 2026) authorize document generation, video tours,
+walking inside rooms, a local Cycles photorealistic still option in the visualizer,
+and a separate schema-driven design-image pipeline. These controls are allowed in
+the presentation. Design alternatives remain proposals in independent snapshots;
+they must not overwrite the selected apartment or confirmed bathroom choices.
+Rendered stills are clearly distinguished from interactive walking and AI concepts.
+
 ## Correctness
 
 - Architectural geometry is the source of truth. Never invent real apartment dimensions.
@@ -77,6 +84,11 @@ Geometry remains parametric in source JSON/TypeScript. CLI GLB/Blender tooling r
 - Test unit conversions, wall openings, polygon areas and scene exports.
 - Handle textures, cameras and lighting explicitly during Blender import.
 - Validate mesh identity and bounds after GLB round trip and Blender import.
+- For placement changes, run `npm run test:review` and `npm run review:geometry`.
+  Reuse `src/review` rules; keep apartment-specific intentions in the review profile.
+  Add a failing-example regression for each new rule. Do not regenerate or silently
+  reposition the model before auditing it, or suppress candidate/access warnings.
+  Scope and limits are documented in `docs/GEOMETRY_REVIEW.md`.
 - Do not add contracts, personal documents, credentials or unrelated files from the parent directory.
 
 ## Implementation order
@@ -103,3 +115,8 @@ Keep generated images, design drawings, videos, Blender scenes and render export
 ## Design continuity
 
 Read `docs/PROJECT_CONTEXT.md` and `docs/bathroom-spec.json` before proposing changes. Preserve confirmed A3/M1/T1/U1/D2 choices. Do not restore night lighting. Keep proposals separate from decisions. Design studies are inside `design/bathroom-v01`; do not depend on a sibling workspace folder. The app demo is not yet synchronized with all later design decisions; disclose this until integration is complete. Never infer actual wall lengths or quantities from room area alone.
+
+For new apartment concepts, start with built interior projects. Record the
+project, studio, link and the specific spatial, material or lighting idea adapted
+to this apartment. Verify the result in the walking view. Live concept selection
+and Cycles use the same concept model.

@@ -18,8 +18,9 @@ import type { ViewMode } from '../scene/canonical.ts'
 import { makeCamera, presets, snapshotCamera, fitOrthographic } from '../scene/cameras.ts'
 import { bindIndoorControls } from '../scene/indoor-controls.ts'
 import { prepareWalkthroughApartment, walkingSpace, safeWalkingStart } from '../scene/walking-space.ts'
-import { makeLighting, presentationLightSpecs, updateEmitters } from '../scene/lighting.ts'
-import type { LightingPreset } from '../scene/lighting.ts'
+import { exteriorWindowIds, makeInteriorLighting, makeLighting, presentationLightSpecs, resolveLighting, updateEmitters } from '../scene/lighting.ts'
+import type { LightingControls, LightingPreset } from '../scene/lighting.ts'
+import { updateWindowAppearance } from '../scene/window-appearance.ts'
 import { makeAnnotations, makeElectricalAnnotations } from '../scene/annotations.ts'
 import { renderNotice, screenshotWithNotice } from '../scene/provenance.ts'
 import { exportScene } from '../scene/export.ts'
@@ -32,6 +33,7 @@ const props = defineProps<{
   cutaway: boolean
   showCeilings: boolean
   lighting: LightingPreset
+  lightingControls?: LightingControls
 }>()
 const emit = defineEmits<{ ready: [source: Apartment]; busy: []; error: [message: string] }>()
 const ctx = useTresContext(),
@@ -52,6 +54,7 @@ let post: ReturnType<typeof createPresentation> | undefined
 let mirrors: T.Group | null = null
 let releaseIndoorControls: (() => void) | undefined
 const { render } = useLoop()
+const exteriorBackdrop = new T.Color('#111722')
 let dirty = true,
   lastFrame = ''
 function renderFrame(force = false) {
@@ -70,7 +73,7 @@ function renderFrame(force = false) {
   dirty = false
   lastFrame = frame
   post ??= createPresentation(renderer, ctx.scene.value, currentCamera)
-  post.render(currentCamera, ['plan', 'ceiling'].includes(props.mode))
+  post.render(currentCamera, !['interior', 'plan', 'ceiling'].includes(props.mode))
 }
 render((done) => {
   try {
@@ -97,16 +100,28 @@ function remove(o: Object3D | null) {
 function visibility({ root, model }: SceneSnapshot) {
   applyVisibility(root, model, props.room, props.mode, props.cutaway, props.showCeilings)
 }
+function refreshLighting() {
+  if (!active) return
+  const { root, model } = active
+  const room = props.mode === 'interior' ? 'all' : props.room
+  const schedule = props.lightingControls && resolveLighting(model, room, props.lighting, props.lightingControls)
+  const fixtures = schedule?.fixtures ?? presentationLightSpecs(model, room, props.lighting)
+  updateEmitters(root, model, fixtures)
+  updateWindowAppearance(root, schedule ? exteriorWindowIds(model) : [], schedule?.windows.map(window => window.id) ?? [])
+  ctx.scene.value.background = schedule ? exteriorBackdrop : null
+  remove(lights)
+  lights = schedule ? makeInteriorLighting(schedule, model, props.room) : makeLighting(fixtures, props.lighting, props.mode === 'ceiling')
+  ctx.scene.value.add(lights)
+  ctx.scene.value.environmentIntensity = schedule ? 0 : props.lighting === 'evening' ? 0.12 : 0.5
+  dirty = true
+  ctx.renderer.invalidate()
+}
 function presentation() {
   dirty = true
   if (!active) return
   const { root, model } = active
   visibility(active)
-  const specs = presentationLightSpecs(model, props.mode === 'interior' ? 'all' : props.room, props.lighting)
-  updateEmitters(root, model, specs)
-  remove(lights)
-  lights = makeLighting(specs, props.lighting, props.mode === 'ceiling')
-  ctx.scene.value.add(lights)
+  refreshLighting()
   remove(annotations)
   annotations = new T.Group()
   if (props.mode === 'electrical' || props.mode === 'plan') annotations.add(makeElectricalAnnotations(model, props.room, root))
@@ -117,7 +132,6 @@ function presentation() {
     ? null
     : makeMirrors(model, props.mode === 'interior' ? 'all' : props.room)
   if (mirrors) ctx.scene.value.add(mirrors)
-  ctx.scene.value.environmentIntensity = props.lighting === 'evening' ? 0.12 : 0.5
   ctx.renderer.invalidate()
 }
 function roomCamera({ root, model, space }: SceneSnapshot) {
@@ -233,7 +247,8 @@ watch(
     resetCamera()
   },
 )
-watch(() => [props.cutaway, props.showCeilings, props.dimensions, props.lighting], presentation)
+watch(() => [props.cutaway, props.showCeilings, props.dimensions], presentation)
+watch(() => [props.lighting, props.lightingControls], refreshLighting)
 watch(
   () => ctx.sizes.aspectRatio.value,
   (aspect) => {
@@ -270,6 +285,7 @@ onBeforeUnmount(() => {
   if (currentCamera) ctx.camera.deregisterCamera(currentCamera)
   disposeMirrors(mirrors)
   post?.dispose()
+  ctx.scene.value.background = null
   ctx.scene.value.environment = null
   env?.dispose()
 })
@@ -296,7 +312,8 @@ async function exportCurrent() {
       : copyMaterial(object.material)
   })
   try {
-    return await exportScene(snapshot, model, snapshotCamera(currentCamera), props.room, props.lighting, props.mode)
+    const schedule = props.lightingControls && resolveLighting(model, props.mode === 'interior' ? 'all' : props.room, props.lighting, props.lightingControls)
+    return await exportScene(snapshot, model, snapshotCamera(currentCamera), props.room, props.lighting, props.mode, schedule)
   } finally {
     materials.forEach(material => material.dispose())
   }

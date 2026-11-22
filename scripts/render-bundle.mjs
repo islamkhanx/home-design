@@ -33,5 +33,22 @@ export function validateBundle(glb, metadata) {
       throw new Error('Invalid geometry manifest.')
   for (const key of ['position', 'target', 'up'])
     if (!finiteVector(metadata.camera[key])) throw new Error('Invalid camera.')
+  if (metadata.lightingSchedule !== undefined) {
+    const { fixtures, windows } = metadata.lightingSchedule ?? {}
+    if (!Array.isArray(fixtures) || !Array.isArray(windows) || fixtures.length + windows.length > 4000)
+      throw new Error('Invalid lighting schedule.')
+    const ids = new Set()
+    for (const spec of [...fixtures, ...windows]) {
+      if (!spec || typeof spec.id !== 'string' || !spec.id || ids.has(spec.id) ||
+          !['area', 'spot', 'point'].includes(spec.type) || !finiteVector(spec.position) || !finiteVector(spec.target) ||
+          !/^#[0-9a-f]{6}$/i.test(spec.color) || !Number.isFinite(spec.power) || spec.power <= 0 || spec.power > 1e8 ||
+          (spec.type === 'area' && !(Number.isFinite(spec.width) && spec.width > 0 && Number.isFinite(spec.height) && spec.height > 0)) ||
+          (spec.tangent !== undefined && !finiteVector(spec.tangent)) ||
+          (spec.size !== undefined && (!Number.isFinite(spec.size) || spec.size < 0)))
+        throw new Error('Invalid light source.')
+      ids.add(spec.id)
+    }
+    if (windows.some(spec => spec.type !== 'area')) throw new Error('Invalid window light source.')
+  }
   return true
 }

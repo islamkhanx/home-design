@@ -9,7 +9,7 @@ import type { CameraSpec } from './cameras.ts'
 import type { ViewMode } from './canonical.ts'
 import { presets } from './cameras.ts'
 import { lightingSpecs } from './lighting.ts'
-import type { LightingPreset } from './lighting.ts'
+import type { LightingPreset, ResolvedLighting } from './lighting.ts'
 export async function exportScene(
   root: T.Group,
   a: Apartment,
@@ -17,6 +17,7 @@ export async function exportScene(
   room: string,
   lighting: LightingPreset,
   view?: ViewMode,
+  lightingSchedule?: ResolvedLighting,
 ) {
   root.updateMatrixWorld(true)
   const exporter = new GLTFExporter()
@@ -53,8 +54,9 @@ export async function exportScene(
     visibleEntityIds: visibleEntities(root),
     lightingPreset: lighting,
     ...(conceptRooms.length ? { conceptLighting: { roomIds: conceptRooms, label: a.generation?.label } } : {}),
-    lights: lightingSpecs(a, view === 'interior' ? 'all' : room, lighting),
-    photorealLights: lightingSpecs(a, 'all', 'clean'),
+    ...(lightingSchedule ? { lightingSchedule } : {}),
+    lights: lightingSchedule?.fixtures ?? lightingSpecs(a, view === 'interior' ? 'all' : room, lighting),
+    photorealLights: lightingSchedule?.fixtures ?? lightingSpecs(a, 'all', 'clean'),
     materials: a.materials,
     geometry,
     roundTrip,

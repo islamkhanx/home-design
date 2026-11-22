@@ -28,6 +28,7 @@ export function generateElectrical(input: Apartment): Apartment {
     gangs: number,
     purpose: string,
     controls: string[] = [],
+    surfaceOffset = 0,
   ) => {
     const host = a.objects.find((o) => o.id === wallId)!,
       wall = host.wall!
@@ -50,7 +51,7 @@ export function generateElectrical(input: Apartment): Apartment {
       )
     )
       throw new Error(`${id}: intersects opening`)
-    const distance = wall.thickness / 2 + depth / 2 + 1
+    const distance = wall.thickness / 2 + surfaceOffset + depth / 2 + 1
     const o: Entity = {
       id,
       name: purpose,
@@ -67,12 +68,30 @@ export function generateElectrical(input: Apartment): Apartment {
       evidence: 'assumed',
       generated: true,
       note,
-      electrical: { wallId, offset, side, gangs, purpose, controls },
+      electrical: {
+        wallId, offset, side, gangs, purpose, controls,
+        ...(surfaceOffset ? { surfaceOffset } : {}),
+      },
     }
     a.objects.push(o)
   }
   const atZ = (wallId: string, z: number) =>
     z - a.objects.find((o) => o.id === wallId)!.wall!.start[1]
+  const atX = (wallId: string, x: number) =>
+    x - a.objects.find((o) => o.id === wallId)!.wall!.start[0]
+  // Project the actual finish panel envelope onto the host wall's room-facing
+  // normal. A socket must sit in front of this surface, not behind its cladding.
+  const finishOffset = (surfaceId: string, wallId: string, side: 1 | -1) => {
+    const surface = a.objects.find(o => o.id === surfaceId)!,
+      wall = a.objects.find(o => o.id === wallId)!.wall!,
+      dx = wall.end[0] - wall.start[0], dz = wall.end[1] - wall.start[1],
+      length = Math.hypot(dx, dz), nx = -dz / length * side, nz = dx / length * side,
+      yaw = surface.rotation[1] * Math.PI / 180, c = Math.cos(yaw), s = Math.sin(yaw),
+      center = (surface.position[0] - wall.start[0]) * nx + (surface.position[2] - wall.start[1]) * nz,
+      reach = Math.abs(nx*c - nz*s) * surface.size[0] / 2 + Math.abs(nx*s + nz*c) * surface.size[2] / 2
+    return Math.max(0, center + reach - wall.thickness / 2)
+  }
+  const kitchenFinish = finishOffset('auto-kitchen-Фартук западный', 'source-kitchen-west', -1)
   mount(
     'E01',
     'bathroom',
@@ -112,51 +131,55 @@ export function generateElectrical(input: Apartment): Apartment {
     'kitchen',
     'Socket',
     'source-kitchen-west',
-    atZ('source-kitchen-west', 3700),
+    atZ('source-kitchen-west', 4350),
     1100,
     -1,
     2,
     'Рабочая поверхность · блок 1',
+    [],
+    kitchenFinish,
   )
   mount(
     'E04',
     'kitchen',
     'Socket',
     'source-kitchen-west',
-    atZ('source-kitchen-west', 4900),
+    atZ('source-kitchen-west', 4550),
     1100,
     -1,
     2,
     'Рабочая поверхность · блок 2',
+    [],
+    kitchenFinish,
   )
   mount(
     'E05',
     'kitchen',
     'Socket',
     'source-kitchen-west',
-    atZ('source-kitchen-west', 4000),
+    atZ('source-kitchen-west', 4450),
     300,
     -1,
     1,
-    'Духовка · соседний отсек, доступ уточнить',
+    'Духовка · сервисный проём в заднике соседней секции, доступ после открытия фасада; подключение и трассу согласовать',
   )
   mount(
     'E06',
     'kitchen',
     'Socket',
     'source-kitchen-west',
-    atZ('source-kitchen-west', 5280),
-    300,
+    atZ('source-kitchen-west', 4450),
+    500,
     -1,
     1,
-    'Холодильник · доступ уточнить',
+    'Встроенный холодильник · сервисный проём в заднике соседней секции, доступ после открытия фасада; отключение и трассу согласовать',
   )
   mount(
     'E07',
     'kitchen',
     'Socket',
     'source-kitchen-west',
-    atZ('source-kitchen-west', 4350),
+    atZ('source-kitchen-west', 3850),
     2200,
     -1,
     1,
@@ -278,7 +301,7 @@ export function generateElectrical(input: Apartment): Apartment {
     'bedroom',
     'Switch',
     'source-bedroom-entry',
-    1150,
+    atX('source-bedroom-entry', 3059),
     900,
     -1,
     1,
@@ -290,13 +313,15 @@ export function generateElectrical(input: Apartment): Apartment {
     'hall',
     'Socket',
     'source-hall-north',
-    400,
+    atX('source-hall-north', 3737),
     300,
     1,
     1,
     'Прихожая · свободная розетка',
   )
-  mount('S04', 'hall', 'Switch', 'source-entry', 1550, 900, 1, 1, 'Прихожая · основной свет', [
+  // The north-wall location remains reachable when the entrance leaf is fully
+  // open inward; the short east-wall return is screened by that open leaf.
+  mount('S04', 'hall', 'Switch', 'source-hall-north', atX('source-hall-north', 3550), 900, 1, 1, 'Прихожая · основной свет', [
     'auto-hall-Основной свет',
   ])
   mount(

@@ -1,20 +1,21 @@
 <script setup lang="ts">
 import { computed, ref, shallowRef, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { TresCanvas } from '@tresjs/core'
-import { ACESFilmicToneMapping, PCFSoftShadowMap } from 'three'
+import { ACESFilmicToneMapping, PCFShadowMap, PCFSoftShadowMap } from 'three'
 import SceneBridge from './components/SceneBridge.vue'
 import DocumentWorkspace from './components/DocumentWorkspace.vue'
 import VideoTour from './components/VideoTour.vue'
 import PhotorealPanel from './components/PhotorealPanel.vue'
 import DesignImages from './components/DesignImages.vue'
 import LiveDesignPicker from './components/LiveDesignPicker.vue'
+import LightingPanel from './components/LightingPanel.vue'
 import './documentation.css'
 import seed from './data/apartment.json'
 import { parseApartment } from './domain/schema.ts'
 import type { Apartment } from './domain/schema.ts'
 import type { ViewMode } from './scene/canonical.ts'
 import { roomSelectionView } from './scene/cameras.ts'
-import type { LightingPreset } from './scene/lighting.ts'
+import type { LightingControls, LightingPreset } from './scene/lighting.ts'
 import { renderNotice } from './scene/provenance.ts'
 import { polygonArea } from './domain/math.ts'
 import { base64 } from './scene/export.ts'
@@ -46,6 +47,23 @@ const walkingEntry = !exportMode && query.has('walk')
 const room = ref(walkingEntry ?? 'all'),
   mode = ref<ViewMode>(walkingEntry ? 'interior' : 'dollhouse'),
   lighting = ref<LightingPreset>(walkingEntry && query.get('light') === 'evening' ? 'evening' : 'day')
+const lightingControls = shallowRef<LightingControls>({ windows: lighting.value === 'day', sources: {} })
+function resetLighting() {
+  lightingControls.value = { windows: lighting.value === 'day', sources: {} }
+}
+function selectLighting(preset: LightingPreset) {
+  lighting.value = preset
+  resetLighting()
+}
+function toggleWindowLight(on: boolean) {
+  lightingControls.value = { ...lightingControls.value, windows: on }
+}
+function toggleLightSource(id: string, on: boolean) {
+  lightingControls.value = {
+    ...lightingControls.value,
+    sources: { ...lightingControls.value.sources, [id]: on },
+  }
+}
 const dimensions = ref(false),
   ready = ref(false),
   error = ref('')
@@ -190,6 +208,9 @@ const lights: [LightingPreset, string, string][] = [
   ['evening', 'Вечер', 'Мягкий локальный свет. В санузле — только зеркало.'],
 ]
 const viewport = ref<HTMLElement | null>(null)
+function focusScene() {
+  viewport.value?.querySelector('canvas')?.focus({ preventScroll: true })
+}
 const entryStudy = walkingEntry && query.get('study')
 if (entryStudy) selectStudy(entryStudy)
 watch(photoMode, value => {
@@ -212,8 +233,8 @@ const syncFullscreen = () => {
 }
 onMounted(() => document.addEventListener('fullscreenchange', syncFullscreen))
 onBeforeUnmount(() => document.removeEventListener('fullscreenchange', syncFullscreen))
-const lightNote = computed(() => activeConcept.value && lighting.value === 'day' && room.value !== 'bathroom'
-  ? 'Обзорный свет вместе со светильниками концепции.'
+const lightNote = computed(() => mode.value === 'interior'
+  ? 'Окна и отдельные светильники можно переключить в меню «Свет» на сцене.'
   : lights.find((l) => l[0] === lighting.value)?.[2])
 async function setView(view: ViewMode) {
   photoMode.value = false
@@ -235,6 +256,7 @@ onMounted(() => {
       studyModels.clear()
       requestedStudy.value = 'current'
       model.value = parseApartment(a)
+      resetLighting()
       room.value = 'all'
       ready.value = false
       await nextTick()
@@ -251,7 +273,7 @@ onMounted(() => {
     },
     setLighting: async (value: LightingPreset) => {
       if (!lights.some(([id]) => id === value)) throw new Error('Unknown lighting')
-      lighting.value = value
+      selectLighting(value)
       await nextTick()
     },
     screenshot: () => bridge.value!.screenshot(),
@@ -300,7 +322,7 @@ onMounted(() => {
       <section ref="viewport" class="viewport" :class="{ 'is-photo': photoMode }" :aria-label="`Трёхмерный вид: ${roomTitle}`" @keydown="studyShortcut">
         <TresCanvas
           shadows
-          :shadow-map-type="PCFSoftShadowMap"
+          :shadow-map-type="mode === 'interior' ? PCFShadowMap : PCFSoftShadowMap"
           :tone-mapping="ACESFilmicToneMapping"
           :tone-mapping-exposure="1.05"
           clear-color="#e7e5de"
@@ -317,6 +339,7 @@ onMounted(() => {
             :cutaway="cutaway"
             :show-ceilings="showCeilings"
             :lighting="lighting"
+            :lighting-controls="mode === 'interior' ? lightingControls : undefined"
             @ready="sceneReady"
             @busy="ready = false"
             @error="error = $event"
@@ -329,6 +352,9 @@ onMounted(() => {
         <LiveDesignPicker v-if="!photoMode && !exportMode" :choices="studyChoices" :featured="FEATURED_DESIGN_STUDIES" :selected="requestedStudy"
           :active="activeStudy" :switching="studySwitching" :walking="mode === 'interior'"
           @select="selectStudy" @cycle="cycleStudy" />
+        <LightingPanel v-if="mode === 'interior' && !photoMode && !exportMode"
+          :model="shownModel" :room="room" :preset="lighting" :controls="lightingControls"
+          @windows="toggleWindowLight" @source="toggleLightSource" @reset="resetLighting" @close="focusScene" />
         <div v-if="photoMode" class="photo-view">
           <template v-if="photo">
             <img :src="photo.url" :alt="`Рендер Cycles: ${photo.title}`" />
@@ -414,7 +440,7 @@ onMounted(() => {
             v-for="[id, label] in lights"
             :key="id"
             :aria-pressed="lighting === id"
-            @click="lighting = id"
+            @click="selectLighting(id)"
           >
             <span :class="['light-dot', id]"></span>{{ label }}
           </button>

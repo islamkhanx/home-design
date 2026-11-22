@@ -1,7 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { createHash } from 'node:crypto'
 import * as T from 'three'
 import type { Object3D } from 'three/src/core/Object3D.js'
 import { OBB } from 'three/addons/math/OBB.js'
@@ -56,28 +55,62 @@ function forward(e: Entity) {
   )
 }
 
-test('furnishing review preserves the traced structural shell and every room contour', () => {
+test('junction corrections preserve source room contours and door/window clear dimensions', () => {
   for (const room of a.rooms) assert.deepEqual(room.polygon, SOURCE_RINGS[room.id].map(planPoint))
-  // Captured from the pre-review revision 9 source model, excluding appearance,
-  // camera and visibility fields. No render export is needed to run this test.
-  const structure = a.objects
-    .filter((o) => ['Wall', 'Door', 'Window', 'Floor', 'Ceiling'].includes(o.kind))
-    .map((o) => ({
-      id: o.id,
-      kind: o.kind,
-      roomId: o.roomId,
-      position: o.position,
-      rotation: o.rotation,
-      size: o.size,
-      wall: o.wall,
-      surface: o.surface,
-      attach: o.attach,
-    }))
-    .sort((left, right) => left.id.localeCompare(right.id))
-  assert.equal(
-    createHash('sha256').update(JSON.stringify(structure)).digest('hex'),
-    '7d2fa7ccd112b67af13f9a5afbab5972f91aeb0eae82cf8f693eb3ca246913cb',
+  // The user requested wall-junction corrections in revision 12. Lock the
+  // original openings explicitly instead of freezing the former broken shell.
+  assert.deepEqual(
+    a.objects.flatMap((o) =>
+      (o.wall?.openings ?? []).map((q) => {
+        const w = o.wall!,
+          dx = w.end[0] - w.start[0],
+          dz = w.end[1] - w.start[1],
+          length = Math.hypot(dx, dz)
+        return [
+          q.id,
+          Math.round(w.start[0] + (dx / length) * q.offset),
+          Math.round(w.start[1] + (dz / length) * q.offset),
+          q.width,
+          q.bottom,
+          q.height,
+        ]
+      }),
+    ),
+    [
+      ['window-courtyard', 565, -5372, 2400, 0, 2700],
+      ['window-living', 471, 9796, 2400, 500, 2200],
+      ['window-bedroom', 859, -4141, 1250, 500, 2200],
+      ['door-loggia', 2176, -4141, 800, 0, 2300],
+      ['door', 1909, 894, 900, 0, 2300],
+      ['door-bedroom', 2059, 765, 900, 0, 2300],
+      ['door-entry', 4709, 991, 1050, 0, 2300],
+    ],
   )
+})
+
+test('physical wall faces meet at hall corners without missing blocks or overlapping volumes', () => {
+  const bedroom = bounds('source-bedroom-east'),
+    north = bounds('source-hall-north')
+  const living = bounds('source-living-east'),
+    south = bounds('source-hall-south')
+  const near = (x: number, y: number) => assert.ok(Math.abs(x - y) < 1e-6, `${x} != ${y}`)
+  near(bedroom.max.x, north.min.x)
+  near(bedroom.max.z, north.max.z)
+  near(living.max.x, south.min.x)
+  near(living.min.z, south.min.z)
+  assert.ok(bedroom.containsPoint(new T.Vector3(3.3, 1.5, 0.7)), 'bedroom slit is closed')
+  assert.ok(living.containsPoint(new T.Vector3(3.3, 1.5, 2.48)), 'living corner is closed')
+  assertSeparate('source-bedroom-east', 'source-hall-north')
+  assertSeparate('source-living-east', 'source-hall-south')
+  const bathEast = bounds('wall-east'),
+    bathNorth = bounds('wall-north'),
+    bathSouth = bounds('wall-south')
+  near(bathEast.max.x, bathNorth.max.x)
+  near(bathEast.max.x, bathSouth.max.x)
+  near(bathEast.min.z, bathNorth.max.z)
+  near(bathEast.max.z, bathSouth.min.z)
+  assertSeparate('wall-east', 'wall-north')
+  assertSeparate('wall-east', 'wall-south')
 })
 
 test('bathroom socket faces clear the mirror, vanity, WC frame and laundry panels', () => {
@@ -181,6 +214,11 @@ test('wardrobe fronts, desk chair and key circulation gaps remain usable in the 
     'TV bracket and wiring need space behind the screen',
   )
   assert.ok(bounds('auto-living-ТВ').min.x >= 0.06)
+  assertSeparate('auto-living-ТВ-тумба', 'auto-living-Рабочий стол')
+  const deskLegs = parts(group('auto-living-Рабочий стол')).map((m) => new T.Box3().setFromObject(m, true))
+    .filter((b) => b.min.y < bounds('auto-living-ТВ-тумба').max.y)
+  assert.ok(deskLegs.every((b) => b.min.z - bounds('auto-living-ТВ-тумба').max.z >= 0.04),
+    'media console must end before the desk legs, with a visible clearance')
   assert.ok(bounds('auto-living-Диван').min.x - bounds('auto-living-Журнальный стол').max.x >= 0.45)
   assert.ok(
     bounds('auto-living-Журнальный стол').min.x - bounds('auto-living-ТВ-тумба').max.x >= 0.76,
@@ -209,14 +247,35 @@ test('kitchen cutout is open, supports the sink rim and does not intersect the s
       true,
     )
   assert.equal(down(cx, cz, top.id).length, 0, 'countertop must have an actual hole')
+  const sinkBase = entity('auto-kitchen-Нижний ряд 3'),
+    bottomPanelTop =
+      (sinkBase.position[1] +
+        (sinkBase.params?.cabinetPlinth ?? 0) +
+        Math.min(18, sinkBase.size[0] / 10, sinkBase.size[2] / 10)) /
+      1000,
+    cabinetHit = down(cx, cz, sinkBase.id)[0]
   assert.ok(
-    down(cx, cz, 'auto-kitchen-Нижний ряд 3')[0].point.y < 0.03,
-    'sink cabinet must not have a solid top under the bowl',
+    cabinetHit && Math.abs(cabinetHit.point.y - bottomPanelTop) < 0.00001,
+    'the open sink base must expose its bottom panel above the plinth, with no solid top under the bowl',
   )
+  assert.ok(bounds(sink.id).min.y - cabinetHit.point.y > 0.6, 'cabinet floor must clear the bowl')
+  assertSeparate(sink.id, sinkBase.id)
+  const dishwasherHousing = entity('auto-kitchen-Корпус посудомойки')
   assert.ok(
-    Math.abs(topBounds.min.y - bounds('auto-kitchen-Нижний ряд 2').max.y) < 0.00001,
-    'worktop sits on base units',
+    Math.abs(topBounds.min.y - bounds(dishwasherHousing.id).max.y) < 0.00001,
+    'worktop sits on the dishwasher housing sides',
   )
+  for (const sign of [-1, 1]) {
+    const support = down(
+      (dishwasherHousing.position[0] + sign * (dishwasherHousing.size[0] / 2 - 9)) / 1000,
+      dishwasherHousing.position[2] / 1000,
+      dishwasherHousing.id,
+    )[0]
+    assert.ok(
+      support && Math.abs(support.point.y - topBounds.min.y) < 0.00001,
+      'both physical housing sides must support the bridging worktop',
+    )
+  }
   for (const [axis, half] of [
     [0, hole.size[0] / 2000],
     [2, hole.size[1] / 2000],
@@ -249,7 +308,8 @@ test('dining group keeps an eastern route clear with both chairs pulled out', ()
   assert.ok(eastWall - table.max.x >= 0.9, 'table must leave a direct eastern route')
   assert.ok(table.min.x - bounds('auto-kitchen-Столешница B').max.x >= 0.84)
   for (const id of ['auto-living-Стул 1', 'auto-living-Стул 2']) {
-    const e = entity(id), direction = forward(e)
+    const e = entity(id),
+      direction = forward(e)
     for (const pullout of [0, 300]) {
       const moved = structuredClone(e)
       moved.position[0] -= direction.x * pullout
@@ -260,7 +320,8 @@ test('dining group keeps an eastern route clear with both chairs pulled out', ()
       for (const part of parts(model)) part.geometry.dispose()
     }
   }
-  const pendant = entity('auto-living-Подвес над столом'), dining = entity('auto-living-Обеденный стол')
+  const pendant = entity('auto-living-Подвес над столом'),
+    dining = entity('auto-living-Обеденный стол')
   assert.equal(pendant.position[0], dining.position[0])
   assert.equal(pendant.position[2], dining.position[2])
 })

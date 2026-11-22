@@ -21,9 +21,9 @@ export function createPresentation(renderer: T.WebGLRenderer, scene: T.Scene, ca
   composer.addPass(output)
   let lastSize = ''
   return {
-    render(nextCamera: T.Camera, plan: boolean) {
+    render(nextCamera: T.Camera, ambientOcclusion: boolean) {
       beauty.camera = ao.camera = nextCamera
-      ao.enabled = !plan
+      ao.enabled = ambientOcclusion
       const perspective = nextCamera instanceof T.PerspectiveCamera ? 1 : 0
       if (ao.ssaoMaterial.defines.PERSPECTIVE_CAMERA !== perspective) {
         ao.ssaoMaterial.defines.PERSPECTIVE_CAMERA = perspective

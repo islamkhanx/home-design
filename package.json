@@ -16,6 +16,8 @@
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "test:core": "node --experimental-strip-types --test tests/math.test.ts tests/schema.test.ts tests/runner.test.ts tests/kitchen.test.ts",
     "test:geometry": "node --experimental-strip-types --test tests/geometry.test.ts",
+    "test:review": "node --experimental-strip-types --test tests/review-*.test.ts tests/architecture-junctions.test.ts tests/geometry-review.test.ts tests/integrated-storage-layout.test.ts tests/kitchen-opening-clearances.test.ts tests/layout-review.test.ts tests/electrical.test.ts tests/cabinet-ceiling.test.ts",
+    "review:geometry": "node --experimental-strip-types scripts/review-geometry.mjs",
     "test:e2e": "node --experimental-strip-types scripts/smoke.mjs",
     "export:scene": "node --experimental-strip-types scripts/export-scene.mjs",
     "render:preview": "node --experimental-strip-types scripts/render.mjs preview",

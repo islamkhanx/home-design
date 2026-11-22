@@ -99,10 +99,17 @@ test('bathroom plans include corridor control and furniture dimensions without m
     assert.ok(root.children.find(e=>e.userData.entityId==='S01')!.visible)
   }
   const svg=planSvg(a,'bathroom','coordination')
-  for(const text of ['E01','E02','S01','500 × 700 × 450','650 × 2550 × 560','690 × 1100 × 300'])assert.ok(svg.includes(text),text)
+  for(const text of ['E01','E02','S01'])assert.ok(svg.includes(text),text)
+  for(const id of ['vanity','laundry-tower','wc-storage']) {
+    const furniture = a.objects.find(e=>e.id===id)!
+    assert.ok(furniture, `missing dimensioned furniture ${id}`)
+    const dimensions = furniture.size.join(' × ')
+    assert.ok(svg.includes(dimensions), `${id}: missing ${dimensions}`)
+  }
   const changed=structuredClone(a)
-  changed.objects.find(e=>e.id==='laundry-tower')!.size[0]=720
-  assert.ok(planSvg(changed,'bathroom','coordination').includes('720 × 2550 × 560'))
+  const tower = changed.objects.find(e=>e.id==='laundry-tower')!
+  tower.size[0] += 70
+  assert.ok(planSvg(changed,'bathroom','coordination').includes(tower.size.join(' × ')))
   assert.ok(!roomElectricalPoints(a,'bedroom').some(e=>e.id==='S01'))
   disposeTree(root)
 })

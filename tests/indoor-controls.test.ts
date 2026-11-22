@@ -56,6 +56,28 @@ test('every room starts in a free walking position and only internal doors are p
     disposeTree(root)
   }
 })
+
+test('a live proposal corrects an occupied eye point and clears hidden furniture from navigation', async () => {
+  const source = JSON.parse(readFileSync(new URL('../src/data/apartment.json', import.meta.url), 'utf8'))
+  const model = prepareWalkthroughApartment(source)
+  const sofa = model.objects.find(o => o.kind === 'Sofa' && o.roomId === 'living' && !o.params?.fixture)!
+  const eye = [sofa.position[0] / 1000, sofa.position[2] / 1000]
+  const root = await buildCanonical(model)
+  try {
+    const occupied = walkingSpace(model, root)
+    assert.equal(occupied.free(eye), false)
+    const movedEye = safeWalkingStart(eye, occupied)
+    assert.ok(occupied.free(movedEye))
+    assert.ok(Math.hypot(movedEye[0] - eye[0], movedEye[1] - eye[1]) <= 0.8)
+
+    sofa.visible = false
+    const clear = walkingSpace(model, root)
+    assert.equal(clear.free(eye), true)
+    assert.deepEqual(safeWalkingStart(eye, clear), eye)
+  } finally {
+    disposeTree(root)
+  }
+})
 test('losing focus or disposing controls stops held movement and removes listeners', () => {
   const original = {
     window: globalThis.window,

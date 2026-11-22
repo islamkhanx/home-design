@@ -4,10 +4,61 @@ import { readFileSync } from 'node:fs'
 import { parseApartment } from '../src/domain/schema.ts'
 import { freshDraft, priceLines, estimateLines, estimateTotals } from '../src/domain/estimate.ts'
 import { buildDossier, dossierHtml } from '../src/domain/dossier.ts'
+import { buildStudioDocuments } from '../src/domain/studio-documents.ts'
+import { roomElevationSvg } from '../src/domain/studio-drawings.ts'
+import type { Apartment } from '../src/domain/schema.ts'
+import { kitchenInteriors } from '../src/domain/kitchen-interior.ts'
 
 const model = parseApartment(JSON.parse(readFileSync(new URL('../src/data/apartment.json', import.meta.url), 'utf8')))
 const spec = JSON.parse(readFileSync(new URL('../docs/bathroom-spec.json', import.meta.url), 'utf8'))
 const date = '2026-11-21T15:00:00.000Z'
+
+test('kitchen inventory includes integrated appliances, microwave and joinery without counting hood volume as storage', () => {
+  const a = structuredClone(model)
+  const kitchen = kitchenInteriors(a)
+  a.objects = [...a.objects.filter(o => o.roomId !== 'kitchen' || ['Wall', 'Floor', 'Ceiling'].includes(o.kind)), ...kitchen]
+  const { sheets } = buildStudioDocuments(a, spec, [])
+  const rows = sheets.filter(s => /^ST-kitchen-\d+$/.test(s.id)).flatMap(s => s.table!.rows)
+  const row = (name: string) => {
+    const found = rows.find(r => r[0] === `auto-kitchen-${name}`)
+    assert.ok(found, name)
+    return found
+  }
+  assert.match(row('Холодильник')[3], /за общим мебельным фасадом/)
+  assert.match(row('Посудомойка')[3], /за общим мебельным фасадом/)
+  assert.match(row('Духовка')[3], /в нише колонны/)
+  assert.match(row('Микроволновка')[3], /в нише колонны/)
+  assert.match(row('Вытяжка')[3], /Скрытый вкладыш/)
+  assert.match(row('Антресоль над вытяжкой')[3], /не считать полезным хранением/)
+  for (const panel of kitchen.filter(o => o.params?.fixture === 'joineryPanel')) assert.ok(rows.some(r => r[0] === panel.id), panel.id)
+  assert.equal(new Set(rows.map(r => r[0])).size, rows.length)
+})
+
+test('wall schedules and elevations show the finish facing each room across one shared partition', () => {
+  const a: Apartment = {
+    schemaVersion: 1, id: 'two-rooms', name: 'Two rooms', revision: 1, units: 'mm', documentedArea: 12, notes: [],
+    rooms: [
+      { id: 'bathroom', name: 'Санузел', documentedArea: 6, evidence: 'assumed', note: '', polygon: [[0, -2000], [3000, -2000], [3000, -50], [0, -50]], height: 3000 },
+      { id: 'bedroom', name: 'Спальня', documentedArea: 6, evidence: 'assumed', note: '', polygon: [[0, 50], [3000, 50], [3000, 2000], [0, 2000]], height: 3000 },
+    ],
+    materials: [
+      { id: 'tile', name: 'Плитка санузла', color: '#d8c6a4', roughness: 1, metalness: 0 },
+      { id: 'paint', name: 'Краска спальни', color: '#f5f4ed', roughness: 1, metalness: 0 },
+    ],
+    objects: [{ id: 'shared-partition', name: 'Перегородка', kind: 'Wall', roomId: 'bathroom', sharedWith: ['bedroom'], position: [0, 0, 0], rotation: [0, 0, 0], size: [3000, 3000, 100], material: 'tile', evidence: 'assumed', wall: { start: [0, 0], end: [3000, 0], thickness: 100, height: 3000, openings: [], materials: { left: 'paint', right: 'tile', edge: 'paint' } } }],
+  }
+  const { sheets } = buildStudioDocuments(a, spec, [])
+  const rows = sheets.filter(s => s.id.startsWith('ST-wall-finishes-')).flatMap(s => s.table!.rows)
+  const wet = rows.find(row => row[0] === 'Санузел')!, dry = rows.find(row => row[0] === 'Спальня')!
+  assert.equal(wet[2], 'Плитка санузла')
+  assert.equal(dry[2], 'Краска спальни')
+  assert.ok(wet[1].includes('shared-partition') && dry[1].includes('shared-partition'))
+  const wetElevation = roomElevationSvg(a, 'bathroom', 2), dryElevation = roomElevationSvg(a, 'bedroom', 0)
+  assert.match(wetElevation, /fill="#d8c6a4"[^>]*data-wall-id="shared-partition" data-material-id="tile"/)
+  assert.match(dryElevation, /fill="#f5f4ed"[^>]*data-wall-id="shared-partition" data-material-id="paint"/)
+  assert.ok(!dryElevation.includes('Плитка санузла'))
+  assert.ok(!wetElevation.includes('Краска спальни'))
+})
 
 test('studio coverage resolves all 29 technical and 3 auxiliary document types to actual sheets', () => {
   const book = buildDossier(model, spec, freshDraft(model, spec), date)
